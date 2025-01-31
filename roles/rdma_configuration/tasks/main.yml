@@ -1,0 +1,14 @@
+---
+- name: Edit the rdma_network.json file
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+    - "'amd' in options or 'nvidia' in options"
+  block:
+    - name: Edit the rdma_network.json file
+      ansible.builtin.copy:
+        src: 'rdma_network_ubuntu.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+        owner: root
+        group: root
+        mode: '0644'
