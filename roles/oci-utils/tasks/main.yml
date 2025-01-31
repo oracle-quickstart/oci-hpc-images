@@ -1,0 +1,16 @@
+---
+- name: Install oci-utils image clean for CentOS 7 and Ubuntu 20
+  block:
+
+  - name: Install oci-image-cleanup
+    copy:
+      src: "oci-image-cleanup.{{ ansible_distribution }}"
+      dest: /usr/libexec/oci-image-cleanup
+      owner: root
+      group: root
+      mode: 0755
+
+  when:
+   - ( ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7' ) or
+     ( ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '20' ) or
+     ( ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22' )

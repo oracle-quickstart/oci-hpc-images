@@ -1,0 +1,39 @@
+{% set name = item['path'].split('/')[4] %}
+{% set intel_mpi_release = name.split('.')[0] %}
+#%Module1.0#
+
+# Copyright (C) 2020 Oracle Corp.
+# This file is released under Universal Permissive License 1.0
+# Authors:
+# Fio Cattaneo <fio.cattaneo@oracle.com> <fio@catttaneo.us>
+# Marcin Zablocki <mzablocki@oracle.com>
+
+proc ModulesHelp { } {
+        puts stderr "\tAdds Intel MPI {{ name }} environment paths, suitable for OCI TCP\n"
+}
+
+module-whatis   "loads Intel MPI {{ name }} module for OCI TCP"
+
+conflict        mpi
+
+#module load     "%MODULEFILE_MPI_PATH%"
+module load     {{ item['path'] }}/intel64/modulefiles/mpi
+set             i_mpi_root                              $::env(I_MPI_ROOT)
+setenv          OCI_MPI_ROOT                            $i_mpi_root
+
+setenv          MPI_BIN                                 $i_mpi_root/intel64/bin
+setenv          MPI_INCLUDE                             $i_mpi_root/intel64/include
+setenv          MPI_LIB                                 $i_mpi_root/intel64/lib
+setenv          MPI_MAN                                 $i_mpi_root/man
+setenv          MPI_HOME                                $i_mpi_root/intel64
+
+set             i_mpi_fabrics                           shm:tcp
+set             i_mpi_fallback                          0
+set             i_mpi_debug                             4
+# FIXME: need to generate CPU list dynamically
+set             i_mpi_pin_processor_list                0-35
+
+setenv          I_MPI_FABRICS                           $i_mpi_fabrics
+setenv          I_MPI_FALLBACK                          $i_mpi_fallback
+setenv          I_MPI_DEBUG                             $i_mpi_debug
+setenv          I_MPI_PIN_PROCESSOR_LIST                $i_mpi_pin_processor_list                

@@ -1,0 +1,9 @@
+---
+- name: install tuned via yum
+  yum: name=tuned state=latest
+    
+- name: start tuned
+  service: name=tuned state=started enabled=yes
+
+- name: start-profile
+  shell: tuned-adm profile throughput-performance

@@ -1,0 +1,26 @@
+---
+- name: create CUDA Samples directory
+  file:
+    path: "{{ benchmark_base_path }}/cuda-samples"
+    state: directory
+    mode: 0755
+    owner: opc
+    group: opc
+  become: yes
+
+- name: clone CUDA Samples
+  git:
+    repo: "{{ cuda_samples_repo }}"
+    dest: "{{ benchmark_base_path }}/cuda-samples"
+    force: yes
+  become_user: opc
+
+- name: build CUDA Samples
+  environment:
+    MAKEFLAGS: "-j 8"
+  make:
+    chdir: "{{ benchmark_base_path }}/cuda-samples"
+    params:
+      SMS: "80 90"
+  become_user: opc
+  ignore_errors: yes

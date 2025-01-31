@@ -1,0 +1,2 @@
+intel_mkl_version_rpm: "2019.5-075"
+intel_mpi_versions_rpm: "intel-mpi-2019.9-912,intel-mpi-2018.4-057"

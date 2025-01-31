@@ -1,0 +1,12 @@
+--- 
+- name: Ensure multi-user.target is set
+  block:
+
+  - name: Ensure multi-user.target is set
+    file:
+      src: /lib/systemd/system/multi-user.target
+      dest: /etc/systemd/system/default.target
+      state: link
+
+  when: 
+    - ansible_distribution == 'Ubuntu'

@@ -1,0 +1,13 @@
+#%Module 1.0
+#
+#  HPCx {{ mellanox_hpcx_version }}
+#
+{% set dir = mellanox_hpcx_package.split('.')[0] %}
+conflict        mpi
+module load     {{ install_prefix }}/{{ mellanox_hpcx_package }}/modulefiles/hpcx/{{ mellanox_hpcx_version }}
+setenv          OMPI_UCX_TLS    rc,self,sm
+setenv          OMPI_HCOLL_ENABLE_MCAST_ALL     0
+setenv          OMPI_UCX_IB_TRAFFIC_CLASS       105
+#setenv          OMPI_UCX_IB_GID_INDEX           3
+setenv          OMPI_MCA_btl    self
+setenv          OMPI_MCA_coll_hcoll_enable      0

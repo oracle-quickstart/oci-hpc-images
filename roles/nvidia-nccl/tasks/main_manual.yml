@@ -1,0 +1,56 @@
+---
+- name: Install NCCL from CUDA repository for RHEL
+  yum:
+    name:
+      - "{{ hpc_artifacts_download }}nccl/libnccl-2.19.3-1+cuda12.2.el7.x86_64.rpm"
+      - "{{ hpc_artifacts_download }}nccl/libnccl-devel-2.19.3-1+cuda12.2.el7.x86_64.rpm"
+      - "{{ hpc_artifacts_download }}nccl/libnccl-static-2.19.3-1+cuda12.2.el7.x86_64.rpm"
+    state: latest
+    disable_gpg_check: true
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+
+- name: Install NCCL from CUDA repository for RHEL
+  yum:
+    name:
+      - "{{ hpc_artifacts_download }}nccl/libnccl-2.19.3-1+cuda12.2.el8.x86_64.rpm"
+      - "{{ hpc_artifacts_download }}nccl/libnccl-devel-2.19.3-1+cuda12.2.el8.x86_64.rpm"
+      - "{{ hpc_artifacts_download }}nccl/libnccl-static-2.19.3-1+cuda12.2.el8.x86_64.rpm"
+    state: latest
+    disable_gpg_check: true
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+
+- name: Install NCCL from Oracle Build repo
+  become: true
+  apt:
+    deb: "{{ hpc_artifacts_download }}nccl/{{item}}"
+  with_items:
+          #- libnccl2_2.19.3-1+cuda12.2_amd64.deb
+    - libnccl2_2.20.5-1+cuda12.3_amd64.deb
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+- name: Install NCCL from Oracle Build repo
+  become: true
+  apt:
+    deb: "{{ hpc_artifacts_download }}nccl/{{item}}"
+  with_items:
+    - libnccl-dev_2.20.5-1+cuda12.3_amd64.deb
+      # - libnccl-dev_2.21.3-1+cuda12.2_amd64.deb
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+      #- name: Install NCCL from CUDA repository for Ubuntu
+      # apt:
+      #name:
+      #- "libnccl2={{ nccl_package_version }}"
+      #- "libnccl-dev={{ nccl_package_version }}"
+      #state: present
+      #environment: "{{proxy_env if proxy_env is defined else {}}}"
+      #when:
+      #- ansible_distribution == 'Ubuntu'

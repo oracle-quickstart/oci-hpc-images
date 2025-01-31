@@ -1,0 +1,95 @@
+---
+- name: AMD GPU Burn
+  block:
+
+    - name: Download CUDA pin with wget
+      get_url: url="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin" dest="/etc/apt/preferences.d/cuda-repository-pin-600"
+
+
+    - name: Download CUDA with wget
+      get_url: url="https://developer.download.nvidia.com/compute/cuda/12.4.1/local_installers/cuda-repo-ubuntu2204-12-4-local_12.4.1-550.54.15-1_amd64.deb" dest="/tmp/cuda-repo-ubuntu2204-12-4-local_12.4.1-550.54.15-1_amd64.deb"
+
+    - name: install cuda-repo-ubuntu2204
+      apt:
+        deb: /tmp/cuda-repo-ubuntu2204-12-4-local_12.4.1-550.54.15-1_amd64.deb
+
+
+    - name: copy keyring.gpg
+      copy:
+        src: "/var/cuda-repo-ubuntu2204-12-4-local/cuda-3F2FBBBE-keyring.gpg"
+        dest: "/usr/share/keyrings/cuda-3F2FBBBE-keyring.gpg"
+        remote_src: yes
+
+
+    - name: Update apt-get repo and cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+
+
+    - name: Install CUDA toolkit for Ubuntu
+      apt:
+        name: cuda-toolkit-12-4
+        force_apt_get: yes
+
+    - name: Install CUDA toolkit for Ubuntu
+      apt:
+        name: cuda-drivers
+        force_apt_get: yes
+
+    - name: Install libstdc
+      apt:
+        name: libstdc++-12-dev
+
+
+    - name: Creates /opt/oci-hpc directory
+      ansible.builtin.file:
+        path: /opt/oci-hpc
+        state: directory
+
+
+    - name: Clone a github repository
+      git:
+        repo: https://github.com/wilicc/gpu-burn
+        dest: /opt/oci-hpc/gpu-burn
+        clone: yes
+        update: yes
+
+    - name: Remove file (delete file)
+      ansible.builtin.file:
+        path: /opt/oci-hpc/gpu-burn/gpu_burn-drv.cpp
+        state: absent
+
+    - name: Download AMD GPU Burn 1
+      get_url: url="https://objectstorage.us-phoenix-1.oraclecloud.com/p/7OUXouKRlH5owhkrzXXJJnUxCuaITeM3DWp08Q2m3aSrdNejB3leJWdPGjN5CeZ8/n/hpc/b/rik-uploads/o/gpu_burn-drv.cpp" dest="/opt/oci-hpc/gpu-burn/gpu_burn-drv.cpp"
+
+    - name: Download AMD GPU Burn 2
+      get_url: url="https://objectstorage.us-phoenix-1.oraclecloud.com/p/7OUXouKRlH5owhkrzXXJJnUxCuaITeM3DWp08Q2m3aSrdNejB3leJWdPGjN5CeZ8/n/hpc/b/rik-uploads/o/Makefile.amd" dest="/opt/oci-hpc/gpu-burn/Makefile.amd"
+
+
+
+    - name: build and check the link
+      shell: |
+        make -f Makefile.amd clean
+      args:
+        chdir: "/opt/oci-hpc/gpu-burn"
+
+
+    - name: build and check the link
+      shell: |
+        make -f Makefile.amd
+      args:
+        chdir: "/opt/oci-hpc/gpu-burn"
+
+
+    - name: apt autoremove
+      shell: |
+        yes | apt autoremove
+      args:
+        chdir: "/tmp"
+
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+

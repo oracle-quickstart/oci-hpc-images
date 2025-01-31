@@ -1,0 +1,320 @@
+---
+- name: Mellanox OFED for Oracle Linux 7 and CentOS 7
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      yum:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - createrepo
+          - python-devel
+          - perl
+          - pciutils
+          - python
+          - gcc-gfortran
+          - libxml2-python
+          - tcsh
+          - libnl.i686
+          - libnl
+          - expat
+          - glib2
+          - tcl
+          - libstdc++
+          - bc
+          - tk
+          - gtk2
+          - atk
+          - cairo
+          - numactl
+          - pkgconfig
+          - ethtool
+          - lsof
+          - fuse-libs
+          - dkms
+          - kernel-devel
+        state: latest
+
+    - name: Check for Oracle Linux 7.9 Mellanox OS override
+      set_fact:
+        mellanox_os_version: "{{ ol79_mellanox_os_version }}"
+      when:
+        - "ol79_mellanox_os_version is defined"
+
+    - name: Check for CentOS 7.9 Mellanox OS override
+      set_fact:
+        mellanox_os_version: "{{ centos79_mellanox_os_version }}"
+      when:
+        - "centos79_mellanox_os_version is defined"
+
+    - name: Setup Oracle Linux 7.9 Mellanox Installer
+      set_fact:
+        mellanox_os_version: "ol{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '7'
+
+    - name: Setup CentOS 7.9 Mellanox Installer
+      set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'CentOS'
+        - ansible_distribution_major_version == '7'
+
+    - name: Get default kernel name
+      shell: "grubby --default-kernel"
+      register: default_kernel_path
+    - set_fact:
+        kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
+
+    - name: Create temporary directory to extract Mellanox OFED installer
+      tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    - name: Extract Mellanox OFED installation tarball
+      unarchive:
+        src: "{{ hpc_artifacts_download }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: yes
+
+    - name: Install Mellanox OFED
+      command: "{{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64/mlnxofedinstall --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}"
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+      notify:
+      - Run dracut
+
+    - name: Run dracut handler
+      meta: flush_handlers
+
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+
+
+- name: Mellanox OFED for Oracle Linux 8
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      yum:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - createrepo
+          - python36-devel
+          - perl
+          - pciutils
+          - python36
+          - gcc-gfortran
+          - kernel-rpm-macros
+          - tcsh
+          - expat
+          - glib2
+          - tcl
+          - libstdc++
+          - bc
+          - tk
+          - gtk2
+          - atk
+          - cairo
+          - numactl
+          - pkgconfig
+          - ethtool
+          - lsof
+          - fuse-libs
+          - dkms
+          - kernel-devel
+          - kernel-modules-extra
+        state: latest
+
+    - name: Check for Oracle Linux 8 Mellanox OS override
+      set_fact:
+        mellanox_os_version: "{{ ol86_mellanox_os_version }}"
+      when:
+        - "ol86_mellanox_os_version is defined"
+
+    - name: Setup Oracle Linux 8 Mellanox Installer
+      set_fact:
+        mellanox_os_version: "ol{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '8'
+
+    - name: Get default kernel name
+      shell: "grubby --default-kernel"
+      register: default_kernel_path
+    -  set_fact:
+        kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
+
+    - name: Install kernel-devel
+      yum:
+        name: kernel-devel-{{ kernel_version }}
+        allow_downgrade: true
+        state: present
+
+    - name: Create temporary directory to extract Mellanox OFED installer
+      tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    - name: Extract Mellanox OFED installation tarball
+      unarchive:
+        src: "{{ hpc_artifacts_download }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: yes
+
+    - name: Install Mellanox OFED
+      command: "{{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64/mlnxofedinstall --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}"
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+      notify:
+      - Run dracut
+
+    - name: Run dracut handler
+      meta: flush_handlers
+
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+
+
+
+- name: Mellanox OFED for Ubuntu 20
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      apt:
+        name:
+          - perl
+          - dpkg
+          - autotools-dev
+          - autoconf
+          - libtool
+          - automake
+          - m4
+          - dkms
+          - debhelper
+          - tcl
+          - chrpath
+          - swig
+          - graphviz
+          - tcl-dev
+          - tk-dev
+          - bison
+          - flex
+          - dpatch
+          - zlib1g-dev
+          - curl
+          - libcurl4-gnutls-dev
+          - python-libxml2
+          - python3-venv
+          - python3-dev
+          - libvirt0
+          - libglib2.0-dev
+          - automake
+          - m4
+          - pkg-config
+          - logrotate
+          - ethtool
+          - lsof
+          - libgfortran4
+          - libnl-3-dev
+          - quilt
+          - libnl-route-3-200
+          - libnl-route-3-dev
+          - gfortran
+          - libnuma-dev
+          - environment-modules
+        state: latest
+
+    - name: Create temporary directory to extract Mellanox OFED installer
+      tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    - name: Extract Mellanox OFED installation tarball
+      unarchive:
+        src: "{{ hpc_artifacts_download }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu20.04-x86_64.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: yes
+
+    - name: Install Mellanox OFED
+      command: "{{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu20.04-x86_64/mlnxofedinstall --force --all --without-fw-update"
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '20'
+
+- name: Mellanox OFED for Ubuntu 22
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      apt:
+        name:
+          - chrpath
+          - libgfortran5
+          - libc6-dev
+          - libltdl-dev
+          - libnl-3-dev
+          - dkms
+          - tcl
+          - tcl-dev
+          - tk
+          - tk-dev
+          - zlib1g-dev
+          - libnl-route-3-dev
+          - libnl-route-3-200
+          - pkg-config
+          - gcc
+          - swig
+          - make
+          - quilt
+          - dpatch
+          - gfortran
+          - flex
+          - m4
+          - bison
+          - automake
+          - libfuse2
+          - autoconf
+          - debhelper
+          - autotools-dev
+          - graphviz
+          - libnuma-dev
+          - environment-modules
+          - python3.10-venv
+          - python3-dev
+        state: latest
+
+    - name: Create temporary directory to extract Mellanox OFED installer
+      tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    - name: Extract Mellanox OFED installation tarball
+      unarchive:
+        src: "{{ hpc_artifacts_download }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: yes
+
+    - name: Install Mellanox OFED
+      command: "{{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64/mlnxofedinstall --force --all --without-fw-update"
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+
+- name: Update MFT
+  include_tasks: mft.yml
+  when:
+    - "mft_version is defined"

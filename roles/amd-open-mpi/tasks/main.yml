@@ -1,0 +1,18 @@
+---
+- name: Install openmpi
+  block:
+    - name: install openmpi-bin
+      apt:
+        name: openmpi-bin
+
+    - name: install openmpi-common
+      apt:
+        name: openmpi-common
+
+    - name: install libopenmpi-dev
+      apt:
+        name: libopenmpi-dev
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'

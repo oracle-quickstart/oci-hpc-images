@@ -1,0 +1,114 @@
+---
+- name: Build list of kernel boot parameters
+  set_fact:
+    kernel_parameters: "{{ grub_cmdline
+       + (('nomitigations' in options) | ternary(grub_cmdline_disable_mitigations, []))
+       + (('noselinux' in options) | ternary(['selinux=0'], []))
+       + (('enroot' in options) | ternary(grub_cmdline_enroot, []))
+       + (('networkdevicenames' in options) | ternary(grub_cmdline_network_device_names, []))
+       + (( ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8' ) | ternary(['ip=single-dhcp,dhcp6'], [])) }} "
+  when:
+    - "options is defined"
+    - grub_cmdline is defined
+
+- name: Kernel boot parameters for RedHat 7 and 8
+  block:
+
+  - name: Ensure kernel boot parameters are setup for RedHat 7 and 8
+#    lineinfile:
+#      path: /etc/default/grub
+#      backrefs: yes
+#      regexp: '^(GRUB_CMDLINE_LINUX="(?!.*\b{{ item }}\b).*)"$'
+#      line: '\1 {{ item }}"'
+    replace:
+      path: /etc/default/grub
+      regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ item.split("=")[0] | regex_escape }}=).)*"?)\s*(?:{{ item.split("=")[0]  | regex_escape }}=\S+\s*)?(.*")$'
+      replace: '\1 {{ item }} \2'
+    notify:
+      - grub2-mkconfig
+      - dracut
+    loop: "{{ kernel_parameters }}"
+    when:
+      - kernel_parameters is defined
+
+  when:
+   - ansible_os_family == 'RedHat'
+   - ansible_distribution_major_version == '7' or ansible_distribution_major_version == '8'
+
+
+- name: Kernel boot parameters for Ubuntu 20
+  block:
+
+  - name: Ensure base kernel boot parameter file exists
+    copy:
+      src: 70-oci-hpc.cfg
+      dest: /etc/default/grub.d/70-oci-hpc.cfg
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Set cloudinit console serial port rate for Ubuntu 20
+    replace:
+      path: /etc/default/grub.d/50-cloudimg-settings.cfg
+      regexp: 'console=ttyS0'
+      replace: 'console=ttyS0,115200'
+
+  - name: Ensure kernel boot parameters are setup for Ubuntu 20
+    lineinfile:
+      path: /etc/default/grub.d/70-oci-hpc.cfg
+      backrefs: yes
+      regexp: '^(GRUB_CMDLINE_LINUX="\$GRUB_CMDLINE_LINUX(?!.*\b{{ item }}\b).*)"$'
+      line: '\1 {{ item }}"'
+      create: yes
+      owner: root
+      group: root
+      mode: 0644
+    notify:
+      - update-grub
+    loop: "{{ kernel_parameters }}"
+    when:
+      - kernel_parameters is defined
+
+  when:
+   - ansible_distribution == 'Ubuntu'
+   - ansible_distribution_major_version == '20'
+
+- name: Kernel boot parameters for Ubuntu 22
+  block:
+
+  - name: Ensure base kernel boot parameter file exists
+    copy:
+      src: 70-oci-hpc.cfg
+      dest: /etc/default/grub.d/70-oci-hpc.cfg
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Set cloudinit console serial port rate for Ubuntu 22
+    replace:
+      path: /etc/default/grub.d/50-cloudimg-settings.cfg
+      regexp: 'console=ttyS0'
+      replace: 'console=ttyS0,115200'
+
+  - name: Ensure kernel boot parameters are setup for Ubuntu 22
+    lineinfile:
+      path: /etc/default/grub.d/70-oci-hpc.cfg
+      backrefs: yes
+      regexp: '^(GRUB_CMDLINE_LINUX="\$GRUB_CMDLINE_LINUX(?!.*\b{{ item }}\b).*)"$'
+      line: '\1 {{ item }}"'
+      create: yes
+      owner: root
+      group: root
+      mode: 0644
+    notify:
+      - update-grub
+    loop: "{{ kernel_parameters }}"
+    when:
+      - kernel_parameters is defined
+
+  when:
+   - ansible_distribution == 'Ubuntu'
+   - ansible_distribution_major_version == '22'
+
+- name: Flush handlers to update grub
+  meta: flush_handlers

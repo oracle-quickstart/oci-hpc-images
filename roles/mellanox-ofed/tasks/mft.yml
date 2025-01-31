@@ -1,0 +1,32 @@
+---
+- name: MFT RPM download
+  set_fact:
+    package_extension: "rpm"
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: MTF DEB download
+  set_fact:
+    package_extension: "deb"
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Extract Mellanox MFT installation tarball
+  unarchive:
+    src: "{{ mellanox_mft_download }}/{{ mft_version }}-x86_64-{{ package_extension }}.tgz"
+    dest: /tmp
+    remote_src: yes
+
+- name: Install Mellanox MFT update (yum)
+  yum:
+    name: "/tmp/{{ mft_version }}-x86_64-rpm/RPMS/{{ mft_version }}.x86_64.rpm"
+    state: present
+    disable_gpg_check: yes
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Install Mellanox MFT update (apt)
+  apt:
+    deb: "/tmp/{{ mft_version }}-x86_64-deb/DEBS/{{ mft_version | replace('-', '_', 1) }}_amd64.deb"
+  when:
+    - ansible_os_family == 'Debian'

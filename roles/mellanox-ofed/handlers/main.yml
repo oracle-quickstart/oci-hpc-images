@@ -1,0 +1,3 @@
+---
+- name: Run dracut
+  command: dracut -f /boot/initramfs-{{ kernel_version }}.img {{ kernel_version }}

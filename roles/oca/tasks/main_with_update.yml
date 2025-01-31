@@ -1,0 +1,54 @@
+---
+- name: OCA v1.40 install
+  block:
+          #    - name: Edit the shapes.json file
+          #      copy:
+          #        src: 'shapes.json'
+          #        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/shapes.json'
+          #      when: ansible_os_family == 'RedHat'
+          #    - name: Edit the shapes.json file
+          #      copy:
+          #        src: 'shapes_ubuntu.json'
+          #        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/shapes.json'
+          #      when : ansible_distribution == 'Ubuntu'
+    - name: Edit the shapes.json file
+      copy:
+        src: 'rdma_network.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+      when: ansible_os_family == 'RedHat'
+    - name: Edit the shapes.json file
+      copy:
+        src: 'rdma_network_ubuntu.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+      when : ansible_distribution == 'Ubuntu'
+      
+
+    - name: Install OCA v1.40 for OL8
+      yum:
+        name: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/3ztqYV0ws_Bnxea9pzoHCIxUZhtvJoqhRYiJS-UKVMlwYYfo2d8r0CgpqPQKqHzo/n/imagegen/b/agent_test/o/1.40.0/2/oracle-cloud-agent-1.40.0-11546.el8.x86_64.rpm"
+        state: present
+        disable_gpg_check: yes
+      when:
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '8'
+
+    - name: Install OCA v1.40 for OL7
+      yum:
+        name: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/lLSRcq7gJyYNixHXDSHmL09WVRWr5W1CFoPQ-fT0GjdkuyTuvNkLXID2TWz7GNkG/n/imagegen/b/agent_test/o/1.40.0/2/oracle-cloud-agent-1.40.0-11546.el7.x86_64.rpm"
+        state: present
+        disable_gpg_check: yes
+      when:
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '7'
+
+    - name: Download Snap package
+      get_url: 
+        url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/b1YZBQSj0AB3iWPcKwRWJlRDlPgYsgVSHFHjU02PzXr-K8WwcC34-rMu4p2XcAuM/n/imagegen/b/agent_test/o/1.40.0/2/oracle-cloud-agent_1.40.0-12_amd64.snap"
+        dest: "/tmp/oracle-cloud-agent_1.40.0-12_amd64.snap"
+      when : ansible_distribution == 'Ubuntu'
+
+    - name: Snap update
+      shell: "snap install --classic --dangerous /tmp/oracle-cloud-agent_1.40.0-12_amd64.snap"
+      when : ansible_distribution == 'Ubuntu'
+
+  when: "'use_plugins' in options"

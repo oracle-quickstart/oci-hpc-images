@@ -1,0 +1,11 @@
+# cmake is needed by cuda-samples
+
+---
+- name: install dependencies
+  yum:
+    name:
+      - git
+      - cmake
+      - pciutils
+      - pciutils-devel
+  become: yes

@@ -1,0 +1,44 @@
+---
+- name: Install perftest
+  block:
+
+    - name: Clone perftest github repository
+      git:
+        repo: https://github.com/linux-rdma/perftest.git
+        dest: /opt/oci-hpc/perftest
+        clone: yes
+        update: yes
+
+    - name: Install libpci-dev
+      apt:
+        name: libpci-dev
+
+    - name: run autogen
+      shell: |
+        bash autogen.sh
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+
+    - name: configure the directory
+      shell: |
+        ./configure --prefix=/opt/oci-hpc/perftest/ --enable-rocm --with-rocm=/opt/rocm
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+
+    - name: build and install
+      shell: |
+        make
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+
+    - name: build and install
+      shell: |
+        make install
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+

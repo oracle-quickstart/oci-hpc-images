@@ -1,0 +1,12 @@
+---
+- name: Install rvs
+  block:
+    - name: install the rocm-validation-suite package
+      apt:
+        name: rocm-validation-suite
+
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+

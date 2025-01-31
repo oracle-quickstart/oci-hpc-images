@@ -1,0 +1,49 @@
+---
+- name: Install amd-tuned
+  block:
+
+    - name: Set tuned to latency-performance
+      apt:
+        name: tuned
+
+    - name: Validate tuned-adm profile
+      shell: |
+        tuned-adm profile
+      args:
+        chdir: /tmp
+
+    - name: Validate tuned-adm profile
+      shell: |
+        tuned-adm active
+      args:
+        chdir: /tmp
+
+
+    - name: Edit grub
+      lineinfile:
+        path: /etc/default/grub
+        regexp: "^GRUB_CMDLINE_LINUX=(.*)$"
+        line: 'GRUB_CMDLINE_LINUX="console=ttyS0,115200 net.ifnames=1 processor.max_cstate=1 intel_idle.max_cstate=0 mce=ignore_ce nohz=off skew_tick=1 iommu=pt numa_balancing=disable selinux=0 rd.driver.blacklist=nouveau noibrs noibpb nopti nospectre_v2 nospectre_v1 l1tf=off nospec_store_bypass_disable no_stf_barrier mds=off mitigations=off oci_hpc.rdma_device_names_mode=2 oci_hpc.vnic_device_names_mode=1"'
+
+    - name: From AMD set performance metrics linux-tools-common
+      apt:
+        name: linux-tools-common
+        force_apt_get: yes
+
+    - name: From AMD set performance metrics linux-tools
+      apt:
+        name: linux-tools-{{ ansible_kernel }}
+        force_apt_get: yes
+
+
+    - name: From AMD set performance metrics cpupower
+      shell: |
+        echo 0 > /proc/sys/kernel/numa_balancing
+      args:
+        chdir: /tmp
+
+
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+

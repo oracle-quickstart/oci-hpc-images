@@ -1,0 +1,22 @@
+---
+- name: create STREAM directory
+  file:
+    path: "{{ benchmark_base_path }}/stream"
+    state: directory
+    mode: 0755
+    owner: opc
+    group: opc
+  become: yes
+
+- name: clone STREAM from repo
+  git:
+    repo: "{{ stream_repo }}"
+    dest: "{{ benchmark_base_path }}/stream"
+    force: yes
+  become_user: opc
+
+- name: build STREAM
+  command:
+    cmd: "gcc {{stream_cflags}} -o {{ benchmark_base_path }}/stream/stream {{ benchmark_base_path }}/stream/stream.c"
+    chdir: "{{ benchmark_base_path }}/stream"
+  become_user: opc

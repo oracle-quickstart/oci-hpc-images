@@ -1,0 +1,9 @@
+---
+- name: grub2-mkconfig
+  command: grub2-mkconfig -o /etc/grub2-efi.cfg
+
+- name: update-grub
+  command: update-grub
+
+- name: dracut
+  command: dracut -f

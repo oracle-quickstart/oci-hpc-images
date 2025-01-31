@@ -1,0 +1,5 @@
+mellanox_ofed_version: "5.0-2.1.8.0"
+use_hpc_artifact: true
+ol79_mellanox_os_version: "ol7.7"
+mft_version: "mft-4.21.0-99"
+mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"

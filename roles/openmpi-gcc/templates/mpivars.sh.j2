@@ -1,0 +1,23 @@
+# NOTE: This is an automatically-generated file!
+
+# PATH
+if test -z "`echo $PATH | grep {{ openmpi_path }}`"; then
+    PATH={{ openmpi_path }}:${PATH}
+    export PATH
+fi
+
+# LD_LIBRARY_PATH
+if test -z "`echo $LD_LIBRARY_PATH | grep {{ openmpi_libpath }}`"; then
+    LD_LIBRARY_PATH={{ openmpi_libpath }}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}
+    export LD_LIBRARY_PATH
+fi
+
+# MANPATH
+if test -z "`echo $MANPATH | grep {{ openmpi_manpath }}`"; then
+    MANPATH={{ openmpi_manpath }}:${MANPATH}
+    export MANPATH
+fi
+
+# MPI_ROOT
+MPI_ROOT={{ openmpi_root }}
+export MPI_ROOT

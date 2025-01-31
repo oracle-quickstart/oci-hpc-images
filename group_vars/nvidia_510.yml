@@ -1,0 +1,4 @@
+nvidia_driver_version: "510"
+nvidia_driver_package_version: "510"
+nvidia_driver_branch: "510"
+nvidia_driver_skip_reboot: yes

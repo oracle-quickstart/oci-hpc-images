@@ -1,0 +1,48 @@
+---
+- name: Install latest DCGM for RHEL 7
+  yum:
+    name: datacenter-gpu-manager
+    state: latest
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+    - "'stable_dcgm' not in options"
+
+- name: Install stable DCGM for RHEL 7
+  yum:
+    name: "datacenter-gpu-manager-{{ stable_nvidia_dcgm_version }}"
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+    - "'stable_dcgm' in options"
+
+- name: Install latest DCGM for RHEL 8
+  dnf:
+    name: datacenter-gpu-manager
+    state: latest
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+    - "'stable_dcgm' not in options"
+
+- name: Install stable DCGM for RHEL 8
+  dnf:
+    name: "datacenter-gpu-manager-{{ stable_nvidia_dcgm_version }}"
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+    - "'stable_dcgm' in options"
+
+- name: Install DCGM for Ubuntu
+  apt:
+    name: datacenter-gpu-manager
+    state: present
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+- name: Enable DCGM service
+  systemd:
+    name: nvidia-dcgm
+    enabled: yes

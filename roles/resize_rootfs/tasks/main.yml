@@ -1,0 +1,10 @@
+---
+# OL platform images come with oci-utils installed, which includes the
+# oci-growfs tool which can be used to grow the root filesystem when
+# an instance is launched with a larger bootvolume.
+#
+# See https://docs.oracle.com/en-us/iaas/oracle-linux/oci-utils/index.htm#oci-growfs
+
+- name: Resize Root FS
+  shell: /usr/libexec/oci-growfs -y
+  when: ansible_distribution == "OracleLinux"

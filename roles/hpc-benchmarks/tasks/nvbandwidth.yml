@@ -1,0 +1,67 @@
+---
+- name: create nvbandwidth directory
+  file:
+    path: "{{ benchmark_base_path }}/nvbandwidth"
+    state: directory
+    mode: 0755
+    owner: opc
+    group: opc
+  become: yes
+
+- name: install dependencies for OL8
+  dnf:
+    name:
+      - boost-devel
+      - boost-program-options
+  become: yes
+  when:
+    - ansible_distribution == 'OracleLinux'
+    - ansible_distribution_major_version == '8'
+
+- name: install dependencies for Ubuntu
+  apt:
+    name:
+      - libboost-program-options-dev
+  become: yes
+  when: ansible_distribution == 'Ubuntu'
+
+- name: clone nvbandwidth
+  git:
+    repo: "{{ nvbandwidth_repo }}"
+    dest: "{{ benchmark_base_path }}/nvbandwidth"
+    force: yes
+  become_user: opc
+
+- name: get updated CMake from Kitware
+  get_url:
+    url: "{{ cmake_git_path }}"
+    dest: "/tmp/{{ cmake_installer }}"
+
+- name: create nvbandwidth/cmake directory
+  file:
+    path: "{{ benchmark_base_path }}/nvbandwidth/cmake"
+    state: directory
+    mode: 0755
+    owner: opc
+    group: opc
+
+- name: install CMake
+  command:
+    cmd: "bash /tmp/{{ cmake_installer }} --skip-license --prefix={{ benchmark_base_path }}/nvbandwidth/cmake"
+  args:
+    chdir: "/tmp"
+  become_user: opc
+
+- name: generate nvbandwidth Makefile from CMake
+  command:
+    cmd: "{{ benchmark_base_path }}/nvbandwidth/cmake/bin/cmake . -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=80;90"
+  args:
+    chdir: "{{ benchmark_base_path }}/nvbandwidth"
+  become_user: opc
+
+- name: build nvbandwidth
+  environment:
+    MAKEFLAGS: "-j 8"
+  make:
+    chdir: "{{ benchmark_base_path }}/nvbandwidth"
+  become_user: opc
