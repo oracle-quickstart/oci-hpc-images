@@ -1,11 +1,11 @@
 ---
-- name: remove ppa
-  apt_repository:
+- name: Remove ppa
+  ansible.builtin.apt_repository:
     repo: ppa:graphics-drivers/ppa
     state: absent
 
-- name: add pin file
-  copy:
+- name: Add pin file
+  ansible.builtin.copy:
     src: "cuda-ubuntu.pin"
     dest: "/etc/apt/preferences.d/cuda-repository-pin-600"
     owner: "root"
@@ -13,35 +13,41 @@
     mode: "0644"
   when: nvidia_driver_add_repos | bool
 
-- name: add key
-  apt_key:
+- name: Add key
+  ansible.builtin.apt_key:
     url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url }}"
     id: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_id }}"
-  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: nvidia_driver_add_repos | bool
 
-- name: esure kmod is installed
-  apt:
+- name: Esure kmod is installed
+  ansible.builtin.apt:
     name: "kmod"
     state: "present"
 
-- name: blacklist nouveau
-  kernel_blacklist:
+- name: Blacklist nouveau
+  community.general.kernel_blacklist:
     name: nouveau
     state: present
 
-- name: add repo
-  apt_repository:
+- name: Add repo
+  ansible.builtin.apt_repository:
     repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl }} /"
-    update_cache: yes
-  environment: "{{proxy_env if proxy_env is defined else {}}}"
+    update_cache: true
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: nvidia_driver_add_repos | bool
 
-- name: install driver packages
-  apt:
-    name: "{{ nvidia_driver_package_version | ternary(nvidia_driver_ubuntu_cuda_package+'-'+nvidia_driver_package_version, nvidia_driver_ubuntu_cuda_package) }}"
+- name: Install driver packages
+  ansible.builtin.apt:
+    name: "{{ nvidia_driver_package_version | ternary(nvidia_driver_ubuntu_cuda_package + '-' + nvidia_driver_package_version, nvidia_driver_ubuntu_cuda_package) }}" # noqa yaml[line-length]
     state: "{{ nvidia_driver_package_state }}"
     autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
     purge: "{{ nvidia_driver_package_state == 'absent' }}"
   register: install_driver
-  environment: "{{proxy_env if proxy_env is defined else {}}}"
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+# add peermem to modprobe.d
+- name: Add peermem to modprobe.d
+  ansible.builtin.lineinfile:
+    path: /etc/modules-load.d/modules.conf
+    line: "nvidia_peermem"

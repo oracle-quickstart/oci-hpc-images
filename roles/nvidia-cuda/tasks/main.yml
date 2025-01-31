@@ -1,56 +1,58 @@
 ---
 - name: NVIDIA CUDA for RHEL
-  block:
+  when:
+    - ansible_os_family == 'RedHat'
 
+  block:
     - name: Install JRE 1.8 prereq RHEL/OL
-      yum:
+      ansible.builtin.dnf:
         name:
           - jre1.8
         state: present
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
-      when: (cuda_version.split('-')[0] | int  >= 12) and (cuda_version.split('-')[1] | int >= 0) and ansible_distribution_major_version == '7' and ansible_distribution != 'CentOS'
+      when: >
+        (cuda_version.split('-')[0] | int  >= 12)
+        and (cuda_version.split('-')[1] | int >= 0)
+        and ansible_distribution_major_version == '7'
+        and ansible_distribution != 'CentOS'
 
     - name: Install JRE 1.8 prereq CentOS
-      yum:
+      ansible.builtin.dnf:
         name:
           - java-1.8.0-openjdk
         state: present
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
-      when: (cuda_version.split('-')[0] | int  >= 12) and (cuda_version.split('-')[1] | int >= 0) and ansible_distribution_major_version == '7' and ansible_distribution == 'CentOS'
+      when: >
+        (cuda_version.split('-')[0] | int  >= 12)
+        and (cuda_version.split('-')[1] | int >= 0)
+        and ansible_distribution_major_version == '7'
+        and ansible_distribution == 'CentOS'
 
     - name: Install CUDA toolkit for RHEL
-      yum:
+      ansible.builtin.dnf:
         name:
           - "{{ cuda_toolkit_version }}"
         state: present
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
     - name: Install nvidia-container-toolkit for RHEL
-      yum:
+      ansible.builtin.dnf:
         name:
           - nvidia-container-toolkit
         state: present
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
-
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version == '7' or ansible_distribution_major_version == '8'
-
-
 - name: NVIDIA CUDA for Ubuntu
-  block:
-
-    - name: Add repository
-      apt_repository:
-        repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl }} /"
-        update_cache: yes
-      environment: "{{proxy_env if proxy_env is defined else {}}}"
-
-    - name: Install CUDA toolkit for Ubuntu
-      apt:
-        name: "{{ cuda_toolkit_version }}"
-      environment: "{{proxy_env if proxy_env is defined else {}}}"
-
   when:
     - ansible_distribution == 'Ubuntu'
+  block:
+    - name: Add repository
+      ansible.builtin.apt_repository:
+        repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl }} /"
+        update_cache: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+    - name: Install CUDA toolkit for Ubuntu
+      ansible.builtin.apt:
+        name: "{{ cuda_toolkit_version }}"
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"

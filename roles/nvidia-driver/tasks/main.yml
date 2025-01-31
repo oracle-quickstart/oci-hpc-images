@@ -1,91 +1,101 @@
 ---
-- name: unload nouveau
+- name: Unload nouveau
   community.general.modprobe:
     name: nouveau
     state: absent
   ignore_errors: true
+  register: nouveau_unload_error
 
-- name: insure GSP firmware is disabled for branch version 510
-  lineinfile:
+- name: Ensure GSP firmware is disabled for branch version 510
+  ansible.builtin.lineinfile:
     path: /etc/modprobe.d/nvidia-gsp.conf
     line: "options nvidia NVreg_EnableGpuFirmware=0"
-    create: yes
+    create: true
+    mode: '0644'
   when: nvidia_driver_branch | int >= 510
 
-- name: ubuntu install tasks (canonical repos)
-  include_tasks: install-ubuntu.yml
+- name: Ubuntu install tasks (canonical repos)
+  ansible.builtin.include_tasks: install-ubuntu.yml
   when: ansible_distribution == 'Ubuntu' and (not nvidia_driver_ubuntu_install_from_cuda_repo)
 
-- name: ubuntu install tasks (CUDA repo)
-  include_tasks: install-ubuntu-cuda-repo.yml
+- name: Ubuntu install tasks (CUDA repo)
+  ansible.builtin.include_tasks: install-ubuntu-cuda-repo.yml
   when: ansible_distribution == 'Ubuntu' and nvidia_driver_ubuntu_install_from_cuda_repo
 
-- name: redhat family install tasks
-  include_tasks: install-redhat.yml
+- name: Redhat family install tasks
+  ansible.builtin.include_tasks: install-redhat.yml
   when: ansible_os_family == 'RedHat'
 
-- name: create persistenced override dir
-  file:
+- name: Create persistenced override dir
+  ansible.builtin.file:
     path: /etc/systemd/system/nvidia-persistenced.service.d/
     state: directory
-    recurse: yes
+    recurse: true
 
-- name: configure persistenced service to turn on persistence mode
-  copy:
+- name: Configure persistenced service to turn on persistence mode
+  ansible.builtin.copy:
     src: nvidia-persistenced-override.conf
     dest: /etc/systemd/system/nvidia-persistenced.service.d/override.conf
+    mode: '0644'
   when: nvidia_driver_persistence_mode_on
 
-- name: remove persistenced service override
-  file:
+- name: Remove persistenced service override
+  ansible.builtin.file:
     path: /etc/systemd/system/nvidia-persistenced.service.d/override.conf
     state: absent
+    mode: '0644'
   when: not nvidia_driver_persistence_mode_on
 
-- name: enable persistenced
-  systemd:
+- name: Enable persistenced
+  ansible.builtin.systemd:
     name: nvidia-persistenced
-    enabled: yes
+    enabled: true
   when: nvidia_driver_package_state != 'absent'
 
-- name: enable fabricmanager
-  systemd:
+- name: Enable fabricmanager
+  ansible.builtin.systemd:
     name: nvidia-fabricmanager
-    enabled: yes
+    enabled: true
   when: nvidia_driver_package_state != 'absent'
 
-- name: set module parameters
-  template:
+- name: Set module parameters
+  ansible.builtin.template:
     src: nvidia.conf.j2
     dest: "{{ nvidia_driver_module_file }}"
     mode: '0644'
 
-- name: reboot after driver install
-  reboot:
+- name: Reboot after driver install
+  ansible.builtin.reboot:
   when: install_driver.changed and not nvidia_driver_skip_reboot
 
-- name: insure DKMS modules are built for OL7/OL8
+- name: Ensure DKMS modules are built for OL7/OL8
+  when: ansible_distribution == 'OracleLinux'
   block:
-    - name: check DKMS module name
-      shell: "dkms status | grep nvidia | cut -d, -f1 | cut -d: -f1"
+    - name: Check DKMS module name # noqa no-changed-when
+      ansible.builtin.shell: |
+        set -o pipefail
+        dkms status | grep nvidia | cut -d, -f1 | cut -d: -f1
       register: dkms_module_name
 
-    - name: check DKMS module state
-      shell: "dkms status | grep nvidia | cut -d: -f2 | awk '{print $1}'"
+    - name: Check DKMS module state # noqa no-changed-when
+      ansible.builtin.shell: |
+        set -o pipefail
+        dkms status | grep nvidia | cut -d: -f2 | awk '{print $1}'
+
       register: dkms_module_state
 
-    - name: show DKMS module status
-      debug:
+    - name: Show DKMS module status
+      ansible.builtin.debug:
         msg: "module name is {{ dkms_module_name.stdout }}, status is {{ dkms_module_state.stdout }}"
 
-    - name: Get default kernel name
-      shell: "grubby --default-kernel"
+    - name: Get default kernel name # noqa no-changed-when command-instead-of-shell
+      ansible.builtin.shell: "grubby --default-kernel"
       register: default_kernel_path
 
-    - set_fact:
+    - name: Set kernel version
+      ansible.builtin.set_fact:
         kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
 
-    - name: run DKMS install
-      shell: "dkms install {{ dkms_module_name.stdout }} --force -k {{ kernel_version }}"
+    - name: Run DKMS install # noqa no-changed-when command-instead-of-shell
+      ansible.builtin.shell: "dkms install {{ dkms_module_name.stdout }} --force -k {{ kernel_version }}"
       when: dkms_module_state.stdout is defined and dkms_module_state.stdout.find('installed') == -1
-  when: ansible_distribution == 'OracleLinux'

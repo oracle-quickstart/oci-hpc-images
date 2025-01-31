@@ -7,3 +7,4 @@
     - "'rhck' in options"
     - ansible_os_family == 'RedHat'
     - ansible_distribution == 'OracleLinux'
+  
