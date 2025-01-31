@@ -1,9 +1,12 @@
 ---
 - name: Kernel limits
+  when: >
+    (ansible_os_family == 'RedHat') or (ansible_distribution == 'Ubuntu')
+
   block:
 
     - name: Ensure kernel limits file exists
-      file:
+      ansible.builtin.file:
         path: /etc/security/limits.d/50-hpc-limits.conf
         state: touch
         owner: root
@@ -11,7 +14,7 @@
         mode: '0644'
 
     - name: Ensure kernel limits are configured
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/security/limits.d/50-hpc-limits.conf
         regexp: '^\*\s+{{ item.type }}\s+{{ item.name }}\s+(?!.*\b{{ item.limit }}\b).*$'
         line: '*  {{ item.type }}  {{ item.name }}  {{ item.limit }}'
@@ -20,13 +23,10 @@
         - "'amd' not in options"
 
     - name: Ensure kernel limits are configured
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/security/limits.d/50-hpc-limits.conf
         regexp: '^\*\s+{{ item.type }}\s+{{ item.name }}\s+(?!.*\b{{ item.limit }}\b).*$'
         line: '*  {{ item.type }}  {{ item.name }}  {{ item.limit }}'
       loop: "{{ kernel_limits_amd }}"
       when:
         - "'amd' in options"
-
-  when:
-   - (ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '7' or ansible_distribution_major_version == '8')) or (ansible_distribution == 'Ubuntu')

@@ -1,11 +1,11 @@
 # cmake is needed by cuda-samples
-
 ---
-- name: install dependencies
-  yum:
+- name: Install dependencies
+  ansible.builtin.dnf:
     name:
       - git
       - cmake
       - pciutils
       - pciutils-devel
-  become: yes
+  become: true
+  when: ansible_os_family == 'RedHat'

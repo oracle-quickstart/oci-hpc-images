@@ -1,9 +1,9 @@
 ---
-- name: install dependencies
-  apt:
+- name: Install dependencies
+  ansible.builtin.apt:
     name:
       - git
       - pciutils
       - libpci-dev
       - acl
-  become: yes
+  become: true
