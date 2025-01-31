@@ -31,7 +31,7 @@
     - import_role:
         name: packages
     - import_role:
-        name: kernel-rhck
+        name: kernel
     - import_role:
         name: oci-utils
     - import_role:

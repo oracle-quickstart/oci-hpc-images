@@ -1,9 +1,6 @@
 ---
-- name: grub2-mkconfig
-  command: grub2-mkconfig -o /etc/grub2-efi.cfg
+- name: Run grub2-mkconfig # noqa no-changed-when
+  ansible.builtin.command: grub2-mkconfig -o /etc/grub2-efi.cfg
 
-- name: update-grub
-  command: update-grub
-
-- name: dracut
-  command: dracut -f
+- name: Run update-grub # noqa no-changed-when
+  ansible.builtin.command: update-grub
