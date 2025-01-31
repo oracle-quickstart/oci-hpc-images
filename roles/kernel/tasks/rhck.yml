@@ -1,12 +1,6 @@
 ---
 - name: Ensure default kernel is RHCK
 
-  when:
-    - "options is defined"
-    - "'rhck' in options"
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution == 'OracleLinux'
-
   block:
 
     - name: Ensure default kernel setting is not OracleLinux UEK

@@ -2,4 +2,8 @@
 
 - name: Configure RHCK
   ansible.builtin.include_tasks: rhck.yml
-  when: ansible_os_family == 'RedHat' and 'rhck' in options
+  when:
+    - "options is defined"
+    - "'rhck' in options"
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'OracleLinux'
