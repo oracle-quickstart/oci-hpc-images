@@ -1,29 +1,33 @@
 ---
 - name: OCA for Oracle Linux
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'OracleLinux'
+
   block:
     - name: Stop cloud agent
-      service:
+      ansible.builtin.service:
         name: oracle-cloud-agent
         state: stopped
 
     - name: Check if agent.yml exists
-      stat:
+      ansible.builtin.stat:
         path: /etc/oracle-cloud-agent/agent.yml
       register: agent_file
 
     - name: Read the agent configuration
-      slurp:
+      ansible.builtin.slurp:
         path: /etc/oracle-cloud-agent/agent.yml
       register: r_myfile
       when: agent_file.stat.exists
 
-    - name: extract the data
-      set_fact:
+    - name: Extract the data
+      ansible.builtin.set_fact:
         mydata: "{{ r_myfile['content'] | b64decode | from_yaml }}"
       when: agent_file.stat.exists
 
     - name: Create configuration for core - modify params
-      set_fact:
+      ansible.builtin.set_fact:
         mydata: "{{ mydata | combine(newdata, recursive=True) }}"
       vars:
         newdata:
@@ -33,38 +37,35 @@
       when: agent_file.stat.exists
 
     - name: Write back to a file
-      copy:
+      ansible.builtin.copy:
         content: '{{ mydata | to_nice_yaml }}'
         dest: /etc/oracle-cloud-agent/agent.yml
+        mode: '0644'
       when: agent_file.stat.exists
 
     - name: Restart cloud agent
-      service:
+      ansible.builtin.service:
         name: oracle-cloud-agent
         state: restarted
       when: agent_file.stat.exists
 
-    - name: Unregister agent
-      command: osms unregister
+    - name: Unregister agent # noqa no-changed-when
+      ansible.builtin.command: osms unregister
       when: agent_file.stat.exists
 
     # Present in OL images prior to May/June 2020, later replaced with oracle cloud agent
-    - name: Check if osms-agent service exist
-      shell: service osms-agent status
+    - name: Check if osms-agent service exist # noqa no-changed-when command-instead-of-shell command-instead-of-module
+      ansible.builtin.shell: service osms-agent status
       register: osms_agent_status
       failed_when: not(osms_agent_status.rc == 3 or osms_agent_status.rc == 0 or osms_agent_status.rc == 4)
 
-    - name: disable osms-agent.service
-      service:
+    - name: Disable osms-agent.service
+      ansible.builtin.service:
         name: osms-agent
         state: stopped
-        enabled: no
+        enabled: false
       when: (osms_agent_status.rc == 0 or osms_agent_status.rc == 3)
 
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution == 'OracleLinux'
-    
 # Disable updater.
 # We do this so customers won't be impacted should the agent get upgraded when
 # they don't expect it. Some of the plugins (e.g. HPC) can cause network or
@@ -87,16 +88,16 @@
 - name: Disable OCA updater
   block:
     - name: Read the agent configuration
-      slurp:
+      ansible.builtin.slurp:
         path: /etc/oracle-cloud-agent/updater.yml
       register: oca_updater_file_contents
 
-    - name: extract the data
-      set_fact:
+    - name: Extract the data
+      ansible.builtin.set_fact:
         mydata: "{{ oca_updater_file_contents['content'] | b64decode | from_yaml }}"
 
     - name: Create configuration for core - modify params
-      set_fact:
+      ansible.builtin.set_fact:
         mydata: "{{ mydata | combine(newdata, recursive=True) }}"
       vars:
         newdata:
@@ -104,6 +105,7 @@
             upgrade_interval: -1
 
     - name: Write back to a file
-      copy:
+      ansible.builtin.copy:
         content: '{{ mydata | to_nice_yaml }}'
         dest: /etc/oracle-cloud-agent/updater.yml
+        mode: '0644'

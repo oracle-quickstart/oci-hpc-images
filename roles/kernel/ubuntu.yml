@@ -1,0 +1,56 @@
+- name: Kernel set version for Ubuntu 22
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+  block:
+
+    # Prefer the generic kernel flavor over oracle *before* we install the
+    # generic kernel flavor so update-grub pick it during installation.
+    - name: Prefer the generic kernel flavor over oracle
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub.d/10_linux_flavour.cfg
+        create: true
+        regexp: '^GRUB_FLAVOUR_ORDER='
+        line: 'GRUB_FLAVOUR_ORDER="generic"'
+
+    - name: Remove Oracle HWE kernel
+      ansible.builtin.apt:
+        name:
+          - linux-image-*-oracle
+          - linux-modules-*-oracle
+          - linux-modules-extra-*-oracle
+          - linux-oracle-*
+          - linux-headers-*-oracle
+        state: absent
+        purge: true
+        autoremove: true
+
+    - name: Install linux-image and headers
+      ansible.builtin.apt:
+        name:
+          - "linux-image-{{ ubuntu_kernel_version }}-generic"
+          - 'linux-headers-{{ ubuntu_kernel_version }}-generic'
+        state: present
+        install_recommends: true
+      when: ubuntu_kernel_version is defined
+
+    - name: Install linux-image and headers
+      ansible.builtin.apt:
+        name:
+          - "linux-image-generic"
+          - 'linux-headers-generic'
+        state: present
+        install_recommends: true
+      when: ubuntu_kernel_version is not defined
+
+    - name: Pin the kernel packages
+      ansible.builtin.copy:
+        content: |
+          Package: linux-*
+          Pin: version *
+          Pin-Priority: -1
+      dest: /etc/apt/preferences.d/00__pin_kernel
+
+    - name: Reboot to install kernel updates
+      reboot:
+        reboot_timeout: 900

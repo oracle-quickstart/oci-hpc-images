@@ -1,0 +1,13 @@
+- name: AMD changes for gc_thresh settings
+  block:
+    - name: Change gc_thresh settings
+      copy:
+        dest: "/etc/sysctl.d/99-oci-gpu-tuning.conf"
+        content: |
+          net.ipv4.neigh.default.gc_thresh1=32768
+          net.ipv4.neigh.default.gc_thresh2=65535
+          net.ipv4.neigh.default.gc_thresh3=131072
+    - name: Run sysctl
+      shell: "sysctl -p"
+  when:
+    - "'amd' in options or 'nvidia' in options"

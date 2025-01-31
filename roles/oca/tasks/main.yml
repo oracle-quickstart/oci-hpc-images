@@ -1,5 +1,6 @@
 ---
 - name: Edit the shapes.json
+  when: "'use_plugins' in options"
   block:
 #    - name: Edit the shapes.json file
           #      copy:
@@ -12,35 +13,40 @@
           #        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/shapes.json'
           #      when : ansible_distribution == 'Ubuntu'
     - name: Edit the shapes.json file
-      copy:
+      ansible.builtin.copy:
         src: 'rdma_network.json'
         dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+        mode: '0644'
       when: ansible_os_family == 'RedHat'
+
     - name: Edit the shapes.json file
-      copy:
+      ansible.builtin.copy:
         src: 'rdma_network_ubuntu.json'
         dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
-      when : ansible_distribution == 'Ubuntu'
+        mode: '0644'
+      when: ansible_distribution == 'Ubuntu'
 
-    - name: Install latest OCA for OL
-      yum:
-        name: oracle-cloud-agent 
+    - name: Install latest OCA for OL # noqa package-latest
+      ansible.builtin.yum:
+        name: oracle-cloud-agent
         state: latest
-        disable_gpg_check: yes
+        disable_gpg_check: true
       when:
         - ansible_os_family == 'RedHat'
+
     - name: Install yum-plugin-versionlock for OL7
-      yum:
+      ansible.builtin.dnf:
         name: yum-plugin-versionlock
-        state: latest
-        disable_gpg_check: yes
+        state: present
+        disable_gpg_check: true
       when:
         - ansible_os_family == 'RedHat' and ansible_distribution_major_version == '7'
+
     - name: Install yum-plugin-versionlock for OL8
-      yum:
+      ansible.builtin.dnf:
         name: python3-dnf-plugin-versionlock
-        state: latest
-        disable_gpg_check: yes
+        state: present
+        disable_gpg_check: true
       when:
         - ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8'
 
@@ -51,16 +57,16 @@
       when:
         - ansible_os_family == 'RedHat'
 
-    - name: Snap update
-      shell: "sudo snap refresh --channel=1.42.x/stable oracle-cloud-agent"
-      when : ansible_distribution == 'Ubuntu'
+    - name: Snap update # noqa command-instead-of-shell no-changed-when
+      ansible.builtin.shell: "sudo snap refresh --channel=1.42.x/stable oracle-cloud-agent"
+      when: ansible_distribution == 'Ubuntu'
 
-    - name: Hold Oracle cloud-agent
-      shell: "sudo snap refresh --hold=forever oracle-cloud-agent"
-      when : ansible_distribution == 'Ubuntu'
+    - name: Hold Oracle cloud-agent # noqa command-instead-of-shell no-changed-when
+      ansible.builtin.shell: "sudo snap refresh --hold=forever oracle-cloud-agent"
+      when: ansible_distribution == 'Ubuntu'
+
     - name: Disable OCA updater
-      replace:
+      ansible.builtin.replace:
         path: /etc/oracle-cloud-agent/updater.yml
         regexp: 'upgrade_interval: 3600'
         replace: 'upgrade_interval: -1'
-  when: "'use_plugins' in options"

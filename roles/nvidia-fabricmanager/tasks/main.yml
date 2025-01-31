@@ -1,28 +1,19 @@
 ---
-- name: Install NVIDIA fabric manager for RHEL 7
-  yum:
+- name: Install NVIDIA fabric manager for Oracle Linux and similar
+  ansible.builtin.dnf:
     name: nvidia-fabricmanager-{{ nvidia_driver_version }}
-    state: latest
+    state: present
   when:
     - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version == '7'
-
-- name: Install NVIDIA fabric manager for RHEL 8
-  dnf:
-    name: nvidia-fabricmanager-{{ nvidia_driver_version }}
-    state: latest
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version == '8'
 
 - name: Install NVIDIA fabric manager for Ubuntu
-  apt:
+  ansible.builtin.apt:
     name: nvidia-fabricmanager-{{ nvidia_driver_version }}
     state: present
   when:
     - ansible_distribution == 'Ubuntu'
 
 - name: Enable NVIDIA fabric manager service
-  systemd:
+  ansible.builtin.systemd:
     name: nvidia-fabricmanager
-    enabled: yes
+    enabled: true
