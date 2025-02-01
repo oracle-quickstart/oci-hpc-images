@@ -12,6 +12,7 @@
         create: true
         regexp: '^GRUB_FLAVOUR_ORDER='
         line: 'GRUB_FLAVOUR_ORDER="generic"'
+        mode: "0644"
 
     - name: Remove Oracle HWE kernel
       ansible.builtin.apt:
@@ -49,8 +50,9 @@
           Package: linux-*
           Pin: version *
           Pin-Priority: -1
-      dest: /etc/apt/preferences.d/00__pin_kernel
+        dest: /etc/apt/preferences.d/00_pin_kernel
+        mode: "0644"
 
     - name: Reboot to install kernel updates
-      reboot:
+      ansible.builtin.reboot:
         reboot_timeout: 900

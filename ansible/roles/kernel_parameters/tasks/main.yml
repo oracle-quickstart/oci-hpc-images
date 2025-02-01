@@ -65,4 +65,3 @@
 
 - name: Flush handlers to update grub
   ansible.builtin.meta: flush_handlers
-  

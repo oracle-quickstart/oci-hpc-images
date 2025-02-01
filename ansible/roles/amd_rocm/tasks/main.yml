@@ -12,11 +12,6 @@
         mode: '0755'
       register: amd_rocm_tmp_archive
 
-    - name: Install headers using meta package
-      ansible.builtin.apt:
-        pkg:
-          - linux-headers-generic
-
     - name: Update apt-get repo and cache
       ansible.builtin.apt:
         update_cache: true
@@ -33,10 +28,6 @@
         yes | amdgpu-install --usecase=graphics,rocm
       args:
         chdir: "/tmp"
-
-    - name: Reboot to install kernel updates
-      ansible.builtin.reboot:
-        reboot_timeout: 900
 
 - name: Add ubuntu to render and video groups
   when:

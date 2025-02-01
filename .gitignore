@@ -1,2 +1,3 @@
 .vscode/*
 default-local.pkr.hcl
+oci_oracle.pem

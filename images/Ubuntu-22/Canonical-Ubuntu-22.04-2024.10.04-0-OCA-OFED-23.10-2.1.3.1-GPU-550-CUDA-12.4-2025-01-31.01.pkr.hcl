@@ -25,11 +25,11 @@ variable "image_base_name" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,upgrade,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0-131.135"]
 }
 
 variable "region" {
@@ -67,7 +67,7 @@ variable "access_cfg_file" {
 
 variable "access_cfg_file_account" {
   type    = string
-  default = "/home/opc/.oci/config"
+  default = "DEFAULT"
 }
 
 variable "use_instance_principals" { 

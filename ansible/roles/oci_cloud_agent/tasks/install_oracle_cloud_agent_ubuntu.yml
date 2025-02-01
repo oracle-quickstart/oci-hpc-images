@@ -1,5 +1,5 @@
-- name: Install specific version of OCI Clud Agent on Ubuntu from Snapcraft
-  when: ansible_distribution == 'Ubuntu' and 'oci_cloud_agent_version_ubuntu' is defined
+- name: Install specific version of OCI Cloud Agent on Ubuntu from Snapcraft
+  when: ansible_distribution == 'Ubuntu' and oci_cloud_agent_version_ubuntu is defined
 
 # version format for Ubuntu
 # oci_cloud_agent_version: 1.40.0-12
@@ -14,7 +14,7 @@
         state: present
 
 - name: Install specific version of OCI Clud Agent on Ubuntu from URL
-  when: ansible_distribution == 'Ubuntu' and 'oci_cloud_agent_version_ubuntu' is defined and oca_download_url is defined
+  when: ansible_distribution == 'Ubuntu' and oci_cloud_agent_version_ubuntu is defined and oca_download_url is defined
 
 # version format for Ubuntu
 # oca_download_url: https://objectstorage.us-phoenix-1.oraclecloud.com/p/.../n/.../b/agent_test/o/1.40.0/2/

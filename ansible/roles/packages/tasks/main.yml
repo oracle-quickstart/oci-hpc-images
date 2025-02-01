@@ -3,7 +3,6 @@
   when:
     - ansible_os_family == 'RedHat'
 
-
   block:
     - name: Ensure Oracle Cloud Agent is stopped to prevent running yum
       ansible.builtin.systemd:
@@ -97,126 +96,9 @@
         name: '*'
         state: latest
       when:
-        - "options is defined"
-        - "'upgrade' in options"
+        - options is defined and 'upgrade' in options
 
     - name: Install CMake
       ansible.builtin.apt:
         name: cmake
-        state: present
-
-
-- name: Kernel changes AMD
-  # This should NOT be in this role
-
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
-    - "'amd' in options"
-
-  block:
-
-    # Prefer the generic kernel flavor over oracle *before* we install the
-    # generic kernel flavor so update-grub pick it during installation.
-    - name: Prefer the generic kernel flavor over oracle
-      ansible.builtin.lineinfile:
-        path: /etc/default/grub.d/10_linux_flavour.cfg
-        create: true
-        regexp: '^GRUB_FLAVOUR_ORDER='
-        line: 'GRUB_FLAVOUR_ORDER="generic"'
-        mode: '0644'
-
-    - name: Install linux-image-generic
-      ansible.builtin.apt:
-        name:
-          - 'linux-image-generic'
-          - 'linux-headers-generic'
-        state: present
-
-    - name: Delete 6.5.0
-      ansible.builtin.shell: |
-        rm initrd.img
-        rm vmlinuz
-        rm -f *6.5.0*
-        rm initrd.img.old
-        rm vmlinuz.old
-        ln -sf initrd.img-5.15.0-91-generic initrd.img
-        ln -sf vmlinuz-5.15.0-91-generic vmlinuz
-        ls -lat
-      args:
-        chdir: "/boot"
-      changed_when: true
-
-    - name: Wait 30 seconds
-      ansible.builtin.pause:
-        seconds: 30
-
-    - name: Update grub
-      ansible.builtin.command:
-        cmd: "update-grub"
-      args:
-        chdir: "/boot"
-      changed_when: false
-
-    - name: Wait 30 seconds
-      ansible.builtin.pause:
-        seconds: 30
-
-- name: Remaining Packages for Ubuntu
-  when:
-    - ansible_distribution == 'Ubuntu'
-
-  block:
-
-    - name: Reboot to install kernel updates
-      ansible.builtin.reboot:
-        reboot_timeout: 900
-      when:
-        - "options is defined"
-        - "'upgrade' in options"
-
-    - name: Ensure Oracle Cloud Agent is stopped to prevent running apt
-      ansible.builtin.systemd:
-        name: snap.oracle-cloud-agent.oracle-cloud-agent
-        state: stopped
-
-    - name: Wait for automatic system updates to complete # noqa no-changed-when
-      ansible.builtin.shell: while pgrep apt; do sleep 10; done;
-
-    - name: Install numactl
-      ansible.builtin.apt:
-        name: 'numactl'
-        state: present
-
-
-- name: Remove linux-image to stop kernel updates
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - "'amd' not in options"
-  block:
-
-    - name: Remove linux-image-generic to stop kernel updates
-      ansible.builtin.apt:
-        name: 'linux-image-generic'
-        state: absent
-
-    - name: Remove linux-image to stop kernel updates
-      ansible.builtin.apt:
-        name: 'linux-image'
-        state: absent
-
-- name: Additional packages AMD on Ubuntu
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
-    - "'amd' in options"
-  block:
-
-    - name: Install packages
-      ansible.builtin.apt:
-        name:
-          - jq
-          - pdsh
-          - unzip
-          - alien
         state: present
