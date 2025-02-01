@@ -126,6 +126,8 @@
 
 - name: Reboot and cleanup
   hosts: all
+  any_errors_fatal: true
+  become: true
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
         name: dracut
