@@ -14,18 +14,6 @@
         line: 'GRUB_FLAVOUR_ORDER="generic"'
         mode: "0644"
 
-    - name: Remove Oracle HWE kernel
-      ansible.builtin.apt:
-        name:
-          - linux-image-*-oracle
-          - linux-modules-*-oracle
-          - linux-modules-extra-*-oracle
-          - linux-oracle-*
-          - linux-headers-*-oracle
-        state: absent
-        purge: true
-        autoremove: true
-
     - name: Install linux-image and headers
       ansible.builtin.apt:
         name:
@@ -43,6 +31,20 @@
         state: present
         install_recommends: true
       when: ubuntu_kernel_version is not defined
+
+    - name: Remove Oracle HWE kernel
+      ansible.builtin.apt:
+        name:
+          - linux-image-*-oracle
+          - linux-modules-*-oracle
+          - linux-modules-extra-*-oracle
+          - linux-oracle-*
+          - linux-headers-*-oracle
+          - linux-oracle
+          - linux-headers-oracle
+        state: absent
+        purge: true
+        autoremove: true
 
     - name: Pin the kernel packages
       ansible.builtin.copy:
