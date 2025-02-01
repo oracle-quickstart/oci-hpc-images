@@ -1,6 +1,0 @@
-{
-    "ansible.python.interpreterPath": "/home/mkk/.pyenv/versions/p3/bin/python",
-    "yaml.schemas": {
-        "https://raw.githubusercontent.com/ansible/ansible-lint/main/src/ansiblelint/schemas/ansible.json#/$defs/tasks": "file:///home/mkk/Documents/Work/Code/imaging/ansible_hpc/roles/nvidia-nccl/tasks/main_manual.yml"
-    }
-}
