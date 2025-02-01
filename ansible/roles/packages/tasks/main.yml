@@ -4,14 +4,6 @@
     - ansible_os_family == 'RedHat'
 
   block:
-    - name: Ensure Oracle Cloud Agent is stopped to prevent running yum
-      ansible.builtin.systemd:
-        name: '{{ item }}.service'
-        state: stopped
-      with_items:
-        - oracle-cloud-agent
-        - oracle-cloud-agent-updater
-
     - name: Ensure latest microcode_ctl is installed
       ansible.builtin.dnf:
         name:
@@ -58,12 +50,6 @@
     - ansible_distribution == 'Ubuntu'
 
   block:
-
-    - name: Ensure Oracle Cloud Agent is stopped to prevent running apt
-      ansible.builtin.systemd:
-        name: snap.oracle-cloud-agent.oracle-cloud-agent
-        state: stopped
-
     - name: Wait for automatic system updates to complete
       ansible.builtin.shell: while pgrep apt; do sleep 10; done;
       changed_when: false
@@ -78,23 +64,27 @@
     - name: Remove unattended-upgrades
       ansible.builtin.apt:
         name: unattended-upgrades
+        lock_timeout: 300
         state: absent
 
     - name: Update apt repo and cache
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 0
+        lock_timeout: 300
 
     - name: Update apt-get repo and cache
       ansible.builtin.apt:
         update_cache: true
         force_apt_get: true
         cache_valid_time: 0
+        lock_timeout: 300
 
     - name: Upgrade all packages # noqa package-latest
       ansible.builtin.apt:
         name: '*'
         state: latest
+        lock_timeout: 300
       when:
         - options is defined and 'upgrade' in options
 
@@ -102,3 +92,4 @@
       ansible.builtin.apt:
         name: cmake
         state: present
+        lock_timeout: 300

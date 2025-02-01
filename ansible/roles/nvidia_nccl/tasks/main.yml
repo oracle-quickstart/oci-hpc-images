@@ -16,6 +16,7 @@
       - "libnccl2={{ nccl_package_version }}"
       - "libnccl-dev={{ nccl_package_version }}"
     state: present
+    lock_timeout: 300
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when:
     - ansible_distribution == 'Ubuntu'

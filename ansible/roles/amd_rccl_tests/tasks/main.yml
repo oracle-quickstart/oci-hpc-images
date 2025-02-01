@@ -18,13 +18,12 @@
         state: directory
         mode: "0755"
 
-    - name: Install cmake
+    - name: Install cmake and libstdc++-12-dev
       ansible.builtin.apt:
-        name: cmake
-
-    - name: Install libstdc
-      ansible.builtin.apt:
-        name: libstdc++-12-dev
+        name:
+          - cmake
+          - libstdc++-12-dev
+        lock_timeout: 300
 
     - name: Set up CXX # noqa no-changed-when
       ansible.builtin.shell: |
@@ -37,7 +36,6 @@
         chdir: "/opt/rccl/build"
         params:
           NUM_THREADS: 8
-
 
     - name: Clone rccl tests
       ansible.builtin.git:

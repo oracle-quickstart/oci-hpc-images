@@ -255,6 +255,7 @@
           - libnuma-dev
           - environment-modules
         state: present
+        lock_timeout: 300
 
     - name: Create temporary directory to extract Mellanox OFED installer
       ansible.builtin.tempfile:
@@ -316,6 +317,7 @@
           - libnuma-dev
           - environment-modules
         state: present
+        lock_timeout: 300
 
     - name: Create temporary directory to extract Mellanox OFED installer
       ansible.builtin.tempfile:

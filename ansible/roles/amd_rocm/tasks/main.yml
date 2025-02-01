@@ -17,10 +17,12 @@
         update_cache: true
         force_apt_get: true
         cache_valid_time: 3600
+        lock_timeout: 300
 
     - name: Install amdgpu
       ansible.builtin.apt:
         deb: "{{ amd_rocm_tmp_archive.dest }}"
+        lock_timeout: 300
 
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |

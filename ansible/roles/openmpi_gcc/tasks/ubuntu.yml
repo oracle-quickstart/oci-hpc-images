@@ -5,6 +5,7 @@
       ansible.builtin.apt:
         name: libiberty-dev
         state: present
+        lock_timeout: 300
 
     - name: Download and unpack OpenMPI
       ansible.builtin.unarchive:

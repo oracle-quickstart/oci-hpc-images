@@ -55,4 +55,5 @@
     - name: Install CUDA toolkit for Ubuntu
       ansible.builtin.apt:
         name: "{{ cuda_toolkit_version }}"
+        lock_timeout: 300
       environment: "{{ proxy_env if proxy_env is defined else {} }}"

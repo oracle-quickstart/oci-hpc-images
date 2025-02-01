@@ -10,6 +10,7 @@
   ansible.builtin.apt:
     name: nvidia-fabricmanager-{{ nvidia_driver_version }}
     state: present
+    lock_timeout: 300
   when:
     - ansible_distribution == 'Ubuntu'
 

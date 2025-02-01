@@ -18,3 +18,4 @@
         name:
           - libcudnn8
           - libcudnn8-dev
+        lock_timeout: 300

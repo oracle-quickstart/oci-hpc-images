@@ -4,14 +4,10 @@
     - ansible_distribution == 'Ubuntu'
     - ansible_distribution_major_version == '22'
   block:
-    - name: Install openmpi-bin
+    - name: Install OpenMPI packages
       ansible.builtin.apt:
-        name: openmpi-bin
-
-    - name: Install openmpi-common
-      ansible.builtin.apt:
-        name: openmpi-common
-
-    - name: Install libopenmpi-dev
-      ansible.builtin.apt:
-        name: libopenmpi-dev
+        name:
+          - openmpi-bin
+          - openmpi-common
+          - libopenmpi-dev
+      lock_timeout: 300

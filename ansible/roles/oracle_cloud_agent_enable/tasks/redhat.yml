@@ -1,0 +1,13 @@
+- name: Enable Oracle Cloud Agent
+  ansible.builtin.systemd:
+    name: oracle-cloud-agent
+    enabled: true
+    no_block: true
+  when: ansible_distribution == 'OracleLinux'
+
+- name: Enable Oracle Cloud Agent Updater
+  ansible.builtin.systemd:
+    name: oracle-cloud-agent-updater
+    enabled: true
+    no_block: true
+  when: ansible_distribution == 'OracleLinux'

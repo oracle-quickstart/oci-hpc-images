@@ -9,3 +9,4 @@
         update_cache: true
         name: gpg-agent
         state: present
+        lock_timeout: 300

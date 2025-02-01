@@ -22,6 +22,7 @@
           - 'linux-tools-{{ ubuntu_kernel_version }}-generic'
         state: present
         install_recommends: true
+        lock_timeout: 300
       when: ubuntu_kernel_version is defined
 
     - name: Install linux-image and headers
@@ -32,6 +33,7 @@
           - "linux-tools-generic"
         state: present
         install_recommends: true
+        lock_timeout: 300
       when: ubuntu_kernel_version is not defined
       register: kernel_packages
 
@@ -60,5 +62,6 @@
         state: absent
         purge: true
         autoremove: true
+        lock_timeout: 300
       notify:
         - Reboot

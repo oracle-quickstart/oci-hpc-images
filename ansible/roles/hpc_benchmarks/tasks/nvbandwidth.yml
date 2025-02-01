@@ -27,6 +27,7 @@
         name:
           - libboost-program-options-dev
         state: present
+        lock_timeout: 300
       become: true
       when: ansible_distribution == 'Ubuntu'
 

@@ -28,5 +28,6 @@
 - name: Install Mellanox MFT update (apt)
   ansible.builtin.apt:
     deb: "/tmp/{{ mft_version }}-x86_64-deb/DEBS/{{ mft_version | replace('-', '_', 1) }}_amd64.deb"
+    lock_timeout: 300
   when:
     - ansible_os_family == 'Debian'

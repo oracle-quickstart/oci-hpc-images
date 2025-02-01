@@ -5,6 +5,7 @@
       - libopenscap8
       - bzip2
     state: present
+    lock_timeout: 300
 
 - name: Download and unpack oval data
   ansible.builtin.get_url:

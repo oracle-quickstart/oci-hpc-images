@@ -20,9 +20,9 @@
 
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
-        name: ssh
+        name: oracle_cloud_agent_update_disable
     - ansible.builtin.import_role: # noqa name[missing]
-        name: oci_cloud_agent
+        name: ssh
     - ansible.builtin.import_role: # noqa name[missing]
         name: packages
     - ansible.builtin.import_role: # noqa name[missing]
@@ -129,5 +129,7 @@
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
         name: dracut
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oracle_cloud_agent_enable
     - ansible.builtin.import_role: # noqa name[missing]
         name: cleanup

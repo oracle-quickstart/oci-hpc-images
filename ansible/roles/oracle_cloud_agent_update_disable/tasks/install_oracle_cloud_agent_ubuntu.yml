@@ -30,3 +30,19 @@
     - name: Install Oracle Cloud Agent Snap from URL # noqa no-changed-when
     # since the snap is downloaded we have to install using command
       ansible.builtin.command: "snap install /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap --dangerous --classic"
+
+- name: Stop Oracle Cloud Agent (Ubuntu)
+  ansible.builtin.systemd:
+    name: snap.oracle-cloud-agent.oracle-cloud-agent
+    state: stopped
+    enabled: false
+    no_block: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Stop Oracle Cloud Updater (Ubuntu)
+  ansible.builtin.systemd:
+    name: snap.oracle-cloud-agent.oracle-cloud-agent-updater
+    state: stopped
+    enabled: false
+    no_block: true
+  when: ansible_distribution == 'Ubuntu'
