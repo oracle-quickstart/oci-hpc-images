@@ -19,18 +19,18 @@
   ansible.builtin.include_tasks: gpuburn.yml
   when: (options is defined) and ('nvidia' in options)
 
-- name: Install CUDA samples
-  ansible.builtin.include_tasks: cuda-samples.yml
-  when:
-    - "options is defined"
-    - "'nvidia' in options"
+# - name: Install CUDA samples
+#   ansible.builtin.include_tasks: cuda-samples.yml
+#   when:
+#     - "options is defined"
+#     - "'nvidia' in options"
 
-- name: Install nvbandwidth
-  ansible.builtin.include_tasks: nvbandwidth.yml
-  when:
-    - "options is defined"
-    - "'nvidia' in options"
-    - "(ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8') or ansible_distribution == 'Ubuntu'"
+# - name: Install nvbandwidth
+#   ansible.builtin.include_tasks: nvbandwidth.yml
+#   when:
+#     - "options is defined"
+#     - "'nvidia' in options"
+#     - "(ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8') or ansible_distribution == 'Ubuntu'"
 
 - name: Install STREAM
   ansible.builtin.include_tasks: stream.yml

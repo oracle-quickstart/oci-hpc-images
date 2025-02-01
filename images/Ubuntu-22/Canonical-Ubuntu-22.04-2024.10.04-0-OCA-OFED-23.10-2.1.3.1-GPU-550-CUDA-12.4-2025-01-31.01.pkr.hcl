@@ -29,7 +29,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0-131.135"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0-131"]
 }
 
 variable "region" {

@@ -14,11 +14,12 @@
         line: 'GRUB_FLAVOUR_ORDER="generic"'
         mode: "0644"
 
-    - name: Install linux-image and headers
+    - name: Install linux-image and headers (specific version)
       ansible.builtin.apt:
         name:
           - "linux-image-{{ ubuntu_kernel_version }}-generic"
           - 'linux-headers-{{ ubuntu_kernel_version }}-generic'
+          - 'linux-tools-{{ ubuntu_kernel_version }}-generic'
         state: present
         install_recommends: true
       when: ubuntu_kernel_version is defined
@@ -27,24 +28,12 @@
       ansible.builtin.apt:
         name:
           - "linux-image-generic"
-          - 'linux-headers-generic'
+          - "linux-headers-generic"
+          - "linux-tools-generic"
         state: present
         install_recommends: true
       when: ubuntu_kernel_version is not defined
-
-    - name: Remove Oracle HWE kernel
-      ansible.builtin.apt:
-        name:
-          - linux-image-*-oracle
-          - linux-modules-*-oracle
-          - linux-modules-extra-*-oracle
-          - linux-oracle-*
-          - linux-headers-*-oracle
-          - linux-oracle
-          - linux-headers-oracle
-        state: absent
-        purge: true
-        autoremove: true
+      register: kernel_packages
 
     - name: Pin the kernel packages
       ansible.builtin.copy:
@@ -55,6 +44,21 @@
         dest: /etc/apt/preferences.d/00_pin_kernel
         mode: "0644"
 
-    - name: Reboot to install kernel updates
-      ansible.builtin.reboot:
-        reboot_timeout: 900
+    - name: Remove Oracle HWE kernel
+      ansible.builtin.apt:
+        name:
+          - linux-image-*-oracle
+          - linux-modules-*-oracle
+          - linux-modules-extra-*-oracle
+          - linux-oracle-*
+          - linux-headers-*-oracle
+          - linux-oracle-*-tools-*
+          - linux-tools-*oracle
+          - linux-image-oracle
+          - linux-oracle
+          - linux-headers-oracle
+        state: absent
+        purge: true
+        autoremove: true
+      notify:
+        - Reboot

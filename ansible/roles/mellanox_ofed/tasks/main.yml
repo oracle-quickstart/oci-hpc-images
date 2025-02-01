@@ -91,7 +91,7 @@
         remote_src: true
 
     - name: Install Mellanox OFED
-      ansible.builtin.command: >
+      ansible.builtin.shell: >
         {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64/mlnxofedinstall
         --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
       args:
@@ -192,7 +192,7 @@
         remote_src: true
 
     - name: Install Mellanox OFED
-      ansible.builtin.command: >
+      ansible.builtin.shell: >
         {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-x86_64/mlnxofedinstall
         --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
       args:
@@ -269,9 +269,8 @@
         remote_src: true
 
     - name: Install Mellanox OFED
-      ansible.builtin.command: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu20.04-x86_64/mlnxofedinstall
-        --force --all --without-fw-update
+      ansible.builtin.shell: >
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu20.04-x86_64/mlnxofedinstall --force --all --without-fw-update
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"
@@ -331,9 +330,8 @@
         remote_src: true
 
     - name: Install Mellanox OFED
-      ansible.builtin.command: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64/mlnxofedinstall
-        --force --all --without-fw-update
+      ansible.builtin.shell: >
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64/mlnxofedinstall --force --all --without-fw-update
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"

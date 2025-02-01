@@ -18,7 +18,7 @@
         dest: "{{ benchmark_base_path }}/stream"
         force: true
         version: "{{ stream_version | default('master') }}"
-      become_user: opc
+      become_user: "{{ user}}"
       become: true
 
     - name: Build STREAM # noqa no-changed-when

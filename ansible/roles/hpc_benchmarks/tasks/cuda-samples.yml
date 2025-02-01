@@ -8,8 +8,8 @@
         path: "{{ benchmark_base_path }}/cuda-samples"
         state: directory
         mode: "0755"
-        owner: "opc"
-        group: "opc"
+        owner: "{{ user }}"
+        group: "{{ user }}"
       become: true
 
     - name: Clone CUDA Samples
@@ -21,12 +21,12 @@
       become_user: "{{ user }}"
       become: true
 
-    - name: Build CUDA Samples
-      environment:
-        MAKEFLAGS: "-j 8"
-      community.general.make:
-        chdir: "{{ benchmark_base_path }}/cuda-samples"
-        params:
-          SMS: "80 90"
-      become_user: "{{ user }}"
-      become: true
+    # - name: Build CUDA Samples
+    #   environment:
+    #     MAKEFLAGS: "-j 16"
+    #   community.general.make:
+    #     chdir: "{{ benchmark_base_path }}/cuda-samples"
+    #     params:
+    #       SMS: "80 90"
+    #   become_user: "{{ user }}"
+    #   become: true
