@@ -212,11 +212,11 @@
     - "'amd' in options"
   block:
 
-    - name: Install jq
+    - name: Install packages
       ansible.builtin.apt:
         name:
           - jq
           - pdsh
           - unzip
           - alien
-      state: present
+        state: present

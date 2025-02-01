@@ -1,0 +1,32 @@
+- name: Install specific version of OCI Clud Agent on Ubuntu from Snapcraft
+  when: ansible_distribution == 'Ubuntu' and 'oci_cloud_agent_version_ubuntu' is defined
+
+# version format for Ubuntu
+# oci_cloud_agent_version: 1.40.0-12
+
+  block:
+    - name: Install Oracle Cloud Agent Snap from channel
+      community.general.snap:
+        name: oracle-cloud-agent
+        channel: "{{ oci_cloud_agent_version_ubuntu }}"
+        classic: true
+        dangerous: true
+        state: present
+
+- name: Install specific version of OCI Clud Agent on Ubuntu from URL
+  when: ansible_distribution == 'Ubuntu' and 'oci_cloud_agent_version_ubuntu' is defined and oca_download_url is defined
+
+# version format for Ubuntu
+# oca_download_url: https://objectstorage.us-phoenix-1.oraclecloud.com/p/.../n/.../b/agent_test/o/1.40.0/2/
+# oci_cloud_agent_version: 1.40.0-12
+
+  block:
+    - name: Download Oracle Cloud Agent Snap from URL
+      ansible.builtin.get_url:
+        url: "{{ oca_download_url }}/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap"
+        dest: "/tmp/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap"
+        mode: "0755"
+
+    - name: Install Oracle Cloud Agent Snap from URL # noqa no-changed-when
+    # since the snap is downloaded we have to install using command
+      ansible.builtin.command: "snap install /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap --dangerous --classic"

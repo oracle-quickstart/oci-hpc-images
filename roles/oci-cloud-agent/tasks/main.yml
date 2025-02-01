@@ -1,111 +1,18 @@
----
-- name: OCA for Oracle Linux
-  when:
-    - ansible_os_family == 'RedHat'
-    - ansible_distribution == 'OracleLinux'
+- name: Disable OSMS on Oracle Linux
+  ansible.builtin.include_tasks:
+    file: osms.yml
+  when: ansible_distribution == 'OracleLinux'
 
-  block:
-    - name: Stop cloud agent
-      ansible.builtin.service:
-        name: oracle-cloud-agent
-        state: stopped
+- name: Install OCI Cloud Agent on Oracle Linux
+  ansible.builtin.include_tasks:
+    file: install_oracle_cloud_agent_el.yml
+  when: ansible_distribution == 'OracleLinux'
 
-    - name: Check if agent.yml exists
-      ansible.builtin.stat:
-        path: /etc/oracle-cloud-agent/agent.yml
-      register: agent_file
+- name: Install OCI Cloud Agent on Ubuntu
+  ansible.builtin.include_tasks:
+    file: install_oracle_cloud_agent_ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
 
-    - name: Read the agent configuration
-      ansible.builtin.slurp:
-        path: /etc/oracle-cloud-agent/agent.yml
-      register: r_myfile
-      when: agent_file.stat.exists
-
-    - name: Extract the data
-      ansible.builtin.set_fact:
-        mydata: "{{ r_myfile['content'] | b64decode | from_yaml }}"
-      when: agent_file.stat.exists
-
-    - name: Create configuration for core - modify params
-      ansible.builtin.set_fact:
-        mydata: "{{ mydata | combine(newdata, recursive=True) }}"
-      vars:
-        newdata:
-          plugins:
-            osms:
-              disabled: true
-      when: agent_file.stat.exists
-
-    - name: Write back to a file
-      ansible.builtin.copy:
-        content: '{{ mydata | to_nice_yaml }}'
-        dest: /etc/oracle-cloud-agent/agent.yml
-        mode: '0644'
-      when: agent_file.stat.exists
-
-    - name: Restart cloud agent
-      ansible.builtin.service:
-        name: oracle-cloud-agent
-        state: restarted
-      when: agent_file.stat.exists
-
-    - name: Unregister agent # noqa no-changed-when
-      ansible.builtin.command: osms unregister
-      when: agent_file.stat.exists
-
-    # Present in OL images prior to May/June 2020, later replaced with oracle cloud agent
-    - name: Check if osms-agent service exist # noqa no-changed-when command-instead-of-shell command-instead-of-module
-      ansible.builtin.shell: service osms-agent status
-      register: osms_agent_status
-      failed_when: not(osms_agent_status.rc == 3 or osms_agent_status.rc == 0 or osms_agent_status.rc == 4)
-
-    - name: Disable osms-agent.service
-      ansible.builtin.service:
-        name: osms-agent
-        state: stopped
-        enabled: false
-      when: (osms_agent_status.rc == 0 or osms_agent_status.rc == 3)
-
-# Disable updater.
-# We do this so customers won't be impacted should the agent get upgraded when
-# they don't expect it. Some of the plugins (e.g. HPC) can cause network or
-# host configuration changes.
-#
-# The updater is disabled by editing the "/etc/oracle-cloud-agent/updater.yml"
-# file.  The file looks like this:
-#
-# agent:
-#   upgrade_interval: 3600
-#   upgrade_init_delay: 3600
-#   upgrade_init_jitter: 120
-#   ...
-#
-# To disable updating, we change the "upgrade_interval" to -1
-#
-# There is no need to stop OCA when editing this file, but changes won't be
-# picked up until a restart.
-
-- name: Disable OCA updater
-  block:
-    - name: Read the agent configuration
-      ansible.builtin.slurp:
-        path: /etc/oracle-cloud-agent/updater.yml
-      register: oca_updater_file_contents
-
-    - name: Extract the data
-      ansible.builtin.set_fact:
-        mydata: "{{ oca_updater_file_contents['content'] | b64decode | from_yaml }}"
-
-    - name: Create configuration for core - modify params
-      ansible.builtin.set_fact:
-        mydata: "{{ mydata | combine(newdata, recursive=True) }}"
-      vars:
-        newdata:
-          agent:
-            upgrade_interval: -1
-
-    - name: Write back to a file
-      ansible.builtin.copy:
-        content: '{{ mydata | to_nice_yaml }}'
-        dest: /etc/oracle-cloud-agent/updater.yml
-        mode: '0644'
+- name: Disable OCA updates
+  ansible.builtin.include_tasks:
+    file: disable_oca_updates.yml

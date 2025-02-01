@@ -17,15 +17,10 @@
 # groups:
 #   groups define the variables (group_vars) to use with the roles
 
-  tasks:
-    - import_role:
-        name: resize_rootfs
+- name: General configuration
+  tasks: 
     - import_role:
         name: ssh
-    - import_role:
-        name: kernel-parameters
-    - import_role:
-        name: kernel-limits
     - import_role:
         name: oci-cloud-agent
     - import_role:
@@ -33,13 +28,32 @@
     - import_role:
         name: kernel
     - import_role:
+        name: kernel-parameters
+    - import_role:
+        name: kernel-limits
+    - import_role:
         name: oci-utils
     - import_role:
         name: nozeroconf
     - import_role:
+        name: disable-selinux
+    - import_role:
         name: mellanox-ofed
     - import_role:
+        name: mellanox-hpcx
+    - import_role:
         name: oci-hpc-packages
+    - import_role:
+        name: tuned
+      when: "'noselinux' in options"
+    - import_role:
+        name: openmpi-gcc
+      when: "'openmpi' in options"
+    - import_role:
+        name: systemd
+
+- name: AMD configuration
+  tasks:
     - import_role:
         name: amd-mpivars
       when: "'amd' in options"
@@ -61,25 +75,12 @@
     - import_role:
         name: amd-disclaimer
       when: "'amd' in options"
-#    - import_role:
-#        name: amd-open-mpi
-#      when: "'amd' in options"
     - import_role:
         name: amd-rccl-tests
       when: "'amd' in options"
-    - import_role:
-        name: tuned
-    - import_role:
-        name: disable-selinux
-      when: "'noselinux' in options"
-    - import_role:
-        name: mellanox-hpcx
-    - import_role:
-        name: intel-oneapi
-      when: "'intel-oneapi' in options"
-    - import_role:
-        name: openmpi-gcc
-      when: "'openmpi' in options"
+
+- name: NVIDIA configuration
+  tasks:
     - import_role:
         name: nvidia-driver
       when: "'nvidia' in options"
@@ -99,19 +100,24 @@
         name: nvidia-dcgm
       when: "'nvidia' in options and 'monitoring' in options"
     - import_role:
+        name: nccl-tuner
+      when: "'nvidia' in options"
+
+- name: GPU configuration
+  tasks:
+    - import_role:
+        name: gpu_tuning
+      when: "'nvidia' in options or 'amd' in options"
+
+- name: Benchmarks
+  tasks:
+    - import_role:
         name: hpc-benchmarks
       when: "'benchmarks' in options"
+
+- name: Reboot and cleanup
+  tasks:
     - import_role:
-        name: systemd
-        #    - import_role:
-        #        name: rttcc
-    - import_role:
-        name: oca
-    - import_role:
-        name: arp_settings
-    - import_role:
-        name: nccl-tuner
-    - import_role:
-        name: dracut
+        name: dracut    
     - import_role:
         name: cleanup

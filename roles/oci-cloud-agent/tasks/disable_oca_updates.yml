@@ -1,0 +1,5 @@
+- name: Disable OCA updater
+  ansible.builtin.replace:
+    path: /etc/oracle-cloud-agent/updater.yml
+    regexp: 'upgrade_interval: 3600'
+    replace: 'upgrade_interval: -1'

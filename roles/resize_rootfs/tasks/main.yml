@@ -5,6 +5,6 @@
 #
 # See https://docs.oracle.com/en-us/iaas/oracle-linux/oci-utils/index.htm#oci-growfs
 
-- name: Resize Root FS
-  shell: /usr/libexec/oci-growfs -y
+- name: Resize Root FS # noqa no-changed-when
+  ansible.builtin.command: /usr/libexec/oci-growfs -y
   when: ansible_distribution == "OracleLinux"

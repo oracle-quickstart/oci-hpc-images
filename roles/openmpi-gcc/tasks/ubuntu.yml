@@ -1,39 +1,44 @@
 ---
-- block:
-  - name: install OpenMPI prereqs
-    apt:
-      name: libiberty-dev
-      state: present
+- name: Install OpenMPI
+  block:
+    - name: Install OpenMPI prereqs
+      ansible.builtin.apt:
+        name: libiberty-dev
+        state: present
 
-  - name: download and unpack OpenMPI
-    unarchive:
-      src: "https://download.open-mpi.org/release/open-mpi/v{{ openmpi_release }}/openmpi-{{ openmpi_version }}.tar.gz"
-      dest: /tmp/
-      remote_src: yes
+    - name: Download and unpack OpenMPI
+      ansible.builtin.unarchive:
+        src: "https://download.open-mpi.org/release/open-mpi/v{{ openmpi_release }}/openmpi-{{ openmpi_version }}.tar.gz"
+        dest: /tmp/
+        remote_src: true
 
-  - name: configure and build OpenMPI
-    shell: |
-      LDFLAGS=-L/opt/{{ mellanox_hpcx_package }}/hcoll/lib LIBS=-locoms ./configure --prefix=/opt/openmpi-{{ openmpi_version }} --with-ucx=/opt/{{ mellanox_hpcx_package }}/ucx/ --with-hcoll=/opt/{{ mellanox_hpcx_package }}/hcoll --enable-mpirun-prefix-by-default --with-platform=contrib/platform/mellanox/optimized && make -j && make install
-    args:
-      chdir: "/tmp/openmpi-{{ openmpi_version }}"
-      creates: "/opt/openmpi-{{ openmpi_version }}"
-      executable: /bin/bash
+    - name: Configure and build OpenMPI
+      ansible.builtin.shell: >
+        LDFLAGS=-L/opt/{{ mellanox_hpcx_package }}/hcoll/lib LIBS=-locoms
+        ./configure --prefix=/opt/openmpi-{{ openmpi_version }}
+        --with-ucx=/opt/{{ mellanox_hpcx_package }}/ucx/
+        --with-hcoll=/opt/{{ mellanox_hpcx_package }}/hcoll
+        --enable-mpirun-prefix-by-default --with-platform=contrib/platform/mellanox/optimized && make -j && make install
+      args:
+        chdir: "/tmp/openmpi-{{ openmpi_version }}"
+        creates: "/opt/openmpi-{{ openmpi_version }}"
+        executable: /bin/bash
 
-  - name: Install OpenMPI module file
-    template:
-      src: templates/module.j2
-      dest: "/etc/environment-modules/modules/mpi/openmpi/{{ openmpi_version }}-gcc"
-      owner: root
-      group: root
-      mode: '0644'
+    - name: Install OpenMPI module file
+      ansible.builtin.template:
+        src: templates/module.j2
+        dest: "/etc/environment-modules/modules/mpi/openmpi/{{ openmpi_version }}-gcc"
+        owner: root
+        group: root
+        mode: '0644'
 
-  - name: Install OpenMPI shell files
-    template:
-      src: "{{ item.src }}"
-      dest: "{{ openmpi_path }}/{{ item.dest }}"
-      owner: root
-      group: root
-      mode: '0644'
-    loop:
-      - { src: "templates/mpivars.sh.j2", dest: "mpivars.sh" }
-      - { src: "templates/mpivars.csh.j2", dest: "mpivars.csh" }
+    - name: Install OpenMPI shell files
+      ansible.builtin.template:
+        src: "{{ item.src }}"
+        dest: "{{ openmpi_path }}/{{ item.dest }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - { src: "templates/mpivars.sh.j2", dest: "mpivars.sh" }
+        - { src: "templates/mpivars.csh.j2", dest: "mpivars.csh" }
