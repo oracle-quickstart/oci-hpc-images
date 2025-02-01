@@ -25,23 +25,23 @@ grub_cmdline_network_device_names:
   - oci_hpc.rdma_device_names_mode=2
   - oci_hpc.vnic_device_names_mode=1
 kernel_limits_default:
-  - { name: "memlock",   type: "soft",  limit: "unlimited" }
-  - { name: "memlock",   type: "hard",  limit: "unlimited" }
-  - { name: "rss",       type: "soft",  limit: "unlimited" }
-  - { name: "rss",       type: "hard",  limit: "unlimited" }
-  - { name: "core",      type: "soft",  limit: "unlimited" }
-  - { name: "core",      type: "hard",  limit: "unlimited" }
-  - { name: "maxlogins", type: "soft",  limit: "8192" }
-  - { name: "maxlogins", type: "hard",  limit: "8192" }
-  - { name: "stack",     type: "soft",  limit: "unlimited" }
-  - { name: "stack",     type: "hard",  limit: "unlimited" }
-  - { name: "nproc",     type: "soft",  limit: "16384" }
-  - { name: "nproc",     type: "hard",  limit: "16384" }
-  - { name: "nofile",    type: "soft",  limit: "131072" }
-  - { name: "nofile",    type: "hard",  limit: "131072" }
+  - { name: "memlock", type: "soft", limit: "unlimited" }
+  - { name: "memlock", type: "hard", limit: "unlimited" }
+  - { name: "rss", type: "soft", limit: "unlimited" }
+  - { name: "rss", type: "hard", limit: "unlimited" }
+  - { name: "core", type: "soft", limit: "unlimited" }
+  - { name: "core", type: "hard", limit: "unlimited" }
+  - { name: "maxlogins", type: "soft", limit: "8192" }
+  - { name: "maxlogins", type: "hard", limit: "8192" }
+  - { name: "stack", type: "soft", limit: "unlimited" }
+  - { name: "stack", type: "hard", limit: "unlimited" }
+  - { name: "nproc", type: "soft", limit: "16384" }
+  - { name: "nproc", type: "hard", limit: "16384" }
+  - { name: "nofile", type: "soft", limit: "131072" }
+  - { name: "nofile", type: "hard", limit: "131072" }
 kernel_limits_amd:
-  - { name: "memlock",   type: "soft",  limit: "unlimited" }
-  - { name: "memlock",   type: "hard",  limit: "unlimited" }
-  - { name: "nproc",     type: "soft",  limit: "40960" }
-  - { name: "nproc",     type: "hard",  limit: "40960" }
-  - { name: "nofile",    type: "soft",  limit: "20480" }
+  - { name: "memlock", type: "soft", limit: "unlimited" }
+  - { name: "memlock", type: "hard", limit: "unlimited" }
+  - { name: "nproc", type: "soft", limit: "40960" }
+  - { name: "nproc", type: "hard", limit: "40960" }
+  - { name: "nofile", type: "soft", limit: "20480" }

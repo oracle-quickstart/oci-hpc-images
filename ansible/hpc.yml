@@ -19,62 +19,62 @@
   become: true
 
   tasks:
-      - ansible.builtin.import_role: # noqa ansible-lintname[missing]
-          name: ssh
-      - ansible.builtin.import_role: # noqa ansible-lintname
-          name: oci_cloud_agent
-      - ansible.builtin.import_role:
-          name: packages
-      - ansible.builtin.import_role:
-          name: kernel
-      - ansible.builtin.import_role:
-          name: kernel_parameters
-      - ansible.builtin.import_role:
-          name: kernel_limits
-      - ansible.builtin.import_role:
-          name: oci_utils
-      - ansible.builtin.import_role:
-          name: nozeroconf
-      - ansible.builtin.import_role:
-          name: disable_selinux
-      - ansible.builtin.import_role:
-          name: mellanox_ofed
-      - ansible.builtin.import_role:
-          name: mellanox_hpcx
-      - ansible.builtin.import_role:
-          name: oci_hpc_packages
-      - ansible.builtin.import_role:
-          name: tuned
-        when: "'noselinux' in options"
-      - ansible.builtin.import_role:
-          name: openmpi_gcc
-        when: "'openmpi' in options"
-      - ansible.builtin.import_role:
-          name: systemd
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: ssh
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oci_cloud_agent
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: packages
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel_parameters
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel_limits
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oci_utils
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nozeroconf
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: disable_selinux
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: mellanox_ofed
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: mellanox_hpcx
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oci_hpc_packages
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: tuned
+      when: "'noselinux' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: openmpi_gcc
+      when: "'openmpi' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: systemd
 
 - name: AMD configuration
   hosts: all
   any_errors_fatal: true
   become: true
   tasks:
-  - ansible.builtin.import_role:
-      name: amd_mpivars
-    when: "'amd' in options"
-  - ansible.builtin.import_role:
-      name: amd_rocm
-    when: "'amd' in options"
-  - ansible.builtin.import_role:
-      name: amd_perftest
-    when: "'amd' in options"
-  - ansible.builtin.import_role:
-      name: amd_rvs
-    when: "'amd' in options"
-  - ansible.builtin.import_role:
-      name: amd_disclaimer
-    when: "'amd' in options"
-  - ansible.builtin.import_role:
-      name: amd_rccl_tests
-    when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_mpivars
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rocm
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_perftest
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rvs
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_disclaimer
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rccl_tests
+      when: "'amd' in options"
 
 - name: NVIDIA configuration
   hosts: all
@@ -82,27 +82,27 @@
   become: true
   tasks:
 
-  - ansible.builtin.import_role:
-      name: nvidia_driver
-    when: "'nvidia' in options"
-  - ansible.builtin.import_role:
-      name: nvidia_cuda
-    when: "'nvidia' in options"
-  - ansible.builtin.import_role:
-      name: nvidia_cudnn
-    when: "'nvidia' in options"
-  - ansible.builtin.import_role:
-      name: nvidia_nccl
-    when: "'nvidia' in options"
-#    - ansible.builtin.import_role:
-#        name: nvidia-fabricmanager
-#      when: "'nvidia' in options"
-  - ansible.builtin.import_role:
-      name: nvidia_dcgm
-    when: "'nvidia' in options and 'monitoring' in options"
-  - ansible.builtin.import_role:
-      name: nccl_tuner
-    when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_driver
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_cuda
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_cudnn
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_nccl
+      when: "'nvidia' in options"
+  #    - ansible.builtin.import_role:
+  #        name: nvidia-fabricmanager
+  #      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_dcgm
+      when: "'nvidia' in options and 'monitoring' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nccl_tuner
+      when: "'nvidia' in options"
 
 - name: GPU configuration
   hosts: all
@@ -110,9 +110,9 @@
   become: true
 
   tasks:
-  - ansible.builtin.import_role:
-      name: gpu_tuning
-    when: "'nvidia' in options or 'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: gpu_tuning
+      when: "'nvidia' in options or 'amd' in options"
 
 - name: Benchmarks
   hosts: all
@@ -120,14 +120,14 @@
   become: true
 
   tasks:
-  - ansible.builtin.import_role:
-      name: hpc_benchmarks
-    when: "'benchmarks' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: hpc_benchmarks
+      when: "'benchmarks' in options"
 
 - name: Reboot and cleanup
   hosts: all
   tasks:
-  - ansible.builtin.import_role:
-      name: dracut    
-  - ansible.builtin.import_role:
-      name: cleanup
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: dracut
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: cleanup

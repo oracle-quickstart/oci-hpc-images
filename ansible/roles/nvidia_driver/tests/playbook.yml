@@ -1,5 +1,6 @@
 ---
-- hosts: all
-  become: yes
+- name: Tests # noqa role-name[path]
+  hosts: all
+  become: true
   roles:
     - ../..

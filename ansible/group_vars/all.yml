@@ -1,4 +1,4 @@
-hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/E0th3c7g499s5q2NuJDAaeK19H3OlcWeAjnXjJgCAr602ZCUuKbcWTUBv42g5j8K/n/hpc/b/source/o/"
+hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/E0th3c7g499s5q2NuJDAaeK19H3OlcWeAjnXjJgCAr602ZCUuKbcWTUBv42g5j8K/n/hpc/b/source/o/" # noqa yaml[line-length]
 mlx_ofed_download_link: "https://content.mellanox.com/ofed/"
 install_prefix: "/opt"
 benchmark_base_path: "{{ install_prefix }}/oci-hpc"

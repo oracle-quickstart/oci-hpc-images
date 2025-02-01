@@ -5,7 +5,7 @@ galaxy_info:
   company: NVIDIA
   description: Install the NVIDIA driver
   license: 3-Clause BSD
-  min_ansible_version: 2.7
+  min_ansible_version: "2.7"
 
   platforms:
     - name: Ubuntu

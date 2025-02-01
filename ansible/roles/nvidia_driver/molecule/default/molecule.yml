@@ -13,8 +13,8 @@ platforms:
     pre_build_image: true
     privileged: true
     groups:
-    - canonical_repo
-    - ubuntu
+      - canonical_repo
+      - ubuntu
 
   - name: ubuntu-1804-cuda
     image: geerlingguy/docker-ubuntu1804-ansible
@@ -24,8 +24,8 @@ platforms:
     pre_build_image: true
     privileged: true
     groups:
-    - cuda_repo
-    - ubuntu
+      - cuda_repo
+      - ubuntu
 
   - name: ubuntu-2004-canonical
     image: geerlingguy/docker-ubuntu2004-ansible
@@ -35,8 +35,8 @@ platforms:
     pre_build_image: true
     privileged: true
     groups:
-    - canonical_repo
-    - ubuntu
+      - canonical_repo
+      - ubuntu
 
   - name: ubuntu-2004-cuda
     image: geerlingguy/docker-ubuntu2004-ansible
@@ -46,8 +46,8 @@ platforms:
     pre_build_image: true
     privileged: true
     groups:
-    - cuda_repo
-    - ubuntu
+      - cuda_repo
+      - ubuntu
 
   - name: centos-7
     image: geerlingguy/docker-centos7-ansible
@@ -68,7 +68,7 @@ platforms:
 provisioner:
   name: ansible
   ansible_args:
-  - -vv
+    - -vv
   inventory:
     group_vars:
       all:
