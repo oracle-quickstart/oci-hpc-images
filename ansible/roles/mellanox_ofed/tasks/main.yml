@@ -326,7 +326,7 @@
 
     - name: Extract Mellanox OFED installation tarball
       ansible.builtin.unarchive:
-        src: "{{ mlx_ofed_download }}MLNX_OFED-{{ mellanox_ofed_version }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64.tgz"
+        src: "{{ mlx_ofed_download }}{{ dir }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-ubuntu22.04-x86_64.tgz"
         dest: "{{ mlnx_extract_dir.path }}"
         remote_src: true
 
