@@ -1,8 +1,8 @@
-# Stack to create an HPC cluster. 
+# Instructions for OL8
 
 Install Ansible & packer
 ```
-sudo yum install -y yum-utils
+sudo yum install -y yum-utils tmux
 sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
 sudo yum -y install packer
 sudo dnf install -y oracle-epel-release-el8
@@ -18,9 +18,12 @@ ansible-galaxy install -r oci-hpc-images-main/requirements.yml
 
 Create a new version of the file: `defaults.pkr.hcl` and fill in the variables from the console. 
 
-In the image directory, choose the OS folder you would like to build for and edit the file with the image name and the specific modules to install. 
+In the image directory, choose the OS folder you would like to build for and edit the file with the image name and the specific modules to install. Since this takes quite some time, we recommend running this in a tmux session: 
+```
+tmux new
+```
 
-Run: 
+Then run: 
 ```
 packer build -var-file="defaults.pkr.hcl" images/Ubuntu-22/Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-01-31.01.pkr.hcl
 ```
