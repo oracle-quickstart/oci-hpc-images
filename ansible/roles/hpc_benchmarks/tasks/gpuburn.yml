@@ -1,7 +1,7 @@
 ---
 - name: Install gpuburn
   vars:
-    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+    user: "{{ ansible_user }}"
   block:
     - name: Create gpuburn directory
       ansible.builtin.file:

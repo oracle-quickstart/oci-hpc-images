@@ -1,0 +1,17 @@
+{
+  "builds": [
+    {
+      "name": "oracle",
+      "builder_type": "oracle-oci",
+      "build_time": 1738622863,
+      "files": null,
+      "artifact_id": "ocid1.image.oc1.iad.aaaaaaaaouhiiu32ma6lhr54wuf7f7pn3zblr3urz4ylxdextkfubz62ikma",
+      "packer_run_uuid": "116272c9-9a97-1780-35ad-d179074c6443",
+      "custom_data": {
+        "image_name": "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.03-0",
+        "ssh_username": "opc"
+      }
+    }
+  ],
+  "last_run_uuid": "116272c9-9a97-1780-35ad-d179074c6443"
+}

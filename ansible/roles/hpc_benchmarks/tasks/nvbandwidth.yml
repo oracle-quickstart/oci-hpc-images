@@ -1,7 +1,7 @@
 ---
 - name: Install NCCL tests
   vars:
-    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+    user: "{{ ansible_user }}"
   block:
     - name: Create nvbandwidth directory
       ansible.builtin.file:
@@ -19,7 +19,7 @@
           - boost-program-options
       become: true
       when:
-        - ansible_distribution == 'OracleLinux'
+        - ansible_os_family == 'RedHat'
         - ansible_distribution_major_version == '8'
         - or - ansible_distribution_major_version == '9'
 
@@ -60,7 +60,7 @@
         cmd: "bash /tmp/{{ cmake_installer }} --skip-license --prefix={{ benchmark_base_path }}/nvbandwidth/cmake"
       args:
         chdir: "/tmp"
-      become_user: opc
+      become_user: "{{ user }}"
       become: true
 
     - name: Generate nvbandwidth Makefile from CMake # noqa command-instead-of-shell no-changed-when
