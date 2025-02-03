@@ -1,6 +1,6 @@
 ---
-- name: Install tuned via dnf
-  ansible.builtin.dnf:
+- name: Install tuned via yum
+  ansible.builtin.yum:
     name: tuned
     state: present
 

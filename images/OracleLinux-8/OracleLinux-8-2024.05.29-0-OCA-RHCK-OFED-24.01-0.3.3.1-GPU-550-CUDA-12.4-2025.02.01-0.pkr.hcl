@@ -1,8 +1,27 @@
 /* variables */
 
+
+packer {
+    required_plugins {
+      oracle = {
+        source = "github.com/hashicorp/oracle"
+        version = ">= 1.0.3"
+      }
+    ansible = {
+      version = "~> 1"
+      source = "github.com/hashicorp/ansible"
+    }
+    }
+}
+
 variable "image_base_name" {
   type    = string
   default = "OracleLinux-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
+}
+
+variable "image_id" {
+  type    = string
+  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
 }
 
 variable "build_options" {
@@ -14,10 +33,7 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
 }
 
-variable "image_id" {
-  type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
-}
+
 
 variable "ssh_username" {
   type    = string
@@ -28,25 +44,16 @@ variable "ssh_username" {
 
 variable "region" {
   type    = string
-  default = "ca-toronto-1"
 }
-
 variable "ad" {
   type    = string
-  default = "VXpT:CA-TORONTO-1-AD-1"
 }
-
 variable "compartment_ocid" {
-  type    = string
 }
-
 variable "shape" {
   type    = string
-  default = "VM.Standard.E4.Flex"
 }
-
 variable "subnet_ocid" {
-  type    = string
 }
 
 variable "access_cfg_file" { 
@@ -63,11 +70,6 @@ variable "use_instance_principals" {
   type = string
   default = true
 }
-
-#variable "access_cfg_file_account" {
-#  type    = string
-#  default = "/home/opc/.oci/config"
-#}
 
 /* changes should not be required below */
 

@@ -1,7 +1,7 @@
 # cmake is needed by cuda-samples
 ---
 - name: Install dependencies
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name:
       - git
       - cmake

@@ -32,7 +32,7 @@
         kernel_version: "{{ latest_rhck_kernel.path | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
 
     - name: Install RHCK kernel devel packages
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - "kernel-devel-{{ kernel_version }}"
           - "kernel-headers-{{ kernel_version }}"
