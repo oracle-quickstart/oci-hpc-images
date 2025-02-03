@@ -9,7 +9,7 @@
 
   block:
     - name: Install specific version of OCI Cloud Agent
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name: oracle-cloud-agent
         state: present
         disable_gpg_check: true
@@ -29,7 +29,7 @@
 
   block:
     - name: Install specific version of OCI Cloud Agent
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name: oracle-cloud-agent
         state: present
         disable_gpg_check: true

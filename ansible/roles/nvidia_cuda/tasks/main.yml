@@ -5,7 +5,7 @@
 
   block:
     - name: Install JRE 1.8 prereq RHEL/OL
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - jre1.8
         state: present
@@ -17,7 +17,7 @@
         and ansible_distribution != 'CentOS'
 
     - name: Install JRE 1.8 prereq CentOS
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - java-1.8.0-openjdk
         state: present
@@ -29,14 +29,14 @@
         and ansible_distribution == 'CentOS'
 
     - name: Install CUDA toolkit for RHEL
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - "{{ cuda_toolkit_version }}"
         state: present
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
     - name: Install nvidia-container-toolkit for RHEL
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - nvidia-container-toolkit
         state: present

@@ -15,26 +15,26 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-01-31.01"
+  default = "OracleLinux-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaa2bulxukxsjyv3ap3x45eueiqxxpxpsfrv6qppq7xrwtiima2c2pq"
+  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "ubuntu"
+  default = "opc"
 }
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0_131"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -49,6 +49,8 @@ variable "access_cfg_file_account" {
   type = string 
   default = "DEFAULT" 
 }
+
+/* changes should not be required below */
 
 source "oracle-oci" "oracle" {
   availability_domain = var.ad
@@ -80,23 +82,30 @@ build {
   sources = ["source.oracle-oci.oracle"]
 
   provisioner "shell" {
-    inline = ["sudo growpart /dev/sda 1"]
-    valid_exit_codes = [0, 1] // 1 is returned if the partition is already the size of the disk
+    inline = ["sudo /usr/libexec/oci-growfs -y"]
   }
 
-  provisioner "shell" {
-    inline = ["sudo resize2fs /dev/sda1"]
-    valid_exit_codes = [0, 1] 
+  // in case we're running with ansible 2.17+ we need to install python3.8
+  provisioner "shell" { 
+    inline = ["sudo yum -y install python3.8"]
   }
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args]
+    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
     groups = local.ansible_groups
     user = var.ssh_username
   }
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
+  }
+
+  post-processor "manifest" {
+    output = "${var.image_base_name}.manifest.json"
+    custom_data = {
+        image_name    = var.image_base_name
+        ssh_username  = var.ssh_username
+    }
   }
 }

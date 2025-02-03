@@ -1,9 +1,9 @@
 - name: Common Ubuntu tasks
   when: ansible_distribution == 'Ubuntu'
-  block: 
+  block:
 
     - name: Set version string
-      set_fact:
+      ansible.builtin.set_fact:
         mellanox_os_version: "{{
           'ubuntu20.04' if ansible_distribution_major_version == '20' else
           'ubuntu22.04' if ansible_distribution_major_version == '22' else
@@ -121,7 +121,7 @@
     # Download OFED locally
     # This is due to some ansible version incompatibility and problems with remote URL download in unarchive module
 
-    - name: Download OFED locally 
+    - name: Download OFED locally
       ansible.builtin.get_url:
         url: "{{ mlx_ofed_download }}{{ dir }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
         dest: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
@@ -135,7 +135,8 @@
 
     - name: Install Mellanox OFED
       ansible.builtin.shell: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall --force --all --without-fw-update
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall 
+        --force --all --without-fw-update
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"

@@ -1,22 +1,26 @@
 /* variables */
 
+packer {
+    required_plugins {
+      oracle = {
+        source = "github.com/hashicorp/oracle"
+        version = ">= 1.0.3"
+      }
+    ansible = {
+      version = "~> 1"
+      source = "github.com/hashicorp/ansible"
+    }
+    }
+}
+
 variable "image_base_name" {
   type    = string
-  default = "OracleLinux-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
-}
-
-variable "build_options" {
-  type    = string
-  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
-}
-
-variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
+  default = "OracleLinux-7-2024.11.30-0-OCA-RHCK-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025.02.02-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
+  default = "ocid1.image.oc1.iad.aaaaaaaa5zad6cvhy6zyke3qstprwrnw4zvcrd26db6ki7upxkg2ndrgfelq"
 }
 
 variable "ssh_username" {
@@ -24,50 +28,32 @@ variable "ssh_username" {
   default = "opc"
 }
 
+variable "build_options" {
+  type    = string
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,use_plugins"
+}
+
+variable "build_groups" {
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol7_rhck" , "use_plugins" ]
+}
+
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
-variable "region" {
-  type    = string
-  default = "ca-toronto-1"
-}
-
-variable "ad" {
-  type    = string
-  default = "VXpT:CA-TORONTO-1-AD-1"
-}
-
-variable "compartment_ocid" {
-  type    = string
-}
-
-variable "shape" {
-  type    = string
-  default = "VM.Standard.E4.Flex"
-}
-
-variable "subnet_ocid" {
-  type    = string
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
 
 variable "access_cfg_file" { 
   type = string
   default = "~/.oci/config"
 }
-
-variable "access_cfg_file_account" {
-  type    = string
-  default = "DEFAULT"
-}
-
-variable "use_instance_principals" { 
-  type = string
-  default = true
-}
-
-#variable "access_cfg_file_account" {
-#  type    = string
-#  default = "/home/opc/.oci/config"
-#}
 
 /* changes should not be required below */
 
@@ -103,15 +89,12 @@ build {
   provisioner "shell" {
     inline = ["sudo /usr/libexec/oci-growfs -y"]
   }
-
-  // in case we're running with ansible 2.17+ we need to install python3.8
-  provisioner "shell" { 
-    inline = ["sudo dnf -y install python3.8"]
-  }
+  
+// Oracle Linux 7 requiest ansible-core < 2.17 
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", "ansible_python_interpreter=auto_legacy", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
     groups = local.ansible_groups
     user = var.ssh_username
   }

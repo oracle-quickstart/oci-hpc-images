@@ -17,8 +17,8 @@
     dest: /tmp
     remote_src: true
 
-- name: Install Mellanox MFT update (yum)
-  ansible.builtin.dnf:
+- name: Install Mellanox MFT update (yum/dnf)
+  ansible.builtin.yum:
     name: "/tmp/{{ mft_version }}-{{ ansible_architecture }}-rpm/RPMS/{{ mft_version }}.{{ ansible_architecture }}.rpm"
     state: present
     disable_gpg_check: true

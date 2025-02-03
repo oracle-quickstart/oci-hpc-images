@@ -1,6 +1,6 @@
 ---
 - name: Install NCCL from CUDA repository for RHEL
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name:
       - "libnccl-{{ nccl_package_version }}"
       - "libnccl-devel-{{ nccl_package_version }}"
