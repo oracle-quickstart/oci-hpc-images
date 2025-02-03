@@ -50,6 +50,11 @@ variable "access_cfg_file_account" {
   default = "DEFAULT" 
 }
 
+variable "access_cfg_file" { 
+  type = string
+  default = "~/.oci/config"
+}
+
 /* changes should not be required below */
 
 source "oracle-oci" "oracle" {

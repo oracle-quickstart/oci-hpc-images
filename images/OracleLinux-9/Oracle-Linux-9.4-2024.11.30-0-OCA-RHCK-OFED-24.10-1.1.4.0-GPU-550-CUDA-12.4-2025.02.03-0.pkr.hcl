@@ -50,6 +50,11 @@ variable "access_cfg_file_account" {
   default = "DEFAULT" 
 }
 
+variable "access_cfg_file" { 
+  type = string
+  default = "~/.oci/config"
+}
+
 /* changes should not be required below */
 
 source "oracle-oci" "oracle" {
@@ -83,11 +88,6 @@ build {
 
   provisioner "shell" {
     inline = ["sudo /usr/libexec/oci-growfs -y"]
-  }
-
-  // in case we're running with ansible 2.17+ we need to install python3.8
-  provisioner "shell" { 
-    inline = ["sudo yum -y install python3.8"]
   }
 
   provisioner "ansible" {
