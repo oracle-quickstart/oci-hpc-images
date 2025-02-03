@@ -15,12 +15,12 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "OracleLinux-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
+  default = "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.03-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
+  default = "ocid1.image.oc1.iad.aaaaaaaae2zqy6e3unvd6rntsuxd6pdnxtc5giebdk23ogjmk3vafzcv4ioq"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol9_rhck" , "use_plugins", "oca_beta_149"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -48,10 +48,6 @@ variable "use_instance_principals" { type = bool }
 variable "access_cfg_file_account" { 
   type = string 
   default = "DEFAULT" 
-}
-variable "access_cfg_file" { 
-  type = string
-  default = "~/.oci/config"
 }
 
 variable "access_cfg_file" { 
@@ -94,14 +90,9 @@ build {
     inline = ["sudo /usr/libexec/oci-growfs -y"]
   }
 
-  // in case we're running with ansible 2.17+ we need to install python3.8
-  provisioner "shell" { 
-    inline = ["sudo yum -y install python3.8"]
-  }
-
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "-e", local.ansible_args] 
+    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
     groups = local.ansible_groups
     user = var.ssh_username
   }

@@ -1,7 +1,7 @@
 ---
 - name: Install NCCL tests
   vars:
-    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+    user: "{{ ansible_user }}"
   block:
     - name: Create nccl-test directory
       ansible.builtin.file:

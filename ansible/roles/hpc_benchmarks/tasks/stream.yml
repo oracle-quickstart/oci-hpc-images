@@ -1,7 +1,7 @@
 ---
 - name: Install perftest
   vars:
-    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+    user: "{{ ansible_user }}"
   block:
     - name: Create STREAM directory
       ansible.builtin.file:
