@@ -1,21 +1,28 @@
+- name: Install versionlock plugin
+  vars:
+    versionlock_package: "{{ 'python3-dnf-plugin-versionlock' if ansible_distribution_major_version | int > 7 else 'yum-plugin-versionlock' }}"
+  ansible.builtin.yum:
+    name: "{{ versionlock_package }}"
+    state: present
+
 - name: Install specific version of OCI Clud Agent on Oracle Linux
-  when: ansible_distribution == 'OracleLinux' and oci_cloud_agent_version is defined
+  when: ansible_distribution == 'OracleLinux' and (oci_cloud_agent_version is defined and oca_download_url is not defined)
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'
               else 'el9' if ansible_distribution_major_version == '9' }}"
 # version format for Oracle Linux: 1.48.0-17
 
-
   block:
-    - name: Install specific version of OCI Cloud Agent
+    - name: Update OCI Cloud Agent
       ansible.builtin.yum:
-        name: oracle-cloud-agent
+        name: oracle-cloud-agent-{{ oci_cloud_agent_version }}
         state: present
         disable_gpg_check: true
+
     - name: Hold specific version of OCI Cloud Agent
       community.general.yum_versionlock:
-        name: oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}
+        name: oracle-cloud-agent
         state: present
 
 - name: Install specific version of OCI Clud Agent on Oracle Linux from URL
@@ -26,17 +33,31 @@
               else 'el9' if ansible_distribution_major_version == '9' }}"
 # version format for Oracle Linux: 1.48.0-17
 
-
   block:
+    - name: Download specific version of OCI Cloud Agent
+      ansible.builtin.get_url:
+        url: "{{ oca_download_url }}oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm"
+        dest: /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm"
+        mode: '0644'
+      register: download_result
+
     - name: Install specific version of OCI Cloud Agent
       ansible.builtin.yum:
-        name: oracle-cloud-agent
+        name: "{{ download_result.dest }}"
         state: present
         disable_gpg_check: true
+
     - name: Hold specific version of OCI Cloud Agent
       community.general.yum_versionlock:
-        name: "{{ oca_download_url }}/oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}"
+        name: oracle-cloud-agent
         state: present
+      when: ansible_distribution_major_version | int == 7
+
+    - name: Hold specific version of OCI Cloud Agent
+      community.general.dnf_versionlock:
+        name: oracle-cloud-agent
+        state: present
+      when: ansible_distribution_major_version | int > 7
 
 - name: Disable Oracle Cloud Agent on Oracle Linux
   ansible.builtin.systemd:
