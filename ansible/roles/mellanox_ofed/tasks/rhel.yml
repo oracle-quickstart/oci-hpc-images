@@ -1,0 +1,205 @@
+- name: Set facts for Mellanox OFED
+  ansible.builtin.set_fact:
+    mlx_ofed_download: "{{ hpc_artifacts_download if use_hpc_artifact else mlx_ofed_download_link }}"
+    dir: "{{ '' if use_hpc_artifact else 'MLNX_OFED-{{ mellanox_ofed_version }}/' }}"
+
+
+- name: Mellanox OFED for Oracle Linux
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      ansible.builtin.dnf:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - createrepo
+          - python-devel
+          - perl
+          - pciutils
+          - python
+          - gcc-gfortran
+          - libxml2-python
+          - tcsh
+          - libnl.i686
+          - libnl
+          - expat
+          - glib2
+          - tcl
+          - libstdc++
+          - bc
+          - tk
+          - gtk2
+          - atk
+          - cairo
+          - numactl
+          - pkgconfig
+          - ethtool
+          - lsof
+          - fuse-libs
+          - dkms
+          - kernel-devel
+        state: present
+
+    - name: Check for Oracle Linux 7.9 Mellanox OS override
+      ansible.builtin.set_fact:
+        mellanox_os_version: "{{ ol79_mellanox_os_version }}"
+      when:
+        - "ol79_mellanox_os_version is defined"
+
+    - name: Check for CentOS 7.9 Mellanox OS override
+      ansible.builtin.set_fact:
+        mellanox_os_version: "{{ centos79_mellanox_os_version }}"
+      when:
+        - "centos79_mellanox_os_version is defined"
+
+    - name: Setup Oracle Linux 7.9 Mellanox Installer
+      ansible.builtin.set_fact:
+        mellanox_os_version: "ol{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '7'
+
+    - name: Setup CentOS 7.9 Mellanox Installer
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'CentOS'
+        - ansible_distribution_major_version == '7'
+
+    - name: Get default kernel name
+      ansible.builtin.command: "grubby --default-kernel"
+      register: default_kernel_path
+      changed_when: false
+
+    - name: Set kernel version fact
+      ansible.builtin.set_fact:
+        kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
+
+- name: Mellanox OFED for Oracle Linux 8/9
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      ansible.builtin.dnf:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - createrepo
+          - perl
+          - pciutils
+          - "{{ 'python36' if ansible_distribution_major_version == '8' else 'python3' }}"
+          - "{{ 'python36-devel' if ansible_distribution_major_version == '8' else 'python3-devel' }}"
+          - gcc-gfortran
+          - kernel-rpm-macros
+          - tcsh
+          - expat
+          - glib2
+          - tcl
+          - libstdc++
+          - bc
+          - tk
+          - gtk2
+          - atk
+          - cairo
+          - numactl
+          - pkgconfig
+          - ethtool
+          - lsof
+          - fuse-libs
+          - dkms
+          - kernel-devel
+          - kernel-modules-extra
+        state: present
+
+    - name: Set OL version string for OFED with override
+      ansible.builtin.set_fact:
+        mellanox_os_version: "{{ ol86_mellanox_os_version }}"
+      when:
+        - "ol86_mellanox_os_version is defined"
+
+    - name: Set OL version string for OFED with UEK
+      ansible.builtin.set_fact:
+        mellanox_os_version: "ol{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - "'rhck' not in options"
+
+    - name: Set OL version string for OFED with RHCK
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux' 
+        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - "'rhck' in options"
+
+    - name: Get default kernel name
+      ansible.builtin.command: "grubby --default-kernel"
+      register: default_kernel_path
+      changed_when: false
+
+    - name: Set kernel version fact
+      ansible.builtin.set_fact:
+        kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
+
+    - name: Install kernel-devel
+      ansible.builtin.dnf:
+        name: kernel-devel-{{ kernel_version }}
+        allow_downgrade: true
+        state: present
+      when:
+        - "'rhck' in options"
+
+    - name: Install kernel-devel
+      ansible.builtin.dnf:
+        name: kernel-uek-devel-{{ kernel_version }}
+        allow_downgrade: true
+        state: present
+      when:
+        - "'rhck' not in options"
+
+- name: Common Mellanox OFED installation tasks
+  when:
+    - ansible_os_family == 'RedHat'
+  block:
+    - name: Create temporary directory to extract Mellanox OFED installer
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    # Download OFED locally
+    # This is due to some ansible version incompatibility and problems with remote URL download in unarchive module
+
+    - name: Download OFED locally 
+      ansible.builtin.get_url:
+        url: "{{ mlx_ofed_download }}{{ dir }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        dest: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        mode: "0755"
+
+    - name: Extract Mellanox OFED installation tarball
+      ansible.builtin.unarchive:
+        src: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: true 
+      register: mlnx_ofed_extract
+
+    - name: Install Mellanox OFED
+      ansible.builtin.shell: >
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+        creates: "/usr/bin/ofed_info"
+
+      notify:
+        - Run dracut
+
+    - name: Run dracut handler
+      ansible.builtin.meta: flush_handlers
