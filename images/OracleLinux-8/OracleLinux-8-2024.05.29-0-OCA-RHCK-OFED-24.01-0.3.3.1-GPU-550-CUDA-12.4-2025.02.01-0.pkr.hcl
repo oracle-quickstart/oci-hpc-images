@@ -108,7 +108,7 @@ build {
 
   // in case we're running with ansible 2.17+ we need to install python3.8
   provisioner "shell" { 
-    inline = ["sudo dnf -y install python3.8"]
+    inline = ["sudo yum -y install python3.8"]
   }
 
   provisioner "ansible" {
