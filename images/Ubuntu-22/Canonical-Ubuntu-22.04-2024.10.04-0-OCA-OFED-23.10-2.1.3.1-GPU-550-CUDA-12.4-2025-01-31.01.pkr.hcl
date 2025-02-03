@@ -105,6 +105,16 @@ build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
 
+  provisioner "shell" {
+    inline = ["sudo growpart /dev/sda 1"]
+    valid_exit_codes = [0, 1] // 1 is returned if the partition is already the size of the disk
+  }
+
+  provisioner "shell" {
+    inline = ["sudo resize2fs /dev/sda1"]
+    valid_exit_codes = [0, 1] 
+  }
+
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
     extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args]
