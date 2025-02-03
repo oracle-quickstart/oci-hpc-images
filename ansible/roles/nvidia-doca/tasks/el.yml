@@ -1,16 +1,16 @@
 - name: Common Enterprise Linux tasks
   when: ansible_os_family == 'RedHat'
-  block: 
+  block:
 
     - name: Get OS version
       ansible.builtin.set_fact:
-        os_ver: "{{ ansible_distribution_version|split('.') }}"
+        os_ver: "{{ ansible_distribution_version | split('.') }}"
     - name: Set version string
       ansible.builtin.set_fact:
-        doca_os_version: "{{ os_ver.0 }}{{ os_ver.1 }}" 
+        doca_os_version: "{{ os_ver.0 }}{{ os_ver.1 }}"
     - name: Set OS name
       ansible.builtin.set_fact:
-        doca_os_name: "{{ 
+        doca_os_name: "{{
           'rhel' if ansible_distribution == 'RedHat' else
           'rhel' if ansible_distribution == 'OracleLinux' and 'rhck' in options else
           'ol' if ansible_distribution == 'OracleLinux' and 'rhck' not in options
@@ -18,4 +18,3 @@
     - name: Set OS string
       ansible.builtin.set_fact:
         doca_os_string: "{{ doca_os_name }}{{ doca_os_version }}"
-

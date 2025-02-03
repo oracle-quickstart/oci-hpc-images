@@ -67,7 +67,7 @@
         mellanox_os_version: "rhel{{ ansible_distribution_version }}"
       when:
         - "mellanox_os_version is not defined"
-        - ansible_distribution == 'CentOS'
+        - ansible_os_family == 'RedHat'
         - ansible_distribution_major_version == '7'
 
     - name: Get default kernel name
@@ -140,6 +140,15 @@
         - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
         - "'rhck' in options"
 
+    - name: Set OL version string for other EL systems
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_os_family == 'RedHat'
+        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+
+
     - name: Get default kernel name
       ansible.builtin.command: "grubby --default-kernel"
       register: default_kernel_path
@@ -193,7 +202,7 @@
 
     - name: Install Mellanox OFED
       ansible.builtin.shell: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall 
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall
         --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
