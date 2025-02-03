@@ -1,0 +1,11 @@
+- name: Common Ubuntu tasks
+  when: ansible_distribution == 'Ubuntu'
+  block: 
+
+    - name: Get OS version
+      ansible.builtin.set_fact:
+        os_ver: "{{ ansible_distribution_version|split('.') }}"
+    - name: Set version string
+      ansible.builtin.set_fact:
+        doca_os_string: "ubuntu{{ os_ver.0 }}{{ os_ver.1 }}" 
+
