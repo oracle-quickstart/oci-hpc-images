@@ -14,16 +14,6 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
 }
 
-variable "region" {
-  type    = string
-  default = "ca-toronto-1"
-}
-
-variable "ad" {
-  type    = string
-  default = "VXpT:CA-TORONTO-1-AD-1"
-}
-
 variable "image_id" {
   type    = string
   default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
@@ -32,6 +22,18 @@ variable "image_id" {
 variable "ssh_username" {
   type    = string
   default = "opc"
+}
+
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+
+variable "region" {
+  type    = string
+  default = "ca-toronto-1"
+}
+
+variable "ad" {
+  type    = string
+  default = "VXpT:CA-TORONTO-1-AD-1"
 }
 
 variable "compartment_ocid" {
