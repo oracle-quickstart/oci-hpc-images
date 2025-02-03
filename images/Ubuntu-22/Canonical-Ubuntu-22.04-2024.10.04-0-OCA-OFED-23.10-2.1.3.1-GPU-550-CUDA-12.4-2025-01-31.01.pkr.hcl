@@ -13,14 +13,19 @@ packer {
     }
 }
 
+variable "image_base_name" {
+  type    = string
+  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-01-31.01"
+}
+
 variable "image_id" {
   type    = string
   default = "ocid1.image.oc1.iad.aaaaaaaa2bulxukxsjyv3ap3x45eueiqxxpxpsfrv6qppq7xrwtiima2c2pq"
 }
 
-variable "image_base_name" {
+variable "ssh_username" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-01-31.01"
+  default = "ubuntu"
 }
 
 variable "build_options" {
@@ -32,49 +37,18 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0_131"]
 }
 
-variable "region" {
-  type    = string
-  default = "us-ashburn-1"
-}
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
-variable "ad" {
-  type    = string
-  default = "LUbc:US-ASHBURN-AD-1"
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
-
-variable "compartment_ocid" {
-  type    = string
-}
-
-variable "shape" {
-  type    = string
-  default = "VM.Standard.E4.Flex"
-}
-
-variable "ssh_username" {
-  type    = string
-  default = "ubuntu"
-}
-
-variable "subnet_ocid" {
-  type    = string
-}
-
-variable "access_cfg_file" { 
-  type = string
-  default = "~/.oci/config"
-}
-
-variable "access_cfg_file_account" {
-  type    = string
-  default = "DEFAULT"
-}
-
-variable "use_instance_principals" { 
-  type = string
-  default = true
-}
-
 
 source "oracle-oci" "oracle" {
   availability_domain = var.ad

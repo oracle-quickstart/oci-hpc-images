@@ -18,6 +18,16 @@ variable "image_base_name" {
   default = "OracleLinux-7-2024.11.30-0-OCA-RHCK-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025.02.02-0"
 }
 
+variable "image_id" {
+  type    = string
+  default = "ocid1.image.oc1.iad.aaaaaaaa5zad6cvhy6zyke3qstprwrnw4zvcrd26db6ki7upxkg2ndrgfelq"
+}
+
+variable "ssh_username" {
+  type    = string
+  default = "opc"
+}
+
 variable "build_options" {
   type    = string
   default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,use_plugins"
@@ -27,49 +37,17 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol7_rhck" , "use_plugins" ]
 }
 
-variable "region" {
-  type    = string
-  default = "ca-toronto-1"
-}
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
-variable "ad" {
-  type    = string
-  default = "VXpT:CA-TORONTO-1-AD-1"
-}
-
-variable "image_id" {
-  type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaa5zad6cvhy6zyke3qstprwrnw4zvcrd26db6ki7upxkg2ndrgfelq"
-}
-
-variable "compartment_ocid" {
-  type    = string
-  default = "ocid1.compartment.oc1..aaaaaaaaq4mildz7ebwzq7hvuocmkohglonlly2wi2v4a6nop6ff3mgqbwna"
-}
-
-variable "shape" {
-  type    = string
-  default = "VM.Standard.E4.Flex"
-}
-
-variable "ssh_username" {
-  type    = string
-  default = "opc"
-}
-
-variable "subnet_ocid" {
-  type    = string
-  default = "ocid1.subnet.oc1.ca-toronto-1.aaaaaaaaec5daa2p7p7gwl6t4qjm2yvxrktgaktcct433qgcpqvjimky2pea"
-}
-
-variable "use_instance_principals" {
-  type    = bool
-  default = true
-}
-
-variable "access_cfg_file_account" {
-  type    = string
-  default = "DEFAULT"
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
 
 variable "access_cfg_file" { 

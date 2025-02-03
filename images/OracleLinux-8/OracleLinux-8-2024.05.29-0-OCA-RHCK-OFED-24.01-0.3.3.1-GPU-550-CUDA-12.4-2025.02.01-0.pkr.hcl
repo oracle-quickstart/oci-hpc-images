@@ -1,6 +1,5 @@
 /* variables */
 
-
 packer {
     required_plugins {
       oracle = {
@@ -24,6 +23,11 @@ variable "image_id" {
   default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
 }
 
+variable "ssh_username" {
+  type    = string
+  default = "opc"
+}
+
 variable "build_options" {
   type    = string
   default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
@@ -33,42 +37,17 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
 }
 
-
-
-variable "ssh_username" {
-  type    = string
-  default = "opc"
-}
-
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
-variable "region" {
-  type    = string
-}
-variable "ad" {
-  type    = string
-}
-variable "compartment_ocid" {
-}
-variable "shape" {
-  type    = string
-}
-variable "subnet_ocid" {
-}
-
-variable "access_cfg_file" { 
-  type = string
-  default = "~/.oci/config"
-}
-
-variable "access_cfg_file_account" {
-  type    = string
-  default = "DEFAULT"
-}
-
-variable "use_instance_principals" { 
-  type = string
-  default = true
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
 
 /* changes should not be required below */
