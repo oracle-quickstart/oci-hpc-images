@@ -1,0 +1,67 @@
+---
+- name: Build list of kernel boot parameters
+  ansible.builtin.set_fact:
+    kernel_parameters: "{{ grub_cmdline
+       + (('nomitigations' in options) | ternary(grub_cmdline_disable_mitigations, []))
+       + (('noselinux' in options) | ternary(['selinux=0'], []))
+       + (('enroot' in options) | ternary(grub_cmdline_enroot, []))
+       + (('networkdevicenames' in options) | ternary(grub_cmdline_network_device_names, []))
+       + ((ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'))| ternary(['ip=single-dhcp,dhcp6'], [])) }}"
+  when:
+    - "options is defined"
+    - grub_cmdline is defined
+
+
+- name: Kernel boot parameters for RedHat 7 and 8
+  when:
+    - ansible_os_family == 'RedHat'
+  block:
+
+    - name: Ensure kernel boot parameters are setup for RedHat 7 and 8
+      ansible.builtin.replace:
+        path: /etc/default/grub
+        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ item.split("=")[0] | regex_escape }}=).)*"?)\s*(?:{{ item.split("=")[0] | regex_escape }}=\S+\s*)?(.*")$'
+        replace: '\1 {{ item }} \2'
+      notify:
+        - Run grub2-mkconfig
+      loop: "{{ kernel_parameters }}"
+      when:
+        - kernel_parameters is defined
+
+- name: Kernel boot parameters for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+  block:
+    - name: Ensure base kernel boot parameter file exists
+      ansible.builtin.copy:
+        src: 70-oci-hpc.cfg
+        dest: /etc/default/grub.d/70-oci-hpc.cfg
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Set cloudinit console serial port rate for Ubuntu
+      ansible.builtin.replace:
+        path: /etc/default/grub.d/50-cloudimg-settings.cfg
+        regexp: 'console=ttyS0'
+        replace: 'console=ttyS0,115200'
+
+    - name: Ensure kernel boot parameters are setup for Ubuntu
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub.d/70-oci-hpc.cfg
+        backrefs: true
+        regexp: '^(GRUB_CMDLINE_LINUX="\$GRUB_CMDLINE_LINUX(?!.*\b{{ item }}\b).*)"$'
+        line: '\1 {{ item }}"'
+        create: true
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Run update-grub
+      loop: "{{ kernel_parameters }}"
+      when:
+        - kernel_parameters is defined
+
+- name: Flush handlers to update grub
+  ansible.builtin.meta: flush_handlers

@@ -1,8 +1,0 @@
-- hosts: all
-  any_errors_fatal: yes
-  become: true
-
-# Dev yml file to test the roles
-  tasks:
-    - import_role:
-        name: ssh

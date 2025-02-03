@@ -1,0 +1,54 @@
+---
+- name: Install rccl tests
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+  block:
+    - name: Clone rccl github repository
+      ansible.builtin.git:
+        repo: https://github.com/ROCm/rccl.git
+        dest: /opt/rccl
+        clone: true
+        update: true
+        version: 164c9553717f2c3bce86a372764ea73030dd5f72
+
+    - name: Creates /opt/rccl/build directory
+      ansible.builtin.file:
+        path: /opt/rccl/build
+        state: directory
+        mode: "0755"
+
+    - name: Install cmake and libstdc++-12-dev
+      ansible.builtin.apt:
+        name:
+          - cmake
+          - libstdc++-12-dev
+        lock_timeout: 300
+
+    - name: Set up CXX # noqa no-changed-when
+      ansible.builtin.shell: |
+        CXX=/opt/rocm/bin/hipcc cmake -DCMAKE_PREFIX_PATH=/opt/rocm/ ..
+      args:
+        chdir: "/opt/rccl/build"
+
+    - name: Make rccl
+      community.general.make:
+        chdir: "/opt/rccl/build"
+        params:
+          NUM_THREADS: 8
+
+    - name: Clone rccl tests
+      ansible.builtin.git:
+        repo: https://github.com/ROCm/rccl-tests.git
+        dest: /opt/rccl-tests
+        clone: true
+        update: true
+        version: 52aee698fa255c1eb081d1f33368cca1a82b1b67
+
+    - name: Make RCCL
+      community.general.make:
+        chdir: "/opt/rccl-tests"
+        params:
+          MPI=1
+          MPI_HOME=/usr/mpi/gcc/openmpi-4.1.5rc2
+          RCCL_HOME=/opt/rccl

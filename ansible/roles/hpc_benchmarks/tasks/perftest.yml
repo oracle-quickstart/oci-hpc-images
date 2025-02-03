@@ -1,0 +1,36 @@
+---
+- name: Install perftest
+  vars:
+    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+  block:
+    - name: Create perftest directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/perftest"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Clone IB perftest
+      ansible.builtin.git:
+        repo: "{{ perftest_repo }}"
+        dest: "{{ benchmark_base_path }}/perftest"
+        force: true
+        version: "{{ perftest_version | default('master') }}"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Autogen IB perftest # noqa no-changed-when
+      ansible.builtin.command: ./autogen.sh
+      args:
+        chdir: "{{ benchmark_base_path }}/perftest"
+
+    - name: Configure IB perftest for GPUDirect # noqa no-changed-when
+      ansible.builtin.command: ./configure CUDA_H_PATH=/usr/local/cuda/include/cuda.h
+      args:
+        chdir: "{{ benchmark_base_path }}/perftest"
+
+    - name: Build IB perftest
+      community.general.make:
+        chdir: "{{ benchmark_base_path }}/perftest"

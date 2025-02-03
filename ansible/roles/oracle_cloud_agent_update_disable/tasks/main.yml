@@ -1,0 +1,18 @@
+- name: Disable OSMS on Oracle Linux
+  ansible.builtin.include_tasks:
+    file: osms.yml
+  when: ansible_distribution == 'OracleLinux'
+
+- name: Install OCI Cloud Agent on Oracle Linux
+  ansible.builtin.include_tasks:
+    file: install_oracle_cloud_agent_el.yml
+  when: ansible_distribution == 'OracleLinux'
+
+- name: Install OCI Cloud Agent on Ubuntu
+  ansible.builtin.include_tasks:
+    file: install_oracle_cloud_agent_ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Disable OCA updates
+  ansible.builtin.include_tasks:
+    file: disable_oca_updates.yml

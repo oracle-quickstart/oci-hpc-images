@@ -1,0 +1,28 @@
+- name: Install latest DCGM for EL
+  ansible.builtin.dnf:
+    name: datacenter-gpu-manager
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - "'stable_dcgm' not in options"
+
+- name: Install stable DCGM for EL
+  ansible.builtin.dnf:
+    name: "datacenter-gpu-manager-{{ stable_nvidia_dcgm_version }}"
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+    - "'stable_dcgm' in options"
+
+- name: Install DCGM for Ubuntu
+  ansible.builtin.apt:
+    name: datacenter-gpu-manager
+    state: present
+    lock_timeout: 300
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+- name: Enable DCGM service
+  ansible.builtin.systemd:
+    name: nvidia-dcgm
+    enabled: true

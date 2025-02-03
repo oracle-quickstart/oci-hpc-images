@@ -1,0 +1,42 @@
+---
+- name: Install NCCL tests
+  vars:
+    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+  block:
+    - name: Create nccl-test directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/nccl-test"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Create nccl-tests directory symbolic link
+      ansible.builtin.file:
+        src: nccl-test
+        path: "{{ benchmark_base_path }}/nccl-tests"
+        state: link
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Clone NCCL test
+      ansible.builtin.git:
+        repo: "{{ nccltest_repo }}"
+        dest: "{{ benchmark_base_path }}/nccl-test"
+        force: true
+        version: "{{ nccltests_version }}"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Build NCCL test # noqa no-changed-when
+      ansible.builtin.shell: |
+        . /etc/profile.d/modules.sh
+        module load hpcx/{{ mellanox_hpcx_version }}/hpcx-ompi
+        module list
+        make MPI=1 CUDA_HOME=/usr/local/cuda CXXFLAGS=-std=c++11 -j
+      args:
+        chdir: "{{ benchmark_base_path }}/nccl-test"
+      become_user: "{{ user }}"
+      become: true

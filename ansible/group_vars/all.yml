@@ -1,0 +1,18 @@
+hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/E0th3c7g499s5q2NuJDAaeK19H3OlcWeAjnXjJgCAr602ZCUuKbcWTUBv42g5j8K/n/hpc/b/source/o/" # noqa yaml[line-length]
+mlx_ofed_download_link: "https://content.mellanox.com/ofed/"
+install_prefix: "/opt"
+benchmark_base_path: "{{ install_prefix }}/oci-hpc"
+perftest_repo: https://github.com/linux-rdma/perftest.git
+nccltest_repo: https://github.com/NVIDIA/nccl-tests.git
+gpuburn_repo: https://github.com/wilicc/gpu-burn.git
+spack_repo: "https://github.com/spack/spack.git"
+spack_base_path: "{{ install_prefix }}/spack"
+gcc_version: 11.2.0
+nccltests_version: v2.13.9
+mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
+nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
+stable_nvidia_dcgm_version: 3.2.6
+gpu_sysctl:
+  - { name: net.ipv4.neigh.default.gc_thresh1, value: 32768 }
+  - { name: net.ipv4.neigh.default.gc_thresh2, value: 65535 }
+  - { name: net.ipv4.neigh.default.gc_thresh3, value: 131072 }

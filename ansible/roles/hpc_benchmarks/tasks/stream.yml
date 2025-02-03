@@ -1,0 +1,29 @@
+---
+- name: Install perftest
+  vars:
+    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+  block:
+    - name: Create STREAM directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/stream"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Clone STREAM from repo
+      ansible.builtin.git:
+        repo: "{{ stream_repo }}"
+        dest: "{{ benchmark_base_path }}/stream"
+        force: true
+        version: "{{ stream_version | default('master') }}"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Build STREAM # noqa no-changed-when
+      ansible.builtin.command:
+        cmd: "gcc {{ stream_cflags }} -o {{ benchmark_base_path }}/stream/stream {{ benchmark_base_path }}/stream/stream.c"
+        chdir: "{{ benchmark_base_path }}/stream"
+      become_user: "{{ user }}"
+      become: true

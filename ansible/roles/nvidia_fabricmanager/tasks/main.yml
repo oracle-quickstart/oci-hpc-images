@@ -1,0 +1,20 @@
+---
+- name: Install NVIDIA fabric manager for Oracle Linux and similar
+  ansible.builtin.dnf:
+    name: nvidia-fabricmanager-{{ nvidia_driver_version }}
+    state: present
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Install NVIDIA fabric manager for Ubuntu
+  ansible.builtin.apt:
+    name: nvidia-fabricmanager-{{ nvidia_driver_version }}
+    state: present
+    lock_timeout: 300
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+- name: Enable NVIDIA fabric manager service
+  ansible.builtin.systemd:
+    name: nvidia-fabricmanager
+    enabled: true

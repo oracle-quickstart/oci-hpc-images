@@ -1,7 +1,0 @@
---- 
-
-- include_tasks: el-7.yml
-  when: ansible_os_family == 'RedHat' 
-
-- include_tasks: ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'

@@ -1,0 +1,137 @@
+    # options:
+    #   rhck - For OraceLinux install RedHat Compatiable Kernel
+    #   upgrade - Upgrade all packages to the latest
+    #   nomitigations - Disable all security mitigations
+    #   noselinux - Disable SELinux
+    #   nvidia - Install NVIDIA GPU drivers and software
+    #   monitoring - Install NVIDIA DCGM
+    #   benchmarks - Install benchmarks
+    #   intel-oneapi - Install Intel OneAPI MPI/MKL
+    #   openmpi - Install OpenMPI against system gcc
+    #   use_plugins - Do not install OCI HPC packages that are replaced by OCA HPC Plugins
+
+    # groups:
+    #   groups define the variables (group_vars) to use with the roles
+
+- name: General configuration
+  hosts: all
+  any_errors_fatal: true
+  become: true
+
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oracle_cloud_agent_update_disable
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: ssh
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: packages
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel_parameters
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: kernel_limits
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oci_utils
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nozeroconf
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: disable_selinux
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: mellanox_ofed
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: mellanox_hpcx
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oci_hpc_packages
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: tuned
+      when: "'noselinux' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: openmpi_gcc
+      when: "'openmpi' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: systemd
+
+- name: AMD configuration
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_mpivars
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rocm
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_perftest
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rvs
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_disclaimer
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_rccl_tests
+      when: "'amd' in options"
+
+- name: NVIDIA configuration
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  tasks:
+
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_driver
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_cuda
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_cudnn
+      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_nccl
+      when: "'nvidia' in options"
+  #    - ansible.builtin.import_role:
+  #        name: nvidia-fabricmanager
+  #      when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nvidia_dcgm
+      when: "'nvidia' in options and 'monitoring' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: nccl_tuner
+      when: "'nvidia' in options"
+
+- name: GPU configuration
+  hosts: all
+  any_errors_fatal: true
+  become: true
+
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: gpu_tuning
+      when: "'nvidia' in options or 'amd' in options"
+
+- name: Benchmarks
+  hosts: all
+  any_errors_fatal: true
+  become: true
+
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: hpc_benchmarks
+      when: "'benchmarks' in options"
+
+- name: Reboot and cleanup
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: dracut
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oracle_cloud_agent_enable
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: cleanup

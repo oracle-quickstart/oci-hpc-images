@@ -1,0 +1,13 @@
+---
+- name: Disable SELinux for RedHat 7
+  when:
+    - ansible_os_family == 'RedHat'
+
+  block:
+    - name: Ensure SELinux configuration is disabled
+      ansible.builtin.lineinfile:
+        path: /etc/selinux/config
+        regexp: '^SELINUX='
+        line: 'SELINUX=disabled'
+        create: false
+        state: present

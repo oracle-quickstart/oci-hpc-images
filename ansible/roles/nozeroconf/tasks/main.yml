@@ -1,0 +1,10 @@
+---
+- name: Disable nozeroconf network routes for RedHat
+  when:
+    - ansible_os_family == 'RedHat'
+  block:
+    - name: Ensure NOZEROCONF is configured
+      ansible.builtin.lineinfile:
+        path: /etc/sysconfig/network
+        line: NOZEROCONF=yes
+        state: present

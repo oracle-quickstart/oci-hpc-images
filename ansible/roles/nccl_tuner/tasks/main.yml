@@ -1,0 +1,40 @@
+- name: Install NCCL tuner
+  vars:
+    user: "{{ 'opc' if ansible_os_family == 'RedHat' else 'ubuntu' if ansible_distribution == 'Ubuntu' }}"
+
+  block:
+
+    - name: Ensure monitoring directory exists
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/oci-tuner/"
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: '0775'
+      become: true
+
+    - name: Copy libnccl-ocituner for OL
+      become: true
+      ansible.builtin.get_url:
+        url: https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/m1Gdcbiguqst6n_aVwRZIFpRZxUG-wGMvqWS5QJeJbIvNZnqTTA3N1_DDRuYpvJx/n/hpc/b/source/o/tuner/libnccl-ocituner.so.{{ item }}_OL # noqa yaml[line-length]
+        dest: "{{ benchmark_base_path }}/oci-tuner/libnccl-ocituner-A100.so.{{ item }}"
+        owner: opc
+        group: opc
+        mode: '0775'
+      when: ansible_distribution == 'OracleLinux'
+      with_items:
+        - "1.0.2"
+        - "2.0.1"
+
+    - name: Copy libnccl-ocituner for Ubuntu # noqa yaml[line-length]
+      become: true
+      ansible.builtin.get_url:
+        url: https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/m1Gdcbiguqst6n_aVwRZIFpRZxUG-wGMvqWS5QJeJbIvNZnqTTA3N1_DDRuYpvJx/n/hpc/b/source/o/tuner/libnccl-ocituner.so.{{ item }}_ubuntu_22.04 # noqa yaml[line-length]
+        dest: "{{ benchmark_base_path }}/oci-tuner/libnccl-ocituner-A100.so.{{ item }}"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0775'
+      when: ansible_os_family == 'Debian'
+      with_items:
+        - "1.0.2"
+        - "2.0.1"

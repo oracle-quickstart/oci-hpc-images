@@ -1,0 +1,130 @@
+/* variables */
+
+variable "image_base_name" {
+  type    = string
+  default = "OracleLinux-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
+}
+
+variable "build_options" {
+  type    = string
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
+}
+
+variable "build_groups" {
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
+}
+
+variable "image_id" {
+  type    = string
+  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
+}
+
+variable "ssh_username" {
+  type    = string
+  default = "opc"
+}
+
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+
+variable "region" {
+  type    = string
+  default = "ca-toronto-1"
+}
+
+variable "ad" {
+  type    = string
+  default = "VXpT:CA-TORONTO-1-AD-1"
+}
+
+variable "compartment_ocid" {
+  type    = string
+}
+
+variable "shape" {
+  type    = string
+  default = "VM.Standard.E4.Flex"
+}
+
+variable "subnet_ocid" {
+  type    = string
+}
+
+variable "access_cfg_file" { 
+  type = string
+  default = "~/.oci/config"
+}
+
+variable "access_cfg_file_account" {
+  type    = string
+  default = "DEFAULT"
+}
+
+variable "use_instance_principals" { 
+  type = string
+  default = true
+}
+
+#variable "access_cfg_file_account" {
+#  type    = string
+#  default = "/home/opc/.oci/config"
+#}
+
+/* changes should not be required below */
+
+source "oracle-oci" "oracle" {
+  availability_domain = var.ad
+  base_image_ocid     = var.image_id
+  compartment_ocid    = var.compartment_ocid
+  image_name          = local.build_name
+  shape               = var.shape
+  shape_config        { ocpus = "16" }
+  ssh_username        = var.ssh_username
+  subnet_ocid         = var.subnet_ocid
+  access_cfg_file     = var.use_instance_principals ? null : var.access_cfg_file
+  access_cfg_file_account = var.use_instance_principals ? null : var.access_cfg_file_account
+  region              = var.use_instance_principals ? null : var.region
+  user_data_file      = "${path.root}/../files/user_data.txt"
+  disk_size           = 60
+  use_instance_principals = var.use_instance_principals
+  ssh_timeout         = "90m"
+  instance_name       = "HPC-ImageBuilder-${local.build_name}"
+}
+
+locals {
+  ansible_args        = "options=[${var.build_options}]"
+  ansible_groups      = "${var.build_groups}"
+  build_name          = "${var.image_base_name}"
+}
+
+build {
+  name    = "buildname"
+  sources = ["source.oracle-oci.oracle"]
+
+  provisioner "shell" {
+    inline = ["sudo /usr/libexec/oci-growfs -y"]
+  }
+
+  // in case we're running with ansible 2.17+ we need to install python3.8
+  provisioner "shell" { 
+    inline = ["sudo dnf -y install python3.8"]
+  }
+
+  provisioner "ansible" {
+    playbook_file   = "${path.root}/../../ansible/hpc.yml"
+    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    groups = local.ansible_groups
+    user = var.ssh_username
+  }
+
+  provisioner "shell" {
+    inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
+  }
+
+  post-processor "manifest" {
+    output = "${var.image_base_name}.manifest.json"
+    custom_data = {
+        image_name    = var.image_base_name
+        ssh_username  = var.ssh_username
+    }
+  }
+}
