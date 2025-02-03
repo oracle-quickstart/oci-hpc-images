@@ -39,6 +39,11 @@ variable "build_groups" {
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
+variable "ansible_extra_args" {
+  type    = list(string)
+  default = []
+}
+
 variable "region" { type = string }
 variable "ad" { type = string }
 variable "compartment_ocid" { type = string }
@@ -94,7 +99,7 @@ build {
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", "ansible_python_interpreter=auto_legacy", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    extra_arguments = [ "-e", "ansible_python_interpreter=auto_legacy", "-e", local.ansible_args] 
     groups = local.ansible_groups
     user = var.ssh_username
   }
