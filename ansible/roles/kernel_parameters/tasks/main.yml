@@ -6,7 +6,7 @@
        + (('noselinux' in options) | ternary(['selinux=0'], []))
        + (('enroot' in options) | ternary(grub_cmdline_enroot, []))
        + (('networkdevicenames' in options) | ternary(grub_cmdline_network_device_names, []))
-       + ((ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8') | ternary(['ip=single-dhcp,dhcp6'], [])) }}"
+       + ((ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9') | ternary(['ip=single-dhcp,dhcp6'], [])) }}"
   when:
     - "options is defined"
     - grub_cmdline is defined

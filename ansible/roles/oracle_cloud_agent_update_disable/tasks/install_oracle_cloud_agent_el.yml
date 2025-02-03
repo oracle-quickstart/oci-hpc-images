@@ -1,5 +1,5 @@
 - name: Install specific version of OCI Clud Agent on Oracle Linux
-  when: ansible_distribution == 'OracleLinux' and 'oci_cloud_agent_version'
+  when: ansible_distribution == 'OracleLinux' and oci_cloud_agent_version is defined
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'
@@ -19,7 +19,7 @@
         state: present
 
 - name: Install specific version of OCI Clud Agent on Oracle Linux from URL
-  when: ansible_distribution == 'OracleLinux' and 'oci_cloud_agent_version' is defined and oca_download_url is defined
+  when: ansible_distribution == 'OracleLinux' and oci_cloud_agent_version is defined and oca_download_url is defined
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'

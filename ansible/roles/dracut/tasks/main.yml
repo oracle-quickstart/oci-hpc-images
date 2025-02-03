@@ -1,8 +1,7 @@
 - name: On Oracle Linux reboot twice to make sure all initrd changes are applied
   when:
     - ansible_os_family == 'RedHat'
-    - ansible_distribution_major_version == '7' or ansible_distribution_major_version == '8'
-
+    - ansible_distribution == 'OracleLinux'
   block:
     - name: Run dracut -f # noqa no-changed-when
       ansible.builtin.command: "sudo dracut -f"
