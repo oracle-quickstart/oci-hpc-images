@@ -39,11 +39,6 @@ variable "build_groups" {
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
-variable "ansible_extra_args" {
-  type    = list(string)
-  default = []
-}
-
 variable "region" { type = string }
 variable "ad" { type = string }
 variable "compartment_ocid" { type = string }
