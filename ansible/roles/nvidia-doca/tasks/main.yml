@@ -1,9 +1,0 @@
-- name: Import tasks for Enterprise Linux
-  ansible.builtin.include_tasks:
-    file: el.yml
-  when: ansible_os_family == 'RedHat'
-
-- name: Import tasks for Ubuntu
-  ansible.builtin.include_tasks:
-    file: ubuntu.yml
-  when: ansible_os_family == 'Debian'
