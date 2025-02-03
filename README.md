@@ -2,12 +2,18 @@
 
 Install Ansible & packer
 ```
-sudo yum install -y yum-utils ansible
+sudo yum install -y yum-utils
 sudo yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo
 sudo yum -y install packer
-ansible-galaxy collection install ansible.posix
-ansible-galaxy collection install community.general
-
+sudo dnf install -y oracle-epel-release-el8
+sudo dnf config-manager --set-enabled ol8_codeready_builder
+sudo dnf install -y python3.8
+sudo python3.8 -m pip install --upgrade pip setuptools
+python3.8 -m venv packer_env
+source packer_env/bin/activate 
+python -m pip install --upgrade pip
+pip install ansible-core==2.13.13
+ansible-galaxy install -r oci-hpc-images-main/requirements.yml
 ```
 
 Create a new version of the file: `defaults.pkr.hcl` and fill in the variables from the console. 
