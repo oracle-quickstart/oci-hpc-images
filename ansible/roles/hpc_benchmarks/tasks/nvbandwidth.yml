@@ -13,7 +13,7 @@
       become: true
 
     - name: Install dependencies for OL8
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - boost-devel
           - boost-program-options

@@ -5,7 +5,7 @@
 
   block:
     - name: Ensure latest microcode_ctl is installed
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name:
           - microcode_ctl
         state: present
@@ -19,7 +19,7 @@
         state: present
 
     - name: Install development tools
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         enablerepo: "*developer_EPEL*"
         name:
           - "@Development Tools"
@@ -31,7 +31,7 @@
         state: present
 
     - name: Upgrade all packages # noqa package-latest
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name: '*'
         state: latest
       when:

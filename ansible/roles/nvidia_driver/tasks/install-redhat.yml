@@ -4,7 +4,7 @@
 # - name: Ensure we have kernel-headers installed for the current kernel
 #   block:
 #     - name: Attempt to install kernel support packages for current version
-#       ansible.builtin.dnf:
+#       ansible.builtin.yum:
 #         name:
 #           - "kernel-headers-{{ ansible_kernel }}"
 #           - "kernel-tools-{{ ansible_kernel }}"
@@ -15,7 +15,7 @@
 #       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 #   rescue:
 #     - name: Update the 4kernel to latest version so we have a supported version
-#       ansible.builtin.dnf:
+#       ansible.builtin.yum:
 #         name:
 #           - "kernel"
 #           - "kernel-headers"
@@ -31,7 +31,7 @@
   when: not nvidia_driver_skip_reboot
 
 - name: Install dependencies
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     enablerepo: "*_developer_EPEL*"
     name: dkms
     state: present
@@ -51,7 +51,7 @@
   when: nvidia_driver_add_repos | bool
 
 - name: Install driver packages RHEL/CentOS 7 and older
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     enablerepo: "*_developer_EPEL*"
     name:
       - "nvidia-driver-branch-{{ nvidia_driver_version }}"
@@ -65,7 +65,7 @@
   when: ansible_distribution_major_version < '8' and ansible_distribution != 'OracleLinux'
 
 - name: Install driver packages Oracle Linux 7
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     enablerepo: "*_developer_EPEL*"
     name:
       - "nvidia-driver-branch-{{ nvidia_driver_version }}"
@@ -79,7 +79,7 @@
   when: ansible_distribution_major_version < '8' and ansible_distribution == 'OracleLinux'
 
 - name: Install driver packages RHEL/CentOS 8 and newer
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name:
 #      - "{{ nvidia_driver_package_version | ternary('@nvidia-driver:'+nvidia_driver_package_version, '@nvidia-driver:'+nvidia_driver_rhel_branch+'-dkms') }}"
       - "{{ '@nvidia-driver:' + nvidia_driver_rhel_branch + '-dkms' }}"

@@ -11,7 +11,7 @@
   block:
 
     - name: Ensure required packages are installed for Mellanox OFED
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         enablerepo: "*developer_EPEL*"
         name:
           - createrepo
@@ -86,7 +86,7 @@
   block:
 
     - name: Ensure required packages are installed for Mellanox OFED
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         enablerepo: "*developer_EPEL*"
         name:
           - createrepo
@@ -150,7 +150,7 @@
         kernel_version: "{{ default_kernel_path.stdout | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
 
     - name: Install kernel-devel
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name: kernel-devel-{{ kernel_version }}
         allow_downgrade: true
         state: present
@@ -158,7 +158,7 @@
         - "'rhck' in options"
 
     - name: Install kernel-devel
-      ansible.builtin.dnf:
+      ansible.builtin.yum:
         name: kernel-uek-devel-{{ kernel_version }}
         allow_downgrade: true
         state: present

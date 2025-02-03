@@ -1,5 +1,5 @@
 - name: Install latest DCGM for EL
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name: datacenter-gpu-manager
     state: present
   when:
@@ -7,7 +7,7 @@
     - "'stable_dcgm' not in options"
 
 - name: Install stable DCGM for EL
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name: "datacenter-gpu-manager-{{ stable_nvidia_dcgm_version }}"
     state: present
   when:

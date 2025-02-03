@@ -1,6 +1,6 @@
 ---
 - name: Install NVIDIA fabric manager for Oracle Linux and similar
-  ansible.builtin.dnf:
+  ansible.builtin.yum:
     name: nvidia-fabricmanager-{{ nvidia_driver_version }}
     state: present
   when:
