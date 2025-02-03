@@ -136,7 +136,7 @@
         mellanox_os_version: "rhel{{ ansible_distribution_version }}"
       when:
         - "mellanox_os_version is not defined"
-        - ansible_distribution == 'OracleLinux' 
+        - ansible_distribution == 'OracleLinux'
         - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
         - "'rhck' in options"
 
@@ -178,7 +178,7 @@
     # Download OFED locally
     # This is due to some ansible version incompatibility and problems with remote URL download in unarchive module
 
-    - name: Download OFED locally 
+    - name: Download OFED locally
       ansible.builtin.get_url:
         url: "{{ mlx_ofed_download }}{{ dir }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
         dest: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
@@ -188,12 +188,13 @@
       ansible.builtin.unarchive:
         src: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
         dest: "{{ mlnx_extract_dir.path }}"
-        remote_src: true 
+        remote_src: true
       register: mlnx_ofed_extract
 
     - name: Install Mellanox OFED
       ansible.builtin.shell: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall 
+        --force --all --without-fw-update --add-kernel-support --distro {{ mellanox_os_version }} --kernel {{ kernel_version }}
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"
