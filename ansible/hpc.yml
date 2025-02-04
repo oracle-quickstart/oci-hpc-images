@@ -22,6 +22,8 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: oracle_cloud_agent_update_disable
     - ansible.builtin.import_role: # noqa name[missing]
+        name: rdma_configuration
+    - ansible.builtin.import_role: # noqa name[missing]
         name: ssh
     - ansible.builtin.import_role: # noqa name[missing]
         name: packages

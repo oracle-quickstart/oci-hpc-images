@@ -1,5 +1,5 @@
 - name: Install specific version of OCI Cloud Agent on Ubuntu from Snapcraft
-  when: ansible_distribution == 'Ubuntu' and oci_cloud_agent_version_ubuntu is defined
+  when: ansible_distribution == 'Ubuntu' and oci_cloud_agent_channel_ubuntu is defined
 
 # version format for Ubuntu
 # oci_cloud_agent_version: 1.40.0-12
@@ -8,9 +8,7 @@
     - name: Install Oracle Cloud Agent Snap from channel
       community.general.snap:
         name: oracle-cloud-agent
-        channel: "{{ oci_cloud_agent_version_ubuntu }}"
-        classic: true
-        dangerous: true
+        channel: "{{ oci_cloud_agent_channel_ubuntu }}"
         state: present
 
 - name: Install specific version of OCI Clud Agent on Ubuntu from URL
