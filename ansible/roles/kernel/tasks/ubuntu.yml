@@ -6,13 +6,13 @@
 
     # Prefer the generic kernel flavor over oracle *before* we install the
     # generic kernel flavor so update-grub pick it during installation.
-    - name: Prefer the generic kernel flavor over oracle
-      ansible.builtin.lineinfile:
-        path: /etc/default/grub.d/10_linux_flavour.cfg
-        create: true
-        regexp: '^GRUB_FLAVOUR_ORDER='
-        line: 'GRUB_FLAVOUR_ORDER="generic"'
-        mode: "0644"
+    # - name: Prefer the generic kernel flavor over oracle
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/default/grub.d/10_linux_flavour.cfg
+    #     create: true
+    #     regexp: '^GRUB_FLAVOUR_ORDER='
+    #     line: 'GRUB_FLAVOUR_ORDER="generic"'
+    #     mode: "0644"
 
     - name: Remove all kernel packages
       ansible.builtin.apt:
