@@ -3,10 +3,10 @@
     file: osms.yml
   when: ansible_distribution == 'OracleLinux'
 
-- name: Install OCI Cloud Agent on Oracle Linux
+- name: Install OCI Cloud Agent on EL
   ansible.builtin.include_tasks:
     file: install_oracle_cloud_agent_el.yml
-  when: ansible_distribution == 'OracleLinux'
+  when: ansible_os_family == 'RedHat'
 
 - name: Install OCI Cloud Agent on Ubuntu
   ansible.builtin.include_tasks:

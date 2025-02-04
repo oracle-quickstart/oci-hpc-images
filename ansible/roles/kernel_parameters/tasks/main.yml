@@ -12,16 +12,16 @@
     - grub_cmdline is defined
 
 
-- name: Kernel boot parameters for RedHat 7 and 8
+- name: Kernel boot parameters for Enterprise Linux
   when:
     - ansible_os_family == 'RedHat'
   block:
 
-    - name: Ensure kernel boot parameters are setup for RedHat 7 and 8
+    - name: Ensure kernel boot parameters are setup for Enterprise Linux
       ansible.builtin.replace:
         path: /etc/default/grub
-        regexp: '^(GRUB_CMDLINE_LINUX=(?:(?![" ]{{ item.split("=")[0] | regex_escape }}=).)*"?)\s*(?:{{ item.split("=")[0] | regex_escape }}=\S+\s*)?(.*")$'
-        replace: '\1 {{ item }} \2'
+        regexp: '^(GRUB_CMDLINE_LINUX="(?:(?!{{ item.split("=")[0] | regex_escape }}=).)*)([ ]{{ item.split("=")[0] | regex_escape }}=\w+[ ])?[ ]?(?:{{ item.split("=")[0] | regex_escape }}=\S+)?(.*\")$' # noqa yaml[line-length]
+        replace: '\1 {{ item }}\3'
       notify:
         - Run grub2-mkconfig
       loop: "{{ kernel_parameters }}"

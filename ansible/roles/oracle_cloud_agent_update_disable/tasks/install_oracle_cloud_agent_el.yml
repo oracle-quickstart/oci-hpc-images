@@ -5,8 +5,8 @@
     name: "{{ versionlock_package }}"
     state: present
 
-- name: Install specific version of OCI Clud Agent on Oracle Linux
-  when: ansible_distribution == 'OracleLinux' and (oci_cloud_agent_version is defined and oca_download_url is not defined)
+- name: Install specific version of OCI Clud Agent on EL
+  when: ansible_os_family == 'RedHat' and (oci_cloud_agent_version is defined and oca_download_url is not defined)
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'
@@ -25,8 +25,8 @@
         name: oracle-cloud-agent
         state: present
 
-- name: Install specific version of OCI Clud Agent on Oracle Linux from URL
-  when: ansible_distribution == 'OracleLinux' and oci_cloud_agent_version is defined and oca_download_url is defined
+- name: Install specific version of OCI Clud Agent on EL from URL
+  when: ansible_os_family == 'RedHat' and oci_cloud_agent_version is defined and oca_download_url is defined
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'
@@ -37,7 +37,7 @@
     - name: Download specific version of OCI Cloud Agent
       ansible.builtin.get_url:
         url: "{{ oca_download_url }}oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm"
-        dest: /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm"
+        dest: /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm
         mode: '0644'
       register: download_result
 
@@ -59,18 +59,17 @@
         state: present
       when: ansible_distribution_major_version | int > 7
 
-- name: Disable Oracle Cloud Agent on Oracle Linux
+- name: Disable Oracle Cloud Agent on EL
   ansible.builtin.systemd:
     name: oracle-cloud-agent
     state: stopped
     enabled: false
     no_block: true
-  when: ansible_distribution == 'OracleLinux'
-
-- name: Disable Oracle Cloud Agent Updater on Oracle Linux
+  when: (ansible_os_family == 'RedHat' and oci_cloud_agent_version is defined) or ansible_distribution == 'OracleLinux'
+- name: Disable Oracle Cloud Agent Updater on EL
   ansible.builtin.systemd:
     name: oracle-cloud-agent-updater
     state: stopped
     enabled: false
     no_block: true
-  when: ansible_distribution == 'OracleLinux'
+  when: (ansible_os_family == 'RedHat' and oci_cloud_agent_version is defined) or ansible_distribution == 'OracleLinux'
