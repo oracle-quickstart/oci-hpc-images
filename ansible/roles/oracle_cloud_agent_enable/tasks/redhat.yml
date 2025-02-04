@@ -1,13 +1,17 @@
 - name: Enable Oracle Cloud Agent
   ansible.builtin.systemd:
-    name: oracle-cloud-agent
+    name: oracle-cloud-agent.service
     enabled: true
-    no_block: true
-  when: ansible_os_family == 'Redhat'
+    masked: false
+    state: "stopped"
+    daemon_reload: true
+  when: ansible_os_family == 'RedHat'
 
 - name: Enable Oracle Cloud Agent Updater
   ansible.builtin.systemd:
-    name: oracle-cloud-agent-updater
+    name: oracle-cloud-agent-updater.service
     enabled: true
-    no_block: true
+    masked: false
+    state: "stopped"
+    daemon_reload: true
   when: ansible_os_family == 'RedHat'
