@@ -20,12 +20,12 @@ variable "image_base_name" {
 
 variable "image_id" {
   type    = string
-  default = "RESF-Rocky-9-x86_64-Base-9.5-20250124-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.03-0.pkr.hcl"
+  default = "ocid1.image.oc1..aaaaaaaauo3kyxlty6himw7uecc4xdzshdnc43qf4q2uyvy32gi3t3ixg5pa"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "opc"
+  default = "rocky"
 }
 
 variable "build_options" {
