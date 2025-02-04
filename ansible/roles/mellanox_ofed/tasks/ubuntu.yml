@@ -135,7 +135,7 @@
 
     - name: Install Mellanox OFED
       ansible.builtin.shell: >
-        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall 
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall
         --force --all --without-fw-update
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
