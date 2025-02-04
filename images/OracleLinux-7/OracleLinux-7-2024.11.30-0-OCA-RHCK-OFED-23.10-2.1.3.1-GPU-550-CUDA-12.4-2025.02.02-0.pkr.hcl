@@ -15,7 +15,7 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "OracleLinux-7-2024.11.30-0-OCA-RHCK-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025.02.02-0"
+  default = "OracleLinux-7.9-2024.11.30-0-OCA-RHCK-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025.02.02-0"
 }
 
 variable "image_id" {

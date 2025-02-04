@@ -15,26 +15,26 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "OracleLinux-8.9-2024.05.29-0-OCA-RHCK-OFED-23.10-0.5.5.0-GPU-550-CUDA-12.4-2025.02.01-0"
+  default = "Canonical-Ubuntu-20.04-2024.10.02-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-02-03-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
+  default = "ocid1.image.oc1.iad.aaaaaaaadp3lalzonttesoe52qotckqmjth5qeow2wmiaiysykpo7ewqlnlq"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "opc"
+  default = "ubuntu"
 }
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" , "use_plugins" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0_131"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -49,6 +49,7 @@ variable "access_cfg_file_account" {
   type = string 
   default = "DEFAULT" 
 }
+
 variable "access_cfg_file" { 
   type = string
   default = "~/.oci/config"
@@ -86,30 +87,23 @@ build {
   sources = ["source.oracle-oci.oracle"]
 
   provisioner "shell" {
-    inline = ["sudo /usr/libexec/oci-growfs -y"]
+    inline = ["sudo growpart /dev/sda 1"]
+    valid_exit_codes = [0, 1] // 1 is returned if the partition is already the size of the disk
   }
 
-  // in case we're running with ansible 2.17+ we need to install python3.8
-  provisioner "shell" { 
-    inline = ["sudo yum -y install python3.8"]
+  provisioner "shell" {
+    inline = ["sudo resize2fs /dev/sda1"]
+    valid_exit_codes = [0, 1] 
   }
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "-e", local.ansible_args] 
+    extra_arguments = ["-e", local.ansible_args]
     groups = local.ansible_groups
     user = var.ssh_username
   }
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
-  }
-
-  post-processor "manifest" {
-    output = "${var.image_base_name}.manifest.json"
-    custom_data = {
-        image_name    = var.image_base_name
-        ssh_username  = var.ssh_username
-    }
   }
 }
