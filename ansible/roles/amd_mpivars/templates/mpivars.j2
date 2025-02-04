@@ -3,23 +3,23 @@
 # uninstalled or upgraded.
 
 # PATH
-if test -z "`echo $PATH | grep /usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/bin`"; then
-    PATH=/usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/bin:${PATH}
+if test -z "`echo $PATH | grep /usr/mpi/gcc/{{ openmpi.files[0].path }}/bin`"; then
+    PATH=/usr/mpi/gcc/{{ oopenmpi.files[0].path }}/bin:${PATH}
     export PATH
 fi
 
 # LD_LIBRARY_PATH
-if test -z "`echo $LD_LIBRARY_PATH | grep /usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/lib`"; then
-    LD_LIBRARY_PATH=/usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}
+if test -z "`echo $LD_LIBRARY_PATH | grep /usr/mpi/gcc/{{ openmpi.files[0].path }}/lib`"; then
+    LD_LIBRARY_PATH=/usr/mpi/gcc/{{ openmpi.files[0].path }}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}
     export LD_LIBRARY_PATH
 fi
 
 # MANPATH
-if test -z "`echo $MANPATH | grep /usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/share/man`"; then
-    MANPATH=/usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}/share/man:${MANPATH}
+if test -z "`echo $MANPATH | grep /usr/mpi/gcc/{{ openmpi.files[0].path }}/share/man`"; then
+    MANPATH=/usr/mpi/gcc/{{ openmpi.files[0].path }}/share/man:${MANPATH}
     export MANPATH
 fi
 
 # MPI_ROOT
-MPI_ROOT=/usr/mpi/gcc/{{ openmpi.stdout_lines[0] }}
+MPI_ROOT=/usr/mpi/gcc/{{ openmpi.files[0].path }}
 export MPI_ROOT
