@@ -4,10 +4,6 @@
 # "{{ amd_rocm_repo}}/{{ amd_rocm_version }}/rhel/
 #     {{ rhel_version[0] }}.{{ rhel_version[1] }}/{{ amd_rocm_package }}_el{{ ansible_distribution_major_version }}.rpm"
 
-amd_rocm_version: "6.1.1"
+amd_rocm_version: "6.3.2"
 amd_rocm_repo: "https://repo.radeon.com/amdgpu-install/"
-<<<<<<< Updated upstream
-amd_rocm_package: amdgpu-install_6.1.60101-1
-=======
-amd_rocm_package: "amdgpu-install_6.1.60101-1"
->>>>>>> Stashed changes
+amd_rocm_package: "amdgpu-install_6.3.60302-1"
