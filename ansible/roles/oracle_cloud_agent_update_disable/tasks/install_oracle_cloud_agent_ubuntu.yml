@@ -1,6 +1,3 @@
-- name: debug
-  debug: 
-    var: oci_cloud_agent_version_ubuntu
 - name: Install specific version of OCI Cloud Agent on Ubuntu from Snapcraft
   when: ansible_distribution == 'Ubuntu' and oci_cloud_agent_channel_ubuntu is defined
 
