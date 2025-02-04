@@ -14,28 +14,40 @@
         line: 'GRUB_FLAVOUR_ORDER="generic"'
         mode: "0644"
 
+    - name: Remove all kernel packages
+      ansible.builtin.apt:
+        name:
+          - linux-headers*
+          - linux-image*
+          - linux*headers*
+          - linux*tools*
+        state: absent
+        purge: true
+        autoremove: true
+        lock_timeout: 300
+
     - name: Install linux-image and headers (specific version)
       ansible.builtin.apt:
         name:
-          - "linux-image-{{ ubuntu_kernel_version }}-generic"
-          - 'linux-headers-{{ ubuntu_kernel_version }}-generic'
-          - 'linux-tools-{{ ubuntu_kernel_version }}-generic'
+          - "linux-image-{{ ubuntu_22_kernel_version }}"
+          - "linux-headers-{{ ubuntu_22_kernel_version }}"
+          - "linux-tools-{{ ubuntu_22_kernel_version }}"
         state: present
         install_recommends: true
         lock_timeout: 300
-      when: ubuntu_kernel_version is defined
+      when: ubuntu_22_kernel_version is defined
 
-    - name: Install linux-image and headers
-      ansible.builtin.apt:
-        name:
-          - "linux-image-generic"
-          - "linux-headers-generic"
-          - "linux-tools-generic"
-        state: present
-        install_recommends: true
-        lock_timeout: 300
-      when: ubuntu_kernel_version is not defined
-      register: kernel_packages
+    # - name: Install linux-image and headers
+    #   ansible.builtin.apt:
+    #     name:
+    #       - "linux-image-{{ kernel_flavor_ubuntu }}"
+    #       - "linux-headers-{{ kernel_flavor_ubuntu }}"
+    #       - "linux-tools-{{ kernel_flavor_ubuntu }}"
+    #     state: present
+    #     install_recommends: true
+    #     lock_timeout: 300
+    #   when: ubuntu_kernel_version is not defined
+    #   register: kernel_packages
 
     - name: Pin the kernel packages
       ansible.builtin.copy:
@@ -45,23 +57,5 @@
           Pin-Priority: -1
         dest: /etc/apt/preferences.d/00_pin_kernel
         mode: "0644"
-
-    - name: Remove Oracle HWE kernel
-      ansible.builtin.apt:
-        name:
-          - linux-image-*-oracle
-          - linux-modules-*-oracle
-          - linux-modules-extra-*-oracle
-          - linux-oracle-*
-          - linux-headers-*-oracle
-          - linux-oracle-*-tools-*
-          - linux-tools-*oracle
-          - linux-image-oracle
-          - linux-oracle
-          - linux-headers-oracle
-        state: absent
-        purge: true
-        autoremove: true
-        lock_timeout: 300
       notify:
         - Reboot
