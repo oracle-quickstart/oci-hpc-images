@@ -15,7 +15,7 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-01-31.01"
+  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-ROCM-632-CUDA-12.4-2025-02-04.01"
 }
 
 variable "image_id" {
