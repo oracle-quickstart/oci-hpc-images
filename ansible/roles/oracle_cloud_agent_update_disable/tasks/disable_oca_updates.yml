@@ -20,3 +20,4 @@
     content: 'upgrade_interval: -1'
     dest: /etc/oracle-cloud-agent/overrides/updater_override.yml
     mode: "0644"
+  become: true
