@@ -3,34 +3,57 @@
 ansible_hpc is a collection of ansible roles and playbook to build an HPC image.
 - It installs HPC packages to ensure that our instances from the image can run in OCI RDMA network.
 - It is supports HPC/GPU shapes, and we support OL7x/Ubuntu.
+
 # Code geography
+
+## Roles
+
+
 
 | Component            | Description                                                                                                                                                                                                                                    |
 |----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| hpc.yml              | This is Entry point for packer files                                                                                                                                                                                                           |
-| ssh                  | Modifies sshd_config in image                                                                                                                                                                                                                  |
-| kernel-parameters    | Sets grub config changes                                                                                                                                                                                                                       |
-| kernel-limits        | Sets kernel limits changes - specifications -http://openhpc.community/wp-content/uploads/Install_guide-CentOS7.1-1.0.pdf                                                                                                                       |
-| packages             | Installs/Disables Packages from the OS vendor repos                                                                                                                                                                                            |
-| kernel-rhck          | Modifies Redhat kernel params                                                                                                                                                                                                                  |
-| oci-utils            | Clean utils we wrote                                                                                                                                                                                                                           |
-| oracle-cloud-agent   | Configures OCA and OSMS                                                                                                                                                                                                                        |
-| nozeroconf           | Configures NOZERCONFIG settings for Redhat - https://www.brennan.id.au/04-Network_Configuration.html                                                                                                                                           |
-| mellanox-ofed        | Installs Mellanox OFED                                                                                                                                                                                                                         |
-| oci-hpc-packages     | Installs packages from Compute-HPC team                                                                                                                                                                                                        |
-| tuned                | Installs serviced tuned - https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/monitoring_and_managing_system_status_and_performance/getting-started-with-tuned_monitoring-and-managing-system-status-and-performance |
-| disable-selinux      | Disables SELINUX for performances                                                                                                                                                                                                              |
-| mellanox-hpcx        | Installs MLX HPCX - https://developer.nvidia.com/networking/hpc-x                                                                                                                                                                              |
-| intel-openapi        | Installs Intel Open MPI -https://www.intel.com/content/www/us/en/developer/tools/oneapi/mpi-library.html                                                                                                                                       |
-| openmpi-gcc          | Installs Open MPI                                                                                                                                                                                                                              |
-| nvidia-driver        | Installs nvidia-driver - https://galaxy.ansible.com/nvidia/nvidia_driver                                                                                                                                                                       |
-| nvidia-cuda          | Installs cuda                                                                                                                                                                                                                                  |
-| nvidia-cudnn         | Installs cuda libraries for neural networks - https://developer.nvidia.com/cudnn****                                                                                                                                                           |
-| nvidia-fabricmanager | installs fabricmanager for nvidia                                                                                                                                                                                                              |
-| nvidia-nccl          | Installs NCCL libs                                                                                                                                                                                                                             |
-| nvidia-dcgm          | Installs dcgm                                                                                                                                                                                                                                  |
-| hpc-benchmarks       | Installs benchmark utils - gpuburn,nccl-test,stream                                                                                                                                                                                            |
-| systemd              | Configures systemd                                                                                                                                                                                                                             |
+| amd_disclaimer       | adds AMD disclaimer in the cloud user home directory 
+| amd_mpivars					 | creates AMD specific mpivars.sh in local OpenMPI installation 
+| amd_perftest				 | AMD specific perftest installation
+| amd_rccl_tests       | Download and build https://github.com/ROCm/rccl-tests
+| amd_rocm						 | Install ROCm 
+| amd_rvs							 | Install rocm-validation-suite
+| cleanup 						 | on OL8+ perform DNF cache cleanup
+| disable_selinux			 | Disable SELINUX on Enterprise Linux 
+| dracut							 | Update dracut and reboot to apply udev rules
+| gpu_tuning					 | GPU deployment specific sysctl settings
+| hpc_benchmarks		   | Add various HPC benchmarks to the image
+| kernel							 | Perform kernel installation tasks (RHCK on OL, Specific version on Ubuntu)
+| limits      				 | Update default ulimit settings
+| mellanox_hpcx				 | Install HPCX from Nvidia
+| mellanox_ofed 	     | Install MOFED
+| nccl_tuner					 | Download and install NCCL tuning plugin
+| nozeroconf				   | Disable bonjour 
+| nvidia_cuda					 | Install CUDA libraries
+| nvidia_cudnn				 | Install cuDNN libraries
+| nvidia_dcgm					 | Install DCGM
+| nvidia_fabricmanager | (Unused) Install nvidia-fabricmanager
+| nvidia_nccl					 | Install specific NCCL version
+| nvidia-doca					 | Install DOCA-ofed instead of MOFED
+| oci_hpc_packages		 | Add OCI specific hpc packages and utils
+| oci_utils						 | Install image cleanup utilities 
+| openmpi_gcc					 | Build and install OpenMPI 
+| openscap_oval				 | Install Openscap and generate report
+| oracle_cloud_agent_enable | re-enable oracle-cloud-agent 
+| oracle_cloud_agent_update_disable | Update oracle-cloud-agent and pin version in the image
+| packages             | Install necessary packages 
+| rdma_configuration   | Add rdma_network.json configuration file for cloud agent
+| resize_rootfs        | Resize root partition to match boot volume size 
+| ssh                  | Modifies sshd_config in image       
+| systemd							 | Set multi-user target on Ubuntu          
+| tuned							   | Install and configure tuned 
+
+## Playbooks
+
+| Component            | Description                                                                                                                                                                                                                                    |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| hpc.yml      | Entry point for the image build
+                                                                                                                                                                                                        |
 
 
 # Development
@@ -92,8 +115,7 @@ We use when in roles where we need to have different code for different OS.
    - (ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '7' or ansible_distribution_major_version == '8')) or (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '20')
 ```
 
-## How does the ansible and packer gel together?
-It is a marriage from hell - 
+## How does the ansible and packer work together?
 The packer file uses build_options and build_groups to pass the ansible variables to the ansible playbook.
 - build_options - are the ansible variables to switch on / off packages
 - build_groups - are the ansible groups to run aka hpc v/s gpu
