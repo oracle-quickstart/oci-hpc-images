@@ -30,7 +30,7 @@ variable "ssh_username" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,enroot,benchmarks,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
