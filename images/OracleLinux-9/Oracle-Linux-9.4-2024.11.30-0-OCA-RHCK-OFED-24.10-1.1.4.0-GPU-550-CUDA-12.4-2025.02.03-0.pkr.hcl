@@ -15,7 +15,7 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.03-0"
+  default = "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025.02.03-0"
 }
 
 variable "image_id" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol9_rhck" , "use_plugins", "oca_beta_149"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol9_rhck" , "use_plugins", "oca_beta_149"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

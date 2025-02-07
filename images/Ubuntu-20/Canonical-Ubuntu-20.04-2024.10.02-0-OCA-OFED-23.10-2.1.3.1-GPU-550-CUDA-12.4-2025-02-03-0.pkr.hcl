@@ -15,7 +15,7 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-20.04-2024.10.02-0-OCA-OFED-23.10-2.1.3.1-GPU-550-CUDA-12.4-2025-02-03-0"
+  default = "Canonical-Ubuntu-20.04-2024.10.02-0-OCA-OFED-23.10-2.1.3.1-GPU-560-CUDA-12.6-2025-02-03-0"
 }
 
 variable "image_id" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4" , "use_plugins" , "kernel_5.15.0_131", "oca_148"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "use_plugins" , "kernel_5.15.0_131", "oca_148"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol7_rhck" , "use_plugins" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol7_rhck" , "use_plugins" ]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
