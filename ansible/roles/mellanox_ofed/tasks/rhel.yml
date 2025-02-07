@@ -128,8 +128,28 @@
       when:
         - "mellanox_os_version is not defined"
         - ansible_distribution == 'OracleLinux'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - ansible_distribution_major_version == '9'
         - "'rhck' not in options"
+
+    - name: Set OL version string for OFED with UEK
+      ansible.builtin.set_fact:
+        mellanox_os_version: "ol{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '8'
+        - "'rhck' not in options"
+        - ( ansible_distribution_version.split('.')[1] | int ) < 9
+        
+    - name: Set OL version string for OFED with UEK
+      ansible.builtin.set_fact:
+        mellanox_os_version: "ol8.8"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '8'
+        - "'rhck' not in options"
+        - ( ansible_distribution_version.split('.')[1] | int ) > 8
 
     - name: Set OL version string for OFED with RHCK
       ansible.builtin.set_fact:
@@ -137,7 +157,7 @@
       when:
         - "mellanox_os_version is not defined"
         - ansible_distribution == 'OracleLinux'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - ansible_distribution_major_version == '8'
         - "'rhck' in options"
         - ( ansible_distribution_version.split('.')[1] | int ) > 9
 
@@ -147,8 +167,35 @@
       when:
         - "mellanox_os_version is not defined"
         - ansible_distribution == 'OracleLinux'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - ansible_distribution_major_version == '8'
         - "'rhck' in options"
+        - ( ansible_distribution_version.split('.')[1] | int ) < 10
+
+    - name: Set OL version string for OFED with RHCK
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - ansible_distribution_major_version == '9'
+        - "'rhck' in options"
+
+    - name: Set OL version string for other EL systems
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel8.9"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '8'
+        - ( ansible_distribution_version.split('.')[1] | int ) > 9
+
+    - name: Set OL version string for other EL systems
+      ansible.builtin.set_fact:
+        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '8'
         - ( ansible_distribution_version.split('.')[1] | int ) < 10
 
     - name: Set OL version string for other EL systems
@@ -157,8 +204,7 @@
       when:
         - "mellanox_os_version is not defined"
         - ansible_os_family == 'RedHat'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
-
+        - ansible_distribution_major_version == '9'
 
     - name: Get default kernel name
       ansible.builtin.command: "grubby --default-kernel"
