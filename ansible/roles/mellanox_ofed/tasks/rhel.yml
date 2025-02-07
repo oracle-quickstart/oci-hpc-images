@@ -133,12 +133,23 @@
 
     - name: Set OL version string for OFED with RHCK
       ansible.builtin.set_fact:
+        mellanox_os_version: "rhel8.9"
+      when:
+        - "mellanox_os_version is not defined"
+        - ansible_distribution == 'OracleLinux'
+        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
+        - "'rhck' in options"
+        - ( ansible_distribution_version.split('.')[1] | int ) > 9
+
+    - name: Set OL version string for OFED with RHCK
+      ansible.builtin.set_fact:
         mellanox_os_version: "rhel{{ ansible_distribution_version }}"
       when:
         - "mellanox_os_version is not defined"
         - ansible_distribution == 'OracleLinux'
         - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
         - "'rhck' in options"
+        - ( ansible_distribution_version.split('.')[1] | int ) < 10
 
     - name: Set OL version string for other EL systems
       ansible.builtin.set_fact:
