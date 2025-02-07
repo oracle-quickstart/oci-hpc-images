@@ -44,6 +44,7 @@ ansible-galaxy install -r oci-hpc-images-main/requirements.yml
 
 
 Using defaults.pkr.hcl.example create a new version of the file: `defaults.pkr.hcl` and fill in the variables.
+In the image file, you will need to edit the image OCID for your region. OCIDs can be found here: https://docs.oracle.com/en-us/iaas/images/
 
 In the image directory, choose the OS folder you would like to build for and edit the file with the image name and the specific modules to install. Since this takes quite some time, we recommend running this in a tmux session: 
 ```
