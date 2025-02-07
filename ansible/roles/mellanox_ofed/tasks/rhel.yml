@@ -140,7 +140,7 @@
         - ansible_distribution_major_version == '8'
         - "'rhck' not in options"
         - ( ansible_distribution_version.split('.')[1] | int ) < 9
-        
+
     - name: Set OL version string for OFED with UEK
       ansible.builtin.set_fact:
         mellanox_os_version: "ol8.8"
