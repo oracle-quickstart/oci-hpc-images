@@ -1,1 +1,2 @@
 rhck_kernel_level: "3.10.0-1160"
+override_mellanox_os_version: "rhel7.9"
