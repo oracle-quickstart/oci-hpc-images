@@ -15,12 +15,12 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-GPU-560-CUDA-12.6-2025-01-31.01"
+  default = "Canonical-Ubuntu-20.04-2024.10.02-0-OCA-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025-02-03-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaa2bulxukxsjyv3ap3x45eueiqxxpxpsfrv6qppq7xrwtiima2c2pq"
+  default = "ocid1.image.oc1.iad.aaaaaaaadp3lalzonttesoe52qotckqmjth5qeow2wmiaiysykpo7ewqlnlq"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "use_plugins" , "oca_148"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "use_plugins" , "kernel_5.15.0_131", "oca_148"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

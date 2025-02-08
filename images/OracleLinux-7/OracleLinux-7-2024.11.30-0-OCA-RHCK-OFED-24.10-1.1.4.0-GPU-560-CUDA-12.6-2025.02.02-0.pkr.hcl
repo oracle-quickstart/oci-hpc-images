@@ -15,26 +15,26 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-20.04-2024.10.02-0-OCA-OFED-23.10-2.1.3.1-GPU-560-CUDA-12.6-2025-02-03-0"
+  default = "OracleLinux-7.9-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.02-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaadp3lalzonttesoe52qotckqmjth5qeow2wmiaiysykpo7ewqlnlq"
+  default = "ocid1.image.oc1.iad.aaaaaaaa5zad6cvhy6zyke3qstprwrnw4zvcrd26db6ki7upxkg2ndrgfelq"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "ubuntu"
+  default = "opc"
 }
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,nvidia,enroot,monitoring,benchmarks,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "use_plugins" , "kernel_5.15.0_131", "oca_148"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol7_rhck" , "use_plugins" ]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -87,23 +87,27 @@ build {
   sources = ["source.oracle-oci.oracle"]
 
   provisioner "shell" {
-    inline = ["sudo growpart /dev/sda 1"]
-    valid_exit_codes = [0, 1] // 1 is returned if the partition is already the size of the disk
+    inline = ["sudo /usr/libexec/oci-growfs -y"]
   }
-
-  provisioner "shell" {
-    inline = ["sudo resize2fs /dev/sda1"]
-    valid_exit_codes = [0, 1] 
-  }
+  
+// Oracle Linux 7 requiest ansible-core < 2.17 
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = ["-e", local.ansible_args]
+    extra_arguments = [ "-e", "ansible_python_interpreter=auto_legacy", "-e", local.ansible_args] 
     groups = local.ansible_groups
     user = var.ssh_username
   }
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
+  }
+
+  post-processor "manifest" {
+    output = "${var.image_base_name}.manifest.json"
+    custom_data = {
+        image_name    = var.image_base_name
+        ssh_username  = var.ssh_username
+    }
   }
 }
