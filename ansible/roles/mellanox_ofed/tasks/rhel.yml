@@ -9,12 +9,14 @@
   when:
     - "override_mellanox_os_version is defined"
 
+
 - name: Setup Oracle Linux Mellanox Installer
   ansible.builtin.set_fact:
     mellanox_os_version: "ol{{ ansible_distribution_version }}"
   when:
     - "mellanox_os_version is not defined"
     - ansible_distribution == 'OracleLinux'
+    - "'rhck' not in options"
 
 - name: Set OL version string for OFED with RHCK
   ansible.builtin.set_fact:
