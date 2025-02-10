@@ -3,3 +3,4 @@ default-local.pkr.hcl
 oci_oracle.pem
 ansible/debug.yml
 *.manifest.json
+.DS_Store
