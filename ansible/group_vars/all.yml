@@ -20,3 +20,4 @@ gpu_sysctl:
   - { name: net.ipv4.neigh.default.gc_thresh3, value: 131072 }
 
 ubuntu_22_kernel_version: "5.15.0-1074-oracle"
+oca_update: true
