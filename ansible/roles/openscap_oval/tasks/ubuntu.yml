@@ -1,0 +1,42 @@
+---
+- name: Install packages
+  ansible.builtin.apt:
+    name:
+      - libopenscap8
+      - bzip2
+    state: present
+    lock_timeout: 300
+
+- name: Download and unpack oval data
+  ansible.builtin.get_url:
+    url: "https://security-metadata.canonical.com/oval/com.ubuntu.{{ ansible_distribution_release }}.usn.oval.xml.bz2"
+    dest: /tmp/oval-usn.xml.bz2
+    mode: "0644"
+
+- name: Decompress oval data
+  ansible.builtin.unarchive:
+    src: /tmp/oval-usn.xml.bz2
+    dest: /tmp/
+    remote_src: true
+    creates: /tmp/oval-usn.xml
+
+- name: Configure and Run OpenScAP
+  ansible.builtin.command: oscap oval eval --results /tmp/oscap_report.xml --report /tmp/oscap_report.html /tmp/oval-usn.xml
+  creates: /tmp/oscap_report.xml
+  register: oscap_stdout
+
+- name: Check if vulnerabilites were found # noqa no-changed-when
+  ansible.builtin.shell: grep 'result="fail"' /tmp/oscap_report.xml || true
+  register: vulnerabilities_found
+
+- name: Fail on vulnerabilities
+  ansible.builtin.fail:
+    msg: "Vulnerabilities were discovered in the image"
+  when:
+    vulnerabilities_found.stdout != ""
+
+- name: Fetch Report
+  ansible.builtin.fetch:
+    src: /tmp/oscap_report.html
+    dest: /tmp/oval-reports/
+    flat: true

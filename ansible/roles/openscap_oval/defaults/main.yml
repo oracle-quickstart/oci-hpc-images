@@ -1,0 +1,1 @@
+current_year: "{{ lookup('pipe', 'date +\"%Y\"') }}"

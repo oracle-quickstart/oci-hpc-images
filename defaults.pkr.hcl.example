@@ -1,0 +1,8 @@
+region = "us-ashburn-1"
+ad = "LUbc:US-ASHBURN-AD-1"
+compartment_ocid = "ocid1.compartment.oc1.."
+shape = "VM.Standard.E4.Flex"
+subnet_ocid = "ocid1.subnet.oc1.iad.aaaaaaaa"
+access_cfg_file = "/home/opc/.oci/config"
+access_cfg_file_account = "DEFAULT"
+use_instance_principals = true

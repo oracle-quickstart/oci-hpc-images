@@ -1,0 +1,13 @@
+- name: Re-enable Oracle Cloud Agent
+  ansible.builtin.systemd:
+    name: snap.oracle-cloud-agent.oracle-cloud-agent
+    enabled: true
+    no_block: true
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Re-enable Oracle Cloud Agent Updater
+  ansible.builtin.systemd:
+    name: snap.oracle-cloud-agent.oracle-cloud-agent-updater
+    enabled: true
+    no_block: true
+  when: ansible_distribution == 'Ubuntu'

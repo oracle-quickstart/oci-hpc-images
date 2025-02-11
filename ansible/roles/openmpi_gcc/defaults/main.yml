@@ -1,0 +1,5 @@
+openmpi_base: "/opt"
+openmpi_root: "{{ openmpi_base }}/openmpi-{{ openmpi_version }}"
+openmpi_path: "{{ openmpi_root }}/bin"
+openmpi_libpath: "{{ openmpi_root }}/lib"
+openmpi_manpath: "{{ openmpi_root }}/share/man"

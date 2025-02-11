@@ -1,0 +1,8 @@
+- name: AMD and NVIDIA GPU system sysctl changes
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: true
+    sysctl_file: /etc/sysctl.d/99-oci-gpu-tuning.conf
+  loop: "{{ gpu_sysctl }}"

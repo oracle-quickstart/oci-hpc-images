@@ -1,0 +1,10 @@
+---
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - git
+      - pciutils
+      - libpci-dev
+      - acl
+    lock_timeout: 300
+  become: true

@@ -1,0 +1,21 @@
+---
+- name: NVIDIA CUDNN for Redhat
+  when:
+    - ansible_os_family == 'RedHat'
+  block:
+    - name: Install Nvidia CUDNN for RedHat
+      ansible.builtin.yum:
+        name:
+          - libcudnn8
+          - libcudnn8-devel
+
+- name: NVIDIA CUDNN for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+  block:
+    - name: Install Nvidia CUDNN for Ubuntu
+      ansible.builtin.apt:
+        name:
+          - libcudnn8
+          - libcudnn8-dev
+        lock_timeout: 300

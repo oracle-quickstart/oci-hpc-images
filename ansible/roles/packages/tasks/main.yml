@@ -1,0 +1,95 @@
+---
+- name: Packages for RHEL based systems
+  when:
+    - ansible_os_family == 'RedHat'
+
+  block:
+    - name: Ensure latest microcode_ctl is installed
+      ansible.builtin.yum:
+        name:
+          - microcode_ctl
+        state: present
+
+    - name: Ensure dracut early_microcode="yes" is configured
+      ansible.builtin.lineinfile:
+        path: /usr/lib/dracut/dracut.conf.d/01-microcode.conf
+        regexp: '^early_microcode='
+        line: 'early_microcode="yes"'
+        create: false
+        state: present
+
+    - name: Install development tools
+      ansible.builtin.yum:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - "@Development Tools"
+          - numactl
+          - numactl-devel
+          - libxml2
+          - binutils-devel
+          - environment-modules
+        state: present
+
+    - name: Upgrade all packages # noqa package-latest
+      ansible.builtin.yum:
+        name: '*'
+        state: latest
+      when:
+        - "options is defined"
+        - "'upgrade' in options"
+
+    - name: Reboot to install kernel updates
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+      when:
+        - "options is defined"
+        - "'upgrade' in options or 'rhck' in options"
+
+- name: Packages for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+  block:
+    - name: Wait for automatic system updates to complete
+      ansible.builtin.shell: while pgrep apt; do sleep 10; done;
+      changed_when: false
+
+    - name: Disable unattended-upgrades
+      ansible.builtin.systemd:
+        name: unattended-upgrades
+        enabled: false
+        state: stopped
+        masked: true
+
+    - name: Remove unattended-upgrades
+      ansible.builtin.apt:
+        name: unattended-upgrades
+        lock_timeout: 300
+        state: absent
+
+    - name: Update apt repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 0
+        lock_timeout: 300
+
+    - name: Update apt-get repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 0
+        lock_timeout: 300
+
+    - name: Upgrade all packages # noqa package-latest
+      ansible.builtin.apt:
+        name: '*'
+        state: latest
+        lock_timeout: 300
+      when:
+        - options is defined and 'upgrade' in options
+
+    - name: Install CMake
+      ansible.builtin.apt:
+        name: cmake
+        state: present
+        lock_timeout: 300

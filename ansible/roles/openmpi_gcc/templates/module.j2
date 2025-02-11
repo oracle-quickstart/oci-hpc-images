@@ -1,0 +1,19 @@
+#%Module 1.0
+#
+#  OpenMPI {{ openmpi_version }} 
+#
+conflict        mpi
+prepend-path    PATH            /opt/openmpi-{{ openmpi_version }}/bin
+prepend-path    LD_LIBRARY_PATH /opt/openmpi-{{ openmpi_version }}/lib
+prepend-path    MANPATH         /opt/openmpi-{{ openmpi_version }}/share/man
+setenv          MPI_BIN         /opt/openmpi-{{ openmpi_version }}/bin
+setenv          MPI_INCLUDE     /opt/openmpi-{{ openmpi_version }}/include
+setenv          MPI_LIB         /opt/openmpi-{{ openmpi_version }}/lib
+setenv          MPI_MAN         /opt/openmpi-{{ openmpi_version }}/share/man
+setenv          MPI_HOME        /opt/openmpi-{{ openmpi_version }}
+setenv		OMPI_UCX_TLS	rc,self,sm
+setenv		OMPI_HCOLL_ENABLE_MCAST_ALL	0
+setenv		OMPI_UCX_IB_TRAFFIC_CLASS	105
+setenv		OMPI_UCX_IB_GID_INDEX		3
+setenv		OMPI_MCA_btl	self
+setenv		OMPI_MCA_coll_hcoll_enable	0

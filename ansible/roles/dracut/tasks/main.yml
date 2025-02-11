@@ -1,0 +1,22 @@
+- name: On Oracle Linux reboot twice to make sure all initrd changes are applied
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'OracleLinux'
+  block:
+    - name: Run dracut -f # noqa no-changed-when
+      ansible.builtin.command: "sudo dracut -f"
+      register: dracut_output
+
+    - name: Reboot to install kernel updates
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+
+    - name: Run dracut -f # noqa no-changed-when
+      ansible.builtin.command: "sudo dracut -f"
+      register: dracut_output
+
+    - name: Reboot to install kernel updates
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 900
