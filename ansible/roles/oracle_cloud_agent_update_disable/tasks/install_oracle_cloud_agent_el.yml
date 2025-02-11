@@ -6,7 +6,7 @@
     state: present
 
 - name: Install latest version of OCI Cloud Agent on EL
-  when: ansible_os_family == 'RedHat' and (oci_cloud_agent_version is not defined and oca_download_url is not defined and oca_update is defined and oca_update | bool)
+  when: ansible_os_family == 'RedHat' and (oci_cloud_agent_version is not defined and oca_download_url is not defined and oca_update is defined and oca_update | bool) 
   vars:
     distro: "{{ 'el7' if ansible_distribution_major_version == '7'
               else 'el8' if ansible_distribution_major_version == '8'
