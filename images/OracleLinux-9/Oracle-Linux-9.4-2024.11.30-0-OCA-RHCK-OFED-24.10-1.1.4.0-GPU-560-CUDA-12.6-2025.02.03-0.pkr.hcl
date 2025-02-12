@@ -92,7 +92,7 @@ build {
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    extra_arguments = [ "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
     groups = local.ansible_groups
     user = var.ssh_username
   }
