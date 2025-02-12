@@ -1,0 +1,2 @@
+cuda_version: "11-4"
+cuda_toolkit_version: "cuda-toolkit-{{ cuda_version }}"

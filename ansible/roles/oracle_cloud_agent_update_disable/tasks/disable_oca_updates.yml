@@ -1,0 +1,24 @@
+- name: Change upgrade_interval for Oracle Cloud Agent Updater
+  ansible.builtin.replace:
+    path: /etc/oracle-cloud-agent/updater.yml
+    regexp: 'upgrade_interval: 3600'
+    replace: 'upgrade_interval: -1'
+
+- name: Change upgrade_interval for Oracle Cloud Agent Updater
+  ansible.builtin.replace:
+    path: /etc/oracle-cloud-agent/updater.yml
+    regexp: 'upgrade_interval: 0'
+    replace: 'upgrade_interval: -1'
+
+- name: Ensure overrides directory exists
+  ansible.builtin.file:
+    path: /etc/oracle-cloud-agent/overrides/
+    state: directory
+    mode: "0644"
+  become: true
+
+- name: Change upgrade_interval for Oracle Cloud Agent Updater
+  ansible.builtin.copy:
+    content: 'upgrade_interval: -1'
+    dest: /etc/oracle-cloud-agent/overrides/updater_override.yml
+    mode: "0644"

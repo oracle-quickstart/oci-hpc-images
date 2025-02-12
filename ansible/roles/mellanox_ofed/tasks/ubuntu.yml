@@ -1,0 +1,147 @@
+- name: Common Ubuntu tasks
+  when: ansible_distribution == 'Ubuntu'
+  block:
+
+    - name: Set version string
+      ansible.builtin.set_fact:
+        mellanox_os_version: "{{
+          'ubuntu20.04' if ansible_distribution_major_version == '20' else
+          'ubuntu22.04' if ansible_distribution_major_version == '22' else
+          'ubuntu24.04' if ansible_distribution_major_version == '24' }}"
+        mlx_ofed_download: "{{ hpc_artifacts_download if use_hpc_artifact else mlx_ofed_download_link }}"
+        dir: "{{ '' if use_hpc_artifact else 'MLNX_OFED-{{ mellanox_ofed_version }}/' }}"
+
+- name: OFED for Ubuntu 20 specific tasks
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '20'
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      ansible.builtin.apt:
+        name:
+          - perl
+          - dpkg
+          - autotools-dev
+          - autoconf
+          - libtool
+          - automake
+          - m4
+          - dkms
+          - debhelper
+          - tcl
+          - chrpath
+          - swig
+          - graphviz
+          - tcl-dev
+          - tk-dev
+          - bison
+          - flex
+          - dpatch
+          - zlib1g-dev
+          - curl
+          - libcurl4-gnutls-dev
+          - python-libxml2
+          - python3-venv
+          - python3-dev
+          - libvirt0
+          - libglib2.0-dev
+          - automake
+          - m4
+          - pkg-config
+          - logrotate
+          - ethtool
+          - lsof
+          - libgfortran4
+          - libnl-3-dev
+          - quilt
+          - libnl-route-3-200
+          - libnl-route-3-dev
+          - gfortran
+          - libnuma-dev
+          - environment-modules
+        state: present
+        lock_timeout: 300
+
+- name: OFED for Ubuntu 22 specific tasks
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      ansible.builtin.apt:
+        name:
+          - chrpath
+          - libgfortran5
+          - libc6-dev
+          - libltdl-dev
+          - libnl-3-dev
+          - dkms
+          - tcl
+          - tcl-dev
+          - tk
+          - tk-dev
+          - zlib1g-dev
+          - libnl-route-3-dev
+          - libnl-route-3-200
+          - pkg-config
+          - gcc
+          - swig
+          - make
+          - quilt
+          - dpatch
+          - gfortran
+          - flex
+          - m4
+          - bison
+          - automake
+          - libfuse2
+          - autoconf
+          - debhelper
+          - autotools-dev
+          - graphviz
+          - libnuma-dev
+          - environment-modules
+        state: present
+        lock_timeout: 300
+
+- name: Install Mellanox OFED
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '20' or ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+  block:
+
+    - name: Create temporary directory to extract Mellanox OFED installer
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: "_mlnx_install_"
+      register: mlnx_extract_dir
+
+    # Download OFED locally
+    # This is due to some ansible version incompatibility and problems with remote URL download in unarchive module
+
+    - name: Download OFED locally
+      ansible.builtin.get_url:
+        url: "{{ mlx_ofed_download }}{{ dir }}MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        dest: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        mode: "0755"
+
+    - name: Extract Mellanox OFED installation tarball
+      ansible.builtin.unarchive:
+        src: "/tmp/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}.tgz"
+        dest: "{{ mlnx_extract_dir.path }}"
+        remote_src: true
+
+    - name: Install Mellanox OFED
+      ansible.builtin.shell: >
+        {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall
+        --force --all --without-fw-update
+      args:
+        chdir: "{{ mlnx_extract_dir.path }}"
+        creates: "/usr/bin/ofed_info"
+
+- name: Update MFT
+  ansible.builtin.include_tasks: mft.yml
+  when:
+    - "mft_version is defined"

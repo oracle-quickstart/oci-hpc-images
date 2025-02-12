@@ -1,0 +1,12 @@
+---
+# OL8+ uses DNF (and /var/cache/dnf) but as of Sep 2024, oci-image-cleanup only
+
+# cleans up /var/cache/yum
+#
+# For OL8+, call "yum clean all" so we at least minimize the package cruft.
+
+- name: Clean DNF cache # noqa command-instead-of-shell no-changed-when
+  ansible.builtin.shell: dnf clean all
+  ignore_errors: true
+  when: ansible_os_family == "RedHat" and ansible_distribution_version is version("8.0", ">=")
+  register: ignore_errors_register

@@ -1,0 +1,10 @@
+---
+- name: Install rvs
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
+  block:
+    - name: Install the rocm-validation-suite package
+      ansible.builtin.apt:
+        name: rocm-validation-suite
+        lock_timeout: 300

@@ -1,0 +1,12 @@
+- name: Install OFED on EL
+  ansible.builtin.include_tasks: rhel.yml
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Install OFED on Ubuntu
+  ansible.builtin.include_tasks: ubuntu.yml
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Install MFT
+  ansible.builtin.include_tasks: mft.yml

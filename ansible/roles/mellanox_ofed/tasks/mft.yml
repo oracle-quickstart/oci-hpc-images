@@ -1,0 +1,37 @@
+---
+- name: MFT RPM download
+  ansible.builtin.set_fact:
+    package_extension: "rpm"
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: MTF DEB download
+  ansible.builtin.set_fact:
+    package_extension: "deb"
+  when:
+    - ansible_os_family == 'Debian'
+
+- name: Extract Mellanox MFT installation tarball
+  ansible.builtin.unarchive:
+    src: "{{ mellanox_mft_download }}/{{ mft_version }}-{{ ansible_architecture }}-{{ package_extension }}.tgz"
+    dest: /tmp
+    remote_src: true
+
+- name: Install Mellanox MFT update (yum/dnf)
+  ansible.builtin.yum:
+    name: "/tmp/{{ mft_version }}-{{ ansible_architecture }}-rpm/RPMS/{{ mft_version }}.{{ ansible_architecture }}.rpm"
+    state: present
+    disable_gpg_check: true
+  when:
+    - ansible_os_family == 'RedHat'
+
+- name: Get DEB architecture # noqa no-changed-when
+  ansible.builtin.command: dpkg --print-architecture
+  register: deb_architecture
+
+- name: Install Mellanox MFT update (apt)
+  ansible.builtin.apt:
+    deb: "/tmp/{{ mft_version }}-{{ ansible_architecture }}-deb/DEBS/{{ mft_version | replace('-', '_', 1) }}_{{ deb_architecture.stdout }}.deb"
+    lock_timeout: 300
+  when:
+    - ansible_os_family == 'Debian'
