@@ -20,8 +20,7 @@
       become: true
       when:
         - ansible_os_family == 'RedHat'
-        - ansible_distribution_major_version == '8'
-        - or - ansible_distribution_major_version == '9'
+        - ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'
 
     - name: Install dependencies for Ubuntu
       ansible.builtin.apt:

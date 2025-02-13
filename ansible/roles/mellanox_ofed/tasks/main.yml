@@ -7,3 +7,6 @@
   ansible.builtin.include_tasks: ubuntu.yml
   when:
     - ansible_os_family == 'Debian'
+
+- name: Install MFT
+  ansible.builtin.include_tasks: mft.yml

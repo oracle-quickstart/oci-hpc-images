@@ -25,9 +25,22 @@
   when:
     - ansible_os_family == 'RedHat'
 
+- name: Install mstflint
+  ansible.builtin.yum:
+    name: mstflint
+  when: ansible_os_family == 'RedHat' and install_mstflint is defined and install_mstflint | bool
+
+- name: Install mstflint
+  ansible.builtin.apt:
+    name: mstflint
+    lock_timeout: 300
+  when: ansible_os_family == 'Debian' and install_mstflint is defined and install_mstflint | bool
+
 - name: Get DEB architecture # noqa no-changed-when
   ansible.builtin.command: dpkg --print-architecture
   register: deb_architecture
+  when:
+    - ansible_os_family == 'Debian'
 
 - name: Install Mellanox MFT update (apt)
   ansible.builtin.apt:

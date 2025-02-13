@@ -15,17 +15,17 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4-2025.02.03-0"
+  default = "RESF-Rocky-9-x86_64-Base-9.5-20250124-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025.02.03-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaae2zqy6e3unvd6rntsuxd6pdnxtc5giebdk23ogjmk3vafzcv4ioq"
+  default = "ocid1.image.oc1..aaaaaaaauo3kyxlty6himw7uecc4xdzshdnc43qf4q2uyvy32gi3t3ixg5pa"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "opc"
+  default = "rocky"
 }
 
 variable "build_options" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol9_rhck" , "use_plugins", "oca_beta_149"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol9_rhck" , "use_plugins", "oca_beta_149"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -92,7 +92,7 @@ build {
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "--scp-extra-args", "'-O'", "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    extra_arguments = [ "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
     groups = local.ansible_groups
     user = var.ssh_username
   }

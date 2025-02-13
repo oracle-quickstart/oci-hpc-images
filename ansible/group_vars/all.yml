@@ -12,8 +12,12 @@ nccltests_version: v2.13.9
 mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
 nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
 stable_nvidia_dcgm_version: 3.2.6
+
+# Tuning for large scale clusters
 gpu_sysctl:
   - { name: net.ipv4.neigh.default.gc_thresh1, value: 32768 }
   - { name: net.ipv4.neigh.default.gc_thresh2, value: 65535 }
   - { name: net.ipv4.neigh.default.gc_thresh3, value: 131072 }
+
 ubuntu_22_kernel_version: "5.15.0-1074-oracle"
+oca_update: true

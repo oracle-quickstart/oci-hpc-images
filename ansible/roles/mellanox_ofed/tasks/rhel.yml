@@ -3,6 +3,36 @@
     mlx_ofed_download: "{{ hpc_artifacts_download if use_hpc_artifact else mlx_ofed_download_link }}"
     dir: "{{ '' if use_hpc_artifact else 'MLNX_OFED-{{ mellanox_ofed_version }}/' }}"
 
+- name: Check for Mellanox OS override
+  ansible.builtin.set_fact:
+    mellanox_os_version: "{{ override_mellanox_os_version }}"
+  when:
+    - "override_mellanox_os_version is defined"
+
+
+- name: Setup Oracle Linux Mellanox Installer
+  ansible.builtin.set_fact:
+    mellanox_os_version: "ol{{ ansible_distribution_version }}"
+  when:
+    - "mellanox_os_version is not defined"
+    - ansible_distribution == 'OracleLinux'
+    - "'rhck' not in options"
+
+- name: Set OL version string for OFED with RHCK
+  ansible.builtin.set_fact:
+    mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+  when:
+    - "mellanox_os_version is not defined"
+    - ansible_distribution == 'OracleLinux'
+    - (ansible_distribution_major_version == '7')
+    - "'rhck' in options"
+
+- name: Setup CentOS Mellanox Installer
+  ansible.builtin.set_fact:
+    mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+  when:
+    - "mellanox_os_version is not defined"
+    - ansible_os_family == 'RedHat'
 
 - name: Mellanox OFED for Oracle Linux
   when:
@@ -41,34 +71,6 @@
           - dkms
           - kernel-devel
         state: present
-
-    - name: Check for Oracle Linux 7.9 Mellanox OS override
-      ansible.builtin.set_fact:
-        mellanox_os_version: "{{ ol79_mellanox_os_version }}"
-      when:
-        - "ol79_mellanox_os_version is defined"
-
-    - name: Check for CentOS 7.9 Mellanox OS override
-      ansible.builtin.set_fact:
-        mellanox_os_version: "{{ centos79_mellanox_os_version }}"
-      when:
-        - "centos79_mellanox_os_version is defined"
-
-    - name: Setup Oracle Linux 7.9 Mellanox Installer
-      ansible.builtin.set_fact:
-        mellanox_os_version: "ol{{ ansible_distribution_version }}"
-      when:
-        - "mellanox_os_version is not defined"
-        - ansible_distribution == 'OracleLinux'
-        - ansible_distribution_major_version == '7'
-
-    - name: Setup CentOS 7.9 Mellanox Installer
-      ansible.builtin.set_fact:
-        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
-      when:
-        - "mellanox_os_version is not defined"
-        - ansible_os_family == 'RedHat'
-        - ansible_distribution_major_version == '7'
 
     - name: Get default kernel name
       ansible.builtin.command: "grubby --default-kernel"
@@ -116,12 +118,6 @@
           - kernel-modules-extra
         state: present
 
-    - name: Set OL version string for OFED with override
-      ansible.builtin.set_fact:
-        mellanox_os_version: "{{ ol86_mellanox_os_version }}"
-      when:
-        - "ol86_mellanox_os_version is defined"
-
     - name: Set OL version string for OFED with UEK
       ansible.builtin.set_fact:
         mellanox_os_version: "ol{{ ansible_distribution_version }}"
@@ -147,7 +143,6 @@
         - "mellanox_os_version is not defined"
         - ansible_os_family == 'RedHat'
         - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
-
 
     - name: Get default kernel name
       ansible.builtin.command: "grubby --default-kernel"
