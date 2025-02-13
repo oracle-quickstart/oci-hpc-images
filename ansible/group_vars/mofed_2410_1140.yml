@@ -1,2 +1,4 @@
 mellanox_ofed_version: "24.10-1.1.4.0"
 use_hpc_artifact: false
+mft_version: "mft-4.26.0-93"
+mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"

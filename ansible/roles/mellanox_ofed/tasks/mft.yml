@@ -28,6 +28,8 @@
 - name: Get DEB architecture # noqa no-changed-when
   ansible.builtin.command: dpkg --print-architecture
   register: deb_architecture
+  when:
+    - ansible_os_family == 'Debian'
 
 - name: Install Mellanox MFT update (apt)
   ansible.builtin.apt:
