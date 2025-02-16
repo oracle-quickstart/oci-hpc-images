@@ -35,10 +35,7 @@
   
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |
-        set -o pipefail
-        yes | amdgpu-install --usecase=graphics,rocm
-      args:
-        chdir: "/tmp"
+        amdgpu-install -y --usecase=graphics,rocm
 
 - name: Add default user to render and video groups
   block:

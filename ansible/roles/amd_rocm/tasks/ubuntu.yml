@@ -15,7 +15,7 @@
       ansible.builtin.apt_key:
         key: "https://repo.radeon.com/rocm/rocm.gpg.key"
         state: present
-        
+
     - name: Update apt-get repo and cache
       ansible.builtin.apt:
         update_cache: true
@@ -30,10 +30,7 @@
 
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |
-        set -o pipefail
-        yes | amdgpu-install --usecase=graphics,rocm
-      args:
-        chdir: "/tmp"
+        amdgpu-install -y --usecase=graphics,rocm
 
 - name: Add default user to render and video groups
   block:

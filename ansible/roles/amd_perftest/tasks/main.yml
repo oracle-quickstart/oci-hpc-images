@@ -8,7 +8,7 @@
         dest: /opt/oci-hpc/perftest
         clone: true
         update: true
-        version: 318288ee9fe2db8ba34d9b2032831aa401ba8e5d
+        version: 5ae53bae626fd30ca57daadbe2b45cef5499c4e2
 
     - name: Install libpci-dev
       ansible.builtin.apt:

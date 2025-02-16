@@ -69,9 +69,6 @@
         name: amd_perftest
       when: "'amd' in options"
     - ansible.builtin.import_role: # noqa name[missing]
-        name: amd_rvs
-      when: "'amd' in options"
-    - ansible.builtin.import_role: # noqa name[missing]
         name: amd_disclaimer
       when: "'amd' in options"
     - ansible.builtin.import_role: # noqa name[missing]
