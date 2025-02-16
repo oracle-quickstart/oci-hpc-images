@@ -4,7 +4,7 @@
 
 # PATH
 if test -z "`echo $PATH | grep /usr/mpi/gcc/{{ openmpi.files[0].path }}/bin`"; then
-    PATH=/usr/mpi/gcc/{{ oopenmpi.files[0].path }}/bin:${PATH}
+    PATH=/usr/mpi/gcc/{{ openmpi.files[0].path }}/bin:${PATH}
     export PATH
 fi
 

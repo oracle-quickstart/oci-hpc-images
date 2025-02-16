@@ -6,11 +6,16 @@
 
     - name: Download sources
       ansible.builtin.get_url:
-        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package }}_all.deb"
+        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package_prefix }}_{{ amd_rocm_package_version }}_all.deb"
         dest: /tmp
         mode: '0755'
       register: amd_rocm_tmp_archive
 
+    - name: Import GPG key for AMDGPU
+      ansible.builtin.apt_key:
+        key: "https://repo.radeon.com/rocm/rocm.gpg.key"
+        state: present
+        
     - name: Update apt-get repo and cache
       ansible.builtin.apt:
         update_cache: true
