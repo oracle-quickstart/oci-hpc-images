@@ -12,12 +12,24 @@
         group: "{{ user }}"
       become: true
 
+    - name: Get the latest release tag from GitHub
+      uri:
+        url: "{{ perftest_repo | replace('.git', '') }}/releases/latest"
+        return_content: yes
+      register: github_release
+      when: perftest_version is not defined
+     
+    - name: create perftest_version from latest
+      set_fact:
+        perftest_version: "{{ github_release.url |  regex_replace('.*/', '') }}"
+      when: perftest_version is not defined     
+
     - name: Clone IB perftest
       ansible.builtin.git:
         repo: "{{ perftest_repo }}"
         dest: "{{ benchmark_base_path }}/perftest"
         force: true
-        version: "{{ perftest_version | default('master') }}"
+        version: "{{ perftest_version }}"
       become_user: "{{ user }}"
       become: true
 
