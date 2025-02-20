@@ -61,12 +61,14 @@
         dest: /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version }}.{{ distro }}.{{ ansible_architecture }}.rpm
         mode: '0644'
       register: download_result
+      when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '9'
 
     - name: Install specific version of OCI Cloud Agent
       ansible.builtin.yum:
         name: "{{ download_result.dest }}"
         state: present
         disable_gpg_check: true
+      when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '9'
 
     - name: Hold specific version of OCI Cloud Agent
       community.general.yum_versionlock:

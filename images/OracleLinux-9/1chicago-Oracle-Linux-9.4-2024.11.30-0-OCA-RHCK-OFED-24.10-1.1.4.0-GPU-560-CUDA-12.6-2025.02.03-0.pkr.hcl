@@ -15,12 +15,12 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Oracle-Linux-9.4-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-AMD-RCOM-6.3.2-2025.02.13-0"
+  default = "Oracle-Linux-8-10-2024-09-30-0-OCA-RHCK-OFED-24.10-1.1.4.0-AMD-RCOM-6.3.2-2025.02.20-1"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.us-chicago-1.aaaaaaaaj7645gtqiq6dsrb3ki6vflai7ytipc3bomfnqjq63okutrtmk4ra"
+  default = "ocid1.image.oc1.us-chicago-1.aaaaaaaapcgtjopcgxi4arst4jwp5ny4rnm7b4z6cwjgfy4b7hriaj7mjy2a"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "amd_rocm_632", "ol9_rhck" , "use_plugins", "oca_beta_149"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "amd_rocm_632", "ol8_rhck" , "use_plugins", "oca_beta_149"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
