@@ -37,3 +37,14 @@
           - "kernel-devel-{{ kernel_version }}"
           - "kernel-headers-{{ kernel_version }}"
         state: present
+
+    - name: Reboot to install kernel updates
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+
+    - name: Install RHCK kernel devel packages
+      ansible.builtin.yum:
+        name:
+          - "kernel*uek*"
+        state: absent
