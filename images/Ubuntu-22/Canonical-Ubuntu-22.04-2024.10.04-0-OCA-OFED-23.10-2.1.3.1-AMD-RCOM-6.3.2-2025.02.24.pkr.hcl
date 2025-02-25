@@ -15,26 +15,26 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Oracle-Linux-9.5-2025.01.31-0-OCA-RHCK-OFED-24.10-1.1.4.0-AMD-RCOM-6.3.2-2025.02.24-0"
+  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-AMD-RCOM-6.3.2-2025.02.24-0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.us-chicago-1.aaaaaaaagka3js5zwi2mppzh33rvdpv4kjgwijn3dy2vxcy4oqdvzvlat52q"
+  default = "ocid1.image.oc1.us-chicago-1.aaaaaaaa6f3w6m6m7akwhrnaanh433ggfxizymfhimbunc3xgdcqmgeyojua"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "opc"
+  default = "ubuntu"
 }
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,benchmarks,amd,monitoring,enroot,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,enroot,benchmarks,amd,monitoring,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "amd_rocm_632", "ol9_rhck" , "use_plugins", "oca_beta_149"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "amd_rocm_632", "use_plugins"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -94,7 +94,7 @@ source "oracle-oci" "oracle" {
   access_cfg_file_account = var.use_instance_principals ? null : var.access_cfg_file_account
   region              = var.use_instance_principals ? null : var.region
   user_data_file      = "${path.root}/../files/user_data.txt"
-  disk_size           = 100
+  disk_size           = 60
   use_instance_principals = var.use_instance_principals
   ssh_timeout         = "90m"
   instance_name       = "HPC-ImageBuilder-${local.build_name}"
@@ -111,25 +111,23 @@ build {
   sources = ["source.oracle-oci.oracle"]
 
   provisioner "shell" {
-    inline = ["sudo /usr/libexec/oci-growfs -y"]
+    inline = ["sudo growpart /dev/sda 1"]
+    valid_exit_codes = [0, 1] // 1 is returned if the partition is already the size of the disk
+  }
+
+  provisioner "shell" {
+    inline = ["sudo resize2fs /dev/sda1"]
+    valid_exit_codes = [0, 1] 
   }
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "-e", local.ansible_args] // "--scp-extra-args", "'-O'" workaround for OpenSSH > 9
+    extra_arguments = ["-e", local.ansible_args]
     groups = local.ansible_groups
     user = var.ssh_username
   }
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
-  }
-
-  post-processor "manifest" {
-    output = "${var.image_base_name}.manifest.json"
-    custom_data = {
-        image_name    = var.image_base_name
-        ssh_username  = var.ssh_username
-    }
   }
 }

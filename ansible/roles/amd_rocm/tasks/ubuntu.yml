@@ -13,7 +13,7 @@
 
     - name: Import GPG key for AMDGPU
       ansible.builtin.apt_key:
-        key: "https://repo.radeon.com/rocm/rocm.gpg.key"
+        url: "https://repo.radeon.com/rocm/rocm.gpg.key"
         state: present
 
     - name: Update apt-get repo and cache
