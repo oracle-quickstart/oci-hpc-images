@@ -4,14 +4,6 @@
     - ansible_os_family == 'RedHat'
   block:
 
-    - name: Run df -h
-      ansible.builtin.command: df -h
-      register: df_output
-
-    - name: Print df -h output
-      ansible.builtin.debug:
-        msg: "{{ df_output.stdout }}"
-
     - name: Set major.minor version
       ansible.builtin.set_fact:
         os_version: "{{ (ansible_distribution_version | split('.'))[0] }}.{{ (ansible_distribution_version | split('.'))[1] }}"
