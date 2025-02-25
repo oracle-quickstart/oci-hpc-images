@@ -12,10 +12,24 @@
 - name: NVIDIA CUDNN for Ubuntu
   when:
     - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '22'
   block:
     - name: Install Nvidia CUDNN for Ubuntu
       ansible.builtin.apt:
         name:
           - libcudnn8
           - libcudnn8-dev
+        lock_timeout: 300
+      
+
+- name: NVIDIA CUDNN for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '24'
+  block:
+    - name: Install Nvidia CUDNN for Ubuntu
+      ansible.builtin.apt:
+        name:
+          - libcudnn9-cuda-12
+          - libcudnn9-dev-cuda-12
         lock_timeout: 300

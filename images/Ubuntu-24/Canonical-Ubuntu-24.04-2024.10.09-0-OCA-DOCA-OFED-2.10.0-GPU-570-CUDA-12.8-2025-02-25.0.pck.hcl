@@ -15,12 +15,12 @@ packer {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025-01-31.01"
+  default = "Canonical-Ubuntu-24.04-2024.10.09-0-OCA-DOCA-OFED-2.10.0-GPU-570-CUDA-12.8-2025-02-25.0"
 }
 
 variable "image_id" {
   type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaa2bulxukxsjyv3ap3x45eueiqxxpxpsfrv6qppq7xrwtiima2c2pq"
+  default = "ocid1.image.oc1.ca-montreal-1.aaaaaaaa55qfo5n4z56tfer32xzqqbep7axi34mk5hxqkttakanyilpimkwq"
 }
 
 variable "ssh_username" {
@@ -34,10 +34,10 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "use_plugins" , "oca_149"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_2100", "hpcx_2221", "openmpi_414", "nvidia_570", "nvidia_cuda_12_8" , "use_plugins" , "oca_149"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+/* authentication variables, edit and use defaults.pkr.hcl instead */
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -45,12 +45,12 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" { 
-  type = string 
-  default = "DEFAULT" 
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
 }
 
-variable "access_cfg_file" { 
+variable "access_cfg_file" {
   type = string
   default = "~/.oci/config"
 }
@@ -93,7 +93,7 @@ build {
 
   provisioner "shell" {
     inline = ["sudo resize2fs /dev/sda1"]
-    valid_exit_codes = [0, 1] 
+    valid_exit_codes = [0, 1]
   }
 
   provisioner "ansible" {

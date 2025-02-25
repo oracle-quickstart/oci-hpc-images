@@ -34,7 +34,7 @@
         owner: "{{ user }}"
         group: "{{ user }}"
         mode: '0775'
-      when: ansible_os_family == 'Debian'
+      when: ansible_os_family == 'Debian' and ansible_distribution_major_version == '22'
       with_items:
         - "1.0.2"
         - "2.0.1"
