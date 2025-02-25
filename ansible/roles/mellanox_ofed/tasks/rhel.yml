@@ -171,7 +171,7 @@
 
 - name: Common Mellanox OFED installation tasks
   when:
-    - ansible_os_family == 'RedHat'
+    - not doca is defined or doca | bool
   block:
     - name: Create temporary directory to extract Mellanox OFED installer
       ansible.builtin.tempfile:
@@ -208,3 +208,27 @@
 
     - name: Run dracut handler
       ansible.builtin.meta: flush_handlers
+      
+- name: Common Mellanox OFED installation tasks
+  when:
+    - doca is defined and doca | bool
+  block:
+    - name: get package name
+      set_fact: 
+        doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}_{{ mellanox_os_version}}.{{ ansible_architecture }}.rpm
+
+    - name: Download OFED locally
+      ansible.builtin.get_url:
+        url: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{doca_package_name}}"
+        dest: "/tmp/{{doca_package_name}}"
+        mode: "0755"
+
+    - name: Install Mellanox MFT update (yum/dnf)
+      ansible.builtin.yum:
+        name:  "/tmp/{{doca_package_name}}"
+        state: present
+
+    - name: Install Mellanox MFT update (yum/dnf)
+      ansible.builtin.yum:
+        name:  "doca-all"
+        state: present

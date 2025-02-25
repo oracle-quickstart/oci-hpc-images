@@ -108,8 +108,7 @@
 
 - name: Install Mellanox OFED
   when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '20' or ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+    - not doca is defined or doca | bool
   block:
 
     - name: Create temporary directory to extract Mellanox OFED installer
@@ -141,7 +140,32 @@
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"
 
-- name: Update MFT
-  ansible.builtin.include_tasks: mft.yml
+- name: Install DOCA OFED
   when:
-    - "mft_version is defined"
+    -  doca is defined and doca | bool
+  block:
+    - name: Get DEB architecture # noqa no-changed-when
+      ansible.builtin.command: dpkg --print-architecture
+      register: deb_architecture
+
+    - name: get package name
+      set_fact: 
+        doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '')}}_{{ deb_architecture.stdout }}.deb
+
+    - name: Download OFED locally
+      ansible.builtin.get_url:
+        url: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{doca_package_name}}"
+        dest: "/tmp/{{doca_package_name}}"
+        mode: "0755"
+
+    - name: Install DOCA package using dpkg
+      ansible.builtin.shell: "dpkg -i /tmp/{{doca_package_name}}"
+
+    - name: Update APT package list
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install DOCA dependencies
+      ansible.builtin.apt:
+        name: "doca-all"
+        state: present
