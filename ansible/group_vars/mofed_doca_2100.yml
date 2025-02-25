@@ -5,3 +5,4 @@ doca: true
 use_hpc_artifact: false
 mft_version: "mft-4.31.0-149"
 mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"
+install_mstflint: true
