@@ -149,7 +149,7 @@
       register: deb_architecture
 
     - name: get package name
-      set_fact: 
+      ansible.builtin.set_fact: 
         doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '')}}_{{ deb_architecture.stdout }}.deb
 
     - name: Download OFED locally

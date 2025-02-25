@@ -214,7 +214,7 @@
     - doca is defined and doca | bool
   block:
     - name: get package name
-      set_fact: 
+      ansible.builtin.set_fact: 
         doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}_{{ mellanox_os_version}}.{{ ansible_architecture }}.rpm
 
     - name: Download OFED locally
