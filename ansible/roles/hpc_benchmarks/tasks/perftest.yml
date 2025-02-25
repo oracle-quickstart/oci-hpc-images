@@ -13,16 +13,16 @@
       become: true
 
     - name: Get the latest release tag from GitHub
-      uri:
+      ansible.builtin.uri:
         url: "{{ perftest_repo | replace('.git', '') }}/releases/latest"
-        return_content: yes
+        return_content: true
       register: github_release
       when: perftest_version is not defined
-     
-    - name: create perftest_version from latest
-      set_fact:
-        perftest_version: "{{ github_release.url |  regex_replace('.*/', '') }}"
-      when: perftest_version is not defined     
+
+    - name: Create perftest_version from latest
+      ansible.builtin.set_fact:
+        perftest_version: "{{ github_release.url | regex_replace('.*/', '') }}"
+      when: perftest_version is not defined
 
     - name: Clone IB perftest
       ansible.builtin.git:
