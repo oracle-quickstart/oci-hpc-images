@@ -8,7 +8,3 @@
     file: el.yml
   when: ansible_os_family == 'RedHat'
 
-- name: Reboot after ROCM install
-  become: true
-  ansible.builtin.reboot:
-    reboot_timeout: 900
