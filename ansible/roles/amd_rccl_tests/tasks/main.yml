@@ -2,7 +2,7 @@
 - name: Install rccl tests
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
+    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
   block:
     - name: Clone rccl github repository
       ansible.builtin.git:

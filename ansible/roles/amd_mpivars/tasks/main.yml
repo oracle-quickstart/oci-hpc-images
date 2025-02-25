@@ -2,7 +2,7 @@
 - name: Install mpivars
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
+    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
   block:
     - name: Get the openmpi version # noqa command-instead-of-shell no-changed-when
       ansible.builtin.shell:

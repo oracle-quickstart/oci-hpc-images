@@ -2,7 +2,7 @@
 - name: Install rvs
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
+    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
   block:
     - name: Install the rocm-validation-suite package
       ansible.builtin.apt:
