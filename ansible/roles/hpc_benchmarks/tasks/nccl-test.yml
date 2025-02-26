@@ -3,6 +3,12 @@
   vars:
     user: "{{ ansible_user }}"
   block:
+    - name: Install environment-modules
+      ansible.builtin.apt:
+        name: environment-modules
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
     - name: Create nccl-test directory
       ansible.builtin.file:
         path: "{{ benchmark_base_path }}/nccl-test"

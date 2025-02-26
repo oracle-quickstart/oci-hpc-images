@@ -3,6 +3,12 @@
   vars:
     user: "{{ ansible_user }}"
   block:
+    - name: install dependencies
+      ansible.builtin.apt:
+        name:
+          - libtool
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
     - name: Create perftest directory
       ansible.builtin.file:
         path: "{{ benchmark_base_path }}/perftest"
@@ -18,11 +24,11 @@
         return_content: yes
       register: github_release
       when: perftest_version is not defined
-     
+
     - name: create perftest_version from latest
       set_fact:
         perftest_version: "{{ github_release.url |  regex_replace('.*/', '') }}"
-      when: perftest_version is not defined     
+      when: perftest_version is not defined
 
     - name: Clone IB perftest
       ansible.builtin.git:
