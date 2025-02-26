@@ -14,6 +14,12 @@ mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
 nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
 stable_nvidia_dcgm_version: 3.2.6
 
+latest_ol7_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/ZDonynauGjz9zDxkaG0oM9Ktz4imVccxI7EhYaq_S0qokb-kLYn7_qq0n6TAhJV4/n/imagegen/b/agents/o/latest_el7_rpm_par_url"
+latest_ol7_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/LKfhdVsIEEYyOViDUEsehnjVDxNpeuMe_n3Uwfpit92cSTtRx0BPHE7BxbXjJQCL/n/imagegen/b/agents/o/latest_el7_arch_rpm_par_url"
+latest_ol8_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/8FBqPsfqQDuUPqrvbKfvYUAQFA8bdoqcDexI2ka6nTRBvCD5boyGvxHucM88ZAGE/n/imagegen/b/agents/o/latest_el8_rpm_par_url"
+latest_ol8_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/E4nlfoR95rRk7ABCc_LMKLJvlDHaOWeVWS9DDLr3LAEqMmf5P3f7MPiDlBIXcKK8/n/imagegen/b/agents/o/latest_el8_arch_rpm_par_url"
+latest_ol9_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/HCca42r9etjCPk7CquOb2qX6JqRJ0F3JM45xf1Dzv8HX6LyhafDd6k4tb8iC7S8H/n/imagegen/b/agents/o/latest_el9_rpm_par_url"
+latest_ol9_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/a4B7iVxHKAm3A71aur7LnKYo6ArXxOE44K8dgpBzWnNAX6kfl74u0r6TWn8Bs2RF/n/imagegen/b/agents/o/latest_el9_arch_rpm_par_url"
 # Tuning for large scale clusters
 gpu_sysctl:
   - { name: net.ipv4.neigh.default.gc_thresh1, value: 32768 }
