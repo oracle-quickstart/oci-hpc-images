@@ -1,41 +1,10 @@
 ---
-- name: ROCM for Ubuntu 22 and 24
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
-  block:
-
-- name: Import tasks for EL
+- name: Include ROCM task for Ubuntu
+  ansible.builtin.include_tasks:
+    file: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu' and (ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24')
+  
+- name: Include ROCM task for EL
   ansible.builtin.include_tasks:
     file: el.yml
-  when: ansible_os_family == 'RedHat'
-
-    - name: Update apt-get repo and cache
-      ansible.builtin.apt:
-        update_cache: true
-        force_apt_get: true
-        cache_valid_time: 3600
-        lock_timeout: 300
-
-    - name: Install amdgpu
-      ansible.builtin.apt:
-        deb: "{{ amd_rocm_tmp_archive.dest }}"
-        lock_timeout: 300
-
-    - name: Run amdgpu-install # noqa no-changed-when
-      ansible.builtin.shell: |
-        set -o pipefail
-        yes | amdgpu-install --usecase=graphics,rocm
-      args:
-        chdir: "/tmp"
-
-- name: Add ubuntu to render and video groups
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
-  block:
-    - name: Add ubuntu to render and video groups
-      ansible.builtin.user:
-        name: ubuntu
-        groups: render,video
-        append: true
+  when: ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')

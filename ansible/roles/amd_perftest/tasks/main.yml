@@ -1,8 +1,7 @@
 ---
 - name: Install perftest
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+  when: >
+    (ansible_distribution == 'Ubuntu' and (ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24')) or (ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'))
   block:
 
     - name: Clone perftest github repository

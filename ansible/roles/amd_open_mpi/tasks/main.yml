@@ -1,8 +1,7 @@
 ---
 - name: Install openmpi
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+  when: > 
+    ansible_distribution == 'Ubuntu' and (ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24')
   block:
     - name: Install OpenMPI packages
       ansible.builtin.apt:
