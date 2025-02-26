@@ -1,0 +1,22 @@
+---
+- name: Install rocm-validation-suite
+
+  block:
+
+    - name: Ensure required packages are installed for rocm-validation-suite 
+      ansible.builtin.yum:
+        enablerepo: "*developer_EPEL*"
+        name:
+          - cmake3
+          - rpm
+          - rpm-build
+          - git
+          - gcc-c++
+          - yaml-cpp-devel
+          - pciutils-devel
+        state: present
+
+    - name: Install the rocm-validation-suite package
+      ansible.builtin.yum:
+        name: rocm-validation-suite
+        lock_timeout: 300

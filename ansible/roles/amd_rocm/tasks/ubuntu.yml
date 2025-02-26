@@ -1,0 +1,41 @@
+---
+- name: ROCM for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+  block:
+
+    - name: Download sources
+      ansible.builtin.get_url:
+        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package_prefix }}_{{ amd_rocm_package_version }}_all.deb"
+        dest: /tmp
+        mode: '0755'
+      register: amd_rocm_tmp_archive
+
+    - name: Import GPG key for AMDGPU
+      ansible.builtin.apt_key:
+        url: "https://repo.radeon.com/rocm/rocm.gpg.key"
+        state: present
+
+    - name: Update apt-get repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 3600
+        lock_timeout: 300
+
+    - name: Install amdgpu
+      ansible.builtin.apt:
+        deb: "{{ amd_rocm_tmp_archive.dest }}"
+        lock_timeout: 300
+
+    - name: Run amdgpu-install # noqa no-changed-when
+      ansible.builtin.shell: |
+        amdgpu-install -y --usecase=graphics,rocm
+
+- name: Add default user to render and video groups
+  block:
+    - name: Add ubuntu to render and video groups
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: render,video
+        append: true

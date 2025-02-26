@@ -1,0 +1,7 @@
+# repo format ubuntu ""{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package_prefix }}_{{ amd_rocm_package_version }}_all.deb""
+# repo format rhel "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/el/{{ os_version }}/{{ amd_rocm_package_prefix }}-{{ amd_rocm_package_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm"
+
+amd_rocm_version: "6.2"
+amd_rocm_repo: "https://repo.radeon.com/amdgpu-install/"
+amd_rocm_package_prefix: "amdgpu-install"
+amd_rocm_package_version: "6.2.60200-1"

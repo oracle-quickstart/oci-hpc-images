@@ -1,8 +1,7 @@
 ---
 - name: Install rccl tests
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+  when: >
+    (ansible_distribution == 'Ubuntu' and (ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24')) or (ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'))
   block:
     - name: Clone rccl github repository
       ansible.builtin.git:
@@ -24,6 +23,15 @@
           - cmake
           - libstdc++-12-dev
         lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install dependencies
+      ansible.builtin.yum:
+        name:
+          - cmake
+          - libstdc++-devel
+      become: true
+      when: ansible_os_family == 'RedHat'
 
     - name: Set up CXX # noqa no-changed-when
       ansible.builtin.shell: |
@@ -50,5 +58,5 @@
         chdir: "/opt/rccl-tests"
         params:
           MPI=1
-          MPI_HOME=/usr/mpi/gcc/openmpi-4.1.5rc2
+          MPI_HOME=/usr/mpi/gcc/openmpi-4.1.7rc1
           RCCL_HOME=/opt/rccl
