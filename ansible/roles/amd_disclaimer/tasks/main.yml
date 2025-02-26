@@ -1,12 +1,14 @@
 ---
 - name: Disclaimer for AMD image
-  when: >
-    (ansible_distribution == 'Ubuntu' and (ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24')) or (ansible_os_family == 'RedHat' and (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'))
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - "'amd' in options"
+
   block:
     - name: Disclaimer for AMD image
       ansible.builtin.copy:
         src: README.txt
-        dest: "/home/{{ ansible_user }}/README.txt"
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+        dest: "/home/ubuntu/README.txt"
+        owner: ubuntu
+        group: ubuntu
         mode: "0644"
