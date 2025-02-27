@@ -13,6 +13,11 @@ packer {
     }
 }
 
+variable "base_image_name" {
+  type    = string
+  default = "Canonical-Ubuntu-24.04-2024.10.09-0"
+}
+
 variable "image_base_name" {
   type    = string
   default = "Canonical-Ubuntu-24.04-2024.10.09-0-OCA-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025-02-24.0"
