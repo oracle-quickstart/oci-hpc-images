@@ -2,7 +2,6 @@ doca_ofed_version: "2.10.0"
 doca_subversion: "093000-25.01"
 use_hpc_artifact: false
 doca: true
-use_hpc_artifact: false
 mft_version: "mft-4.31.0-149"
 mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"
 install_mstflint: true

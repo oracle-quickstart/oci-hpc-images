@@ -142,28 +142,25 @@
 
 - name: Install DOCA OFED
   when:
-    -  doca is defined and doca | bool
+    - doca is defined and doca | bool
   block:
     - name: Get DEB architecture # noqa no-changed-when
       ansible.builtin.command: dpkg --print-architecture
       register: deb_architecture
 
-    - name: get package name
-      ansible.builtin.set_fact: 
-        doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '')}}_{{ deb_architecture.stdout }}.deb
-
-    - name: Download OFED locally
-      ansible.builtin.get_url:
-        url: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{doca_package_name}}"
-        dest: "/tmp/{{doca_package_name}}"
-        mode: "0755"
+    - name: Get package name
+      ansible.builtin.set_fact:
+        doca_package_name: |-
+          doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
 
     - name: Install DOCA package using dpkg
-      ansible.builtin.shell: "dpkg -i /tmp/{{doca_package_name}}"
+      ansible.builtin.apt:
+        deb: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
+        state: present
 
     - name: Update APT package list
       ansible.builtin.apt:
-        update_cache: yes
+        update_cache: true
 
     - name: Install DOCA dependencies
       ansible.builtin.apt:
