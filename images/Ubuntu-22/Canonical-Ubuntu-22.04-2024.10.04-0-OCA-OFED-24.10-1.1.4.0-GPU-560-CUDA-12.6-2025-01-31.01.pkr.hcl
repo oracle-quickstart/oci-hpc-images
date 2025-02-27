@@ -12,10 +12,6 @@ packer {
     }
     }
 }
-variable "base_image_name" {
-  type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0"
-}
 
 variable "image_base_name" {
   type    = string
@@ -63,10 +59,7 @@ variable "access_cfg_file" {
 
 source "oracle-oci" "oracle" {
   availability_domain = var.ad
-
-  base_image_filter { 
-    display_name = var.base_image_name
-  }
+  base_image_ocid     = var.image_id
   compartment_ocid    = var.compartment_ocid
   image_name          = local.build_name
   shape               = var.shape
