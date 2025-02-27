@@ -11,5 +11,5 @@
     enabled: true
 
 - name: Start-profile # noqa no-changed-when
-  ansible.builtin.shell: |
+  ansible.builtin.command: |
     tuned-adm profile throughput-performance
