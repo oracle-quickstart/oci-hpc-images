@@ -1,8 +1,11 @@
 ---
 - name: Install rccl tests
+<<<<<<< HEAD
   when:
     - ansible_distribution == 'Ubuntu'
     - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+=======
+>>>>>>> amd
   block:
     - name: Clone rccl github repository
       ansible.builtin.git:

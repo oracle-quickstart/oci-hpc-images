@@ -1,7 +1,6 @@
 ---
 - name: Disclaimer for AMD image
   when:
-    - ansible_distribution == 'Ubuntu'
     - "'amd' in options"
 
   block:
