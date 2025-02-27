@@ -1,4 +1,4 @@
 ---
-collections: 
+collections:
   - name: community.general
   - name: ansible.posix

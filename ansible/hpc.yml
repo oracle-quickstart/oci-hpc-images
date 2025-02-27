@@ -32,7 +32,7 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: kernel_parameters
     - ansible.builtin.import_role: # noqa name[missing]
-        name: limits
+        name: kernel_limits
     - ansible.builtin.import_role: # noqa name[missing]
         name: oci_utils
     - ansible.builtin.import_role: # noqa name[missing]

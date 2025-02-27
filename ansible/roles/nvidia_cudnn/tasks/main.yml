@@ -20,7 +20,6 @@
           - libcudnn8
           - libcudnn8-dev
         lock_timeout: 300
-      
 
 - name: NVIDIA CUDNN for Ubuntu
   when:
