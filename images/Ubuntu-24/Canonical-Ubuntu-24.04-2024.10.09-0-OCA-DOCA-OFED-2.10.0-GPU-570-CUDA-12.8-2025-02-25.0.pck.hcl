@@ -12,6 +12,10 @@ packer {
     }
     }
 }
+variable "base_image_name" {
+  type    = string
+  default = "Canonical-Ubuntu-24.04-2024.10.09-0"
+}
 
 variable "image_base_name" {
   type    = string
