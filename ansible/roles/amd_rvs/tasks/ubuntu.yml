@@ -1,0 +1,7 @@
+---
+- name: Install rvs
+  block:
+    - name: Install the rocm-validation-suite package
+      ansible.builtin.yum:
+        name: rocm-validation-suite
+        lock_timeout: 300

@@ -1,11 +1,5 @@
 ---
 - name: Install rccl tests
-<<<<<<< HEAD
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
-=======
->>>>>>> amd
   block:
     - name: Clone rccl github repository
       ansible.builtin.git:
@@ -27,6 +21,15 @@
           - cmake
           - libstdc++-12-dev
         lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install dependencies
+      ansible.builtin.yum:
+        name:
+          - cmake
+          - libstdc++-devel
+      become: true
+      when: ansible_os_family == 'RedHat'
 
     - name: Set up CXX # noqa no-changed-when
       ansible.builtin.shell: |

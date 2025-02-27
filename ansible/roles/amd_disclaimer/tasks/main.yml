@@ -7,7 +7,7 @@
     - name: Disclaimer for AMD image
       ansible.builtin.copy:
         src: README.txt
-        dest: "/home/ubuntu/README.txt"
-        owner: ubuntu
-        group: ubuntu
+        dest: "/home/{{ ansible_user }}/README.txt"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: "0644"
