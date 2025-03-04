@@ -23,7 +23,7 @@
         deb: "{{ amd_rocm_tmp_archive.dest }}"
         lock_timeout: 300
 
-    - name: Temporarly remove pinning file to allow for the Install
+    - name: Check if the kernle is pinned by 00_pin_kernel
       ansible.builtin.stat:
         path: /etc/apt/preferences.d/00_pin_kernel
       register: pinned_kernel
