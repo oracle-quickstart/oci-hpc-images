@@ -23,12 +23,33 @@
         deb: "{{ amd_rocm_tmp_archive.dest }}"
         lock_timeout: 300
 
+    - name: Temporarly remove pinning file to allow for the Install
+      ansible.builtin.stat:
+        path: /etc/apt/preferences.d/00_pin_kernel
+      register: pinned_kernel
+
+    - name: Temporarly remove pinning file to allow for the Install
+      ansible.builtin.file:
+        path: /etc/apt/preferences.d/00_pin_kernel
+        state: absent
+      when: pinned_kernel.stat.exists
+
+
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |
-        set -o pipefail
-        yes | amdgpu-install --usecase=graphics,rocm
+        echo Y | amdgpu-install --usecase=graphics,rocm
       args:
         chdir: "/tmp"
+
+    - name: Pin the kernel packages again
+      ansible.builtin.copy:
+        content: |
+          Package: linux-*
+          Pin: version *
+          Pin-Priority: -1
+        dest: /etc/apt/preferences.d/00_pin_kernel
+        mode: "0644"
+      when: pinned_kernel.stat.exists
 
 - name: Add default user to render and video groups
   block:
