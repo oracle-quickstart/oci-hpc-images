@@ -20,7 +20,7 @@ variable "base_image_name" {
 
 variable "image_base_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-23.10-2.1.3.1-ROCM-632-CUDA-12.4-2025-02-04.01"
+  default = "Canonical-Ubuntu-22.04-2024.10.04-0-OCA-OFED-4.10-1.1.4.0-ROCM-632-2025-02-04.01"
 }
 
 variable "image_id" {
@@ -35,11 +35,11 @@ variable "ssh_username" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,enroot,benchmarks,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,amd,enroot,benchmarks,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2310_2131", "hpcx_2180", "openmpi_414", "amd", "rocm_632", "use_plugins" , "kernel_5.15.0_131"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "amd_rocm_632" , "use_plugins" , "oca_149"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
