@@ -7,3 +7,4 @@
 amd_rocm_version: "6.2"
 amd_rocm_repo: "https://repo.radeon.com/amdgpu-install/"
 amd_rocm_package: "amdgpu-install_6.2.60200-1"
+amd_rccl_commit: 45b618a315b46f007ca58bf1a4bb0da9a86d5beb

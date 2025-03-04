@@ -7,7 +7,7 @@
         dest: /opt/rccl
         clone: true
         update: true
-        version: 164c9553717f2c3bce86a372764ea73030dd5f72
+        version: "{{amd_rccl_commit}}"
 
     - name: Creates /opt/rccl/build directory
       ansible.builtin.file:
@@ -18,8 +18,30 @@
     - name: Install cmake and libstdc++-12-dev
       ansible.builtin.apt:
         name:
-          - cmake
           - libstdc++-12-dev
+          - wget
+          - gnupg
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Download and store Kitware APT repository key
+      ansible.builtin.get_url:
+        url: https://apt.kitware.com/keys/kitware-archive-latest.asc
+        dest: /etc/apt/trusted.gpg.d/kitware.asc
+        mode: '0644'
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Add Kitware APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://apt.kitware.com/ubuntu/ {{ ansible_distribution_release }} main"
+        state: present
+        filename: kitware
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install cmake and libstdc++-12-dev
+      ansible.builtin.apt:
+        name: cmake
+        state: present
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu'
 
