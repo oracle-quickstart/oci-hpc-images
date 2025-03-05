@@ -3,7 +3,7 @@
   block:
     - name: Get the openmpi version # noqa command-instead-of-shell no-changed-when
       ansible.builtin.find:
-        paths: /tmp
+        paths: /usr/mpi/gcc/
         patterns: "openmpi*"
         recurse: false
         file_type: directory
@@ -12,7 +12,7 @@
 
     - name: Check if mpivars.sh exists
       ansible.builtin.stat:
-        path: /usr/mpi/gcc/{{ openmpi.files[0].path }}/bin/mpivars.sh
+        path: "{{ openmpi.files[0].path }}/bin/mpivars.sh"
       register: mpivars
       when: openmpi.files | length > 0
 
@@ -20,7 +20,7 @@
       become: true
       ansible.builtin.template:
         src: mpivars.j2
-        dest: /usr/mpi/gcc/{{ openmpi.files[0].path }}/bin/mpivars.sh
+        dest: "{{ openmpi.files[0].path }}/bin/mpivars.sh"
         force: true
         owner: root
         group: root
