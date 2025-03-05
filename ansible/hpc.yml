@@ -60,6 +60,9 @@
   become: true
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_mpivars
+      when: "'amd' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
         name: amd_rocm
       when: "'amd' in options"
     - ansible.builtin.import_role: # noqa name[missing]
