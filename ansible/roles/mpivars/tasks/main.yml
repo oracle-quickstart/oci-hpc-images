@@ -7,22 +7,22 @@
         patterns: "openmpi*"
         recurse: false
         file_type: directory
-      register: openmpi
+      register: openmpi_dir
       failed_when: false
 
     - name: Check if mpivars.sh exists
       ansible.builtin.stat:
-        path: "{{ openmpi.files[0].path }}/bin/mpivars.sh"
+        path: "{{ openmpi_dir.files[0].path }}/bin/mpivars.sh"
       register: mpivars
-      when: openmpi.files | length > 0
+      when: openmpi_dir.files | length > 0
 
     - name: Create mpivars.sh
       become: true
       ansible.builtin.template:
         src: mpivars.j2
-        dest: "{{ openmpi.files[0].path }}/bin/mpivars.sh"
+        dest: "{{ openmpi_dir.files[0].path }}/bin/mpivars.sh"
         force: true
         owner: root
         group: root
         mode: '0755'
-      when: openmpi.files | length > 0 and not mpivars.stat.exists
+      when: openmpi_dir.files | length > 0 and not mpivars.stat.exists
