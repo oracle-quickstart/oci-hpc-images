@@ -19,7 +19,7 @@
       become: true
 
     - name: Get the latest release tag from GitHub
-      ansible.bultin.uri:
+      ansible.builtin.uri:
         url: "{{ perftest_repo | replace('.git', '') }}/releases/latest"
         return_content: true
       register: github_release
