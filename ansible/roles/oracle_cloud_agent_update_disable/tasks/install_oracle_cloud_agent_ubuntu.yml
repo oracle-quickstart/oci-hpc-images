@@ -19,15 +19,19 @@
 # oci_cloud_agent_version: 1.40.0-12
 
   block:
+    - name: Get DEB architecture # noqa no-changed-when
+      ansible.builtin.command: dpkg --print-architecture
+      register: deb_architecture
+
     - name: Download Oracle Cloud Agent Snap from URL
       ansible.builtin.get_url:
-        url: "{{ oca_download_url }}/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap"
-        dest: "/tmp/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap"
+        url: "{{ oca_download_url }}oracle-cloud-agent_{{ oci_cloud_agent_version_ubuntu }}_{{ deb_architecture.stdout }}.snap"
+        dest: "/tmp/oracle-cloud-agent_{{ oci_cloud_agent_version_ubuntu }}_{{ deb_architecture.stdout }}.snap"
         mode: "0755"
 
     - name: Install Oracle Cloud Agent Snap from URL # noqa no-changed-when
     # since the snap is downloaded we have to install using command
-      ansible.builtin.command: "snap install /tmp/oracle-cloud-agent-{{ oci_cloud_agent_version_ubuntu }}_{{ ansible_architecture }}.snap --dangerous --classic"
+      ansible.builtin.command: "snap install /tmp/oracle-cloud-agent_{{ oci_cloud_agent_version_ubuntu }}_{{ deb_architecture.stdout }}.snap --dangerous --classic"
 
 - name: Stop Oracle Cloud Agent (Ubuntu)
   ansible.builtin.systemd:
