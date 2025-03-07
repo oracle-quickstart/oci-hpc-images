@@ -1,10 +1,9 @@
----
-- name: Install rvs
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
-  block:
-    - name: Install the rocm-validation-suite package
-      ansible.builtin.apt:
-        name: rocm-validation-suite
-        lock_timeout: 300
+- name: Import tasks for Ubuntu
+  ansible.builtin.include_tasks:
+    file: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Import tasks for EL
+  ansible.builtin.include_tasks:
+    file: el.yml
+  when: ansible_os_family == 'RedHat'

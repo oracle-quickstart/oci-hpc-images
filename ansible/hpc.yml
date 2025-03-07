@@ -52,6 +52,8 @@
         name: openmpi_gcc
       when: "'openmpi' in options"
     - ansible.builtin.import_role: # noqa name[missing]
+        name: mpivars
+    - ansible.builtin.import_role: # noqa name[missing]
         name: systemd
 
 - name: AMD configuration
@@ -59,9 +61,6 @@
   any_errors_fatal: true
   become: true
   tasks:
-    - ansible.builtin.import_role: # noqa name[missing]
-        name: amd_mpivars
-      when: "'amd' in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: amd_rocm
       when: "'amd' in options"

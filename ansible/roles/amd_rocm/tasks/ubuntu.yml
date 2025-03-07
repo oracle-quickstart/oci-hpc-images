@@ -1,0 +1,60 @@
+---
+- name: ROCM for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+  block:
+
+    - name: Download sources
+      ansible.builtin.get_url:
+        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package }}_all.deb"
+        dest: /tmp
+        mode: '0755'
+      register: amd_rocm_tmp_archive
+
+    - name: Update apt-get repo and cache
+      ansible.builtin.apt:
+        update_cache: true
+        force_apt_get: true
+        cache_valid_time: 3600
+        lock_timeout: 300
+
+    - name: Install amdgpu
+      ansible.builtin.apt:
+        deb: "{{ amd_rocm_tmp_archive.dest }}"
+        lock_timeout: 300
+
+    - name: Check if the kernle is pinned by 00_pin_kernel
+      ansible.builtin.stat:
+        path: /etc/apt/preferences.d/00_pin_kernel
+      register: pinned_kernel
+
+    - name: Temporarly remove pinning file to allow for the Install
+      ansible.builtin.file:
+        path: /etc/apt/preferences.d/00_pin_kernel
+        state: absent
+      when: pinned_kernel.stat.exists
+
+
+    - name: Run amdgpu-install # noqa no-changed-when
+      ansible.builtin.shell: |
+        echo Y | amdgpu-install --usecase=graphics,rocm
+      args:
+        chdir: "/tmp"
+
+    - name: Pin the kernel packages again
+      ansible.builtin.copy:
+        content: |
+          Package: linux-*
+          Pin: version *
+          Pin-Priority: -1
+        dest: /etc/apt/preferences.d/00_pin_kernel
+        mode: "0644"
+      when: pinned_kernel.stat.exists
+
+- name: Add default user to render and video groups
+  block:
+    - name: Add ubuntu to render and video groups
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: render,video
+        append: true

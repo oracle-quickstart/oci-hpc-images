@@ -1,8 +1,5 @@
 ---
 - name: Install perftest
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
   block:
 
     - name: Clone perftest github repository
@@ -11,12 +8,19 @@
         dest: /opt/oci-hpc/perftest
         clone: true
         update: true
-        version: 318288ee9fe2db8ba34d9b2032831aa401ba8e5d
+        version: 6730e979998f8e58dfccf3de0b7d8bea6536fe4c
 
     - name: Install libpci-dev
       ansible.builtin.apt:
         name: libpci-dev
         lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install pciutils-devel
+      ansible.builtin.yum:
+        name: pciutils-devel
+        lock_timeout: 300
+      when: ansible_os_family == 'RedHat'
 
     - name: Run autogen
       ansible.builtin.shell: |

@@ -1,5 +1,4 @@
 benchmark_base_path: /opt/oci-hpc
-openmpi_path: /usr/mpi/gcc/openmpi-4.1.2a1
 perftest_repo: https://github.com/linux-rdma/perftest.git
 nccltest_repo: https://github.com/NVIDIA/nccl-tests.git
 gpuburn_repo: https://github.com/wilicc/gpu-burn.git
