@@ -25,6 +25,7 @@
         purge: true
         autoremove: true
         lock_timeout: 300
+      when: ( ubuntu_22_kernel_version is defined and ansible_distribution_major_version == '22' ) or ( ubuntu_24_kernel_version is defined and ansible_distribution_major_version == '24' )
 
     - name: Install linux-image and headers (specific version)
       ansible.builtin.apt:
