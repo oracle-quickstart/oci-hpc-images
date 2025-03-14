@@ -108,7 +108,7 @@
 
 - name: Install Mellanox OFED
   when:
-    - not doca is defined or doca | bool
+    - not doca is defined or not (doca | bool)
   block:
 
     - name: Create temporary directory to extract Mellanox OFED installer
