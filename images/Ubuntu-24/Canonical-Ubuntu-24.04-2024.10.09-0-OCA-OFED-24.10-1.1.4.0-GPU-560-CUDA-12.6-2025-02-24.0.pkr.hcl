@@ -23,11 +23,6 @@ variable "image_base_name" {
   default = "Canonical-Ubuntu-24.04-2024.10.09-0-OCA-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025-02-24.0"
 }
 
-variable "image_id" {
-  type    = string
-  default = "ocid1.image.oc1.ca-montreal-1.aaaaaaaa55qfo5n4z56tfer32xzqqbep7axi34mk5hxqkttakanyilpimkwq"
-}
-
 variable "ssh_username" {
   type    = string
   default = "ubuntu"
@@ -64,7 +59,9 @@ variable "access_cfg_file" {
 
 source "oracle-oci" "oracle" {
   availability_domain = var.ad
-  base_image_ocid     = var.image_id
+  base_image_filter { 
+    display_name = var.base_image_name
+  }
   compartment_ocid    = var.compartment_ocid
   image_name          = local.build_name
   shape               = var.shape
