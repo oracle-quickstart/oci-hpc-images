@@ -10,11 +10,16 @@
 
     - name: Download sources
       ansible.builtin.get_url:
-        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/el/{{ os_version }}/{{ amd_rocm_package }}_el{{ ansible_distribution_major_version }}.noarch.rpm"
+        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/el/{{ os_version }}/amdgpu-install-{{ amd_rocm_package_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm"
         dest: /tmp
         mode: '0755'
       register: amd_rocm_tmp_archive
 
+    - name: Import GPG key for AMDGPU
+      ansible.builtin.rpm_key:
+        key: "https://repo.radeon.com/rocm/rocm.gpg.key"
+        state: present
+        
     - name: Install amdgpu
       ansible.builtin.yum:
         name: "{{ amd_rocm_tmp_archive.dest }}"
@@ -22,8 +27,7 @@
 
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |
-        set -o pipefail
-        yes | amdgpu-install --usecase=graphics,rocm
+        amdgpu-install -y --usecase=graphics,rocm
       args:
         chdir: "/tmp"
 
