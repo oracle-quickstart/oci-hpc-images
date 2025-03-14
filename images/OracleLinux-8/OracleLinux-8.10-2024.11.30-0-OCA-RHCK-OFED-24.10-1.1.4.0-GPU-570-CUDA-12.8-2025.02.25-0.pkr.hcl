@@ -14,17 +14,12 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "OracleLinux-8.9-2024.05.29-0"
+  default = "Oracle-Linux-8.10-2024.11.30-0"
 } 
 
 variable "image_base_name" {
   type    = string
-  default = "OracleLinux-8.9-2024.05.29-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6-2025.02.01-0"
-}
-
-variable "image_id" {
-  type    = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaxtzkhdlxbktlkhiausqz7qvqg7d5jqbrgy6empmrojtdktwfv7fq"
+  default = "OracleLinux-8.10-2024.11.30-0-OCA-RHCK-OFED-24.10-1.1.4.0-GPU-570-CUDA-12.8-2025.02.25-0"
 }
 
 variable "ssh_username" {
@@ -38,10 +33,10 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2180", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol8_rhck" , "use_plugins" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_2181", "openmpi_414", "nvidia_570", "nvidia_cuda_12_8", "ol8_rhck" , "use_plugins" ]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+/* authentication variables, edit and use defaults.pkr.hcl instead */
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -49,11 +44,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" { 
-  type = string 
-  default = "DEFAULT" 
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
 }
-variable "access_cfg_file" { 
+variable "access_cfg_file" {
   type = string
   default = "~/.oci/config"
 }
@@ -96,13 +91,13 @@ build {
   }
 
   // in case we're running with ansible 2.17+ we need to install python3.8
-  provisioner "shell" { 
+  provisioner "shell" {
     inline = ["sudo yum -y install python3.8"]
   }
 
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
-    extra_arguments = [ "-e", local.ansible_args] 
+    extra_arguments = [ "-e", local.ansible_args]
     groups = local.ansible_groups
     user = var.ssh_username
   }
