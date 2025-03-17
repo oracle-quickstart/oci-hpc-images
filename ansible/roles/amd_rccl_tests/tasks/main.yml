@@ -63,14 +63,14 @@
       community.general.make:
         chdir: "/opt/rccl/build"
         params:
-          NUM_THREADS: 8
+          NUM_THREADS: "{{ ansible_processor_vcpus }}"
 
     - name: Find matching directories
       ansible.builtin.find:
         paths: /usr/mpi/gcc/
         patterns: "openmpi*"
         file_type: directory
-      register: found_dirs
+      register: openmpi_dirs
 
     - name: Clone rccl tests
       ansible.builtin.git:
@@ -80,11 +80,15 @@
         update: true
         version: 52aee698fa255c1eb081d1f33368cca1a82b1b67
 
+    - name: Create symlink from openmpi /lib64 to /lib as rccl test build expects /lib
+      command: ln -s {{openmpi_dirs.files[0].path}}/lib64 {{openmpi_dirs.files[0].path}}/lib
+      when: ansible_os_family == 'RedHat'
+
     - name: Make RCCL test
       community.general.make:
         chdir: "/opt/rccl-tests"
         params:
           MPI=1
-          MPI_HOME={{found_dirs.files[0].path}}
+          MPI_HOME={{openmpi_dirs.files[0].path}}
           NCCL_HOME=/opt/rccl
           HIP_HOME=/opt/rocm
