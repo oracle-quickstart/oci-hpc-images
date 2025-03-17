@@ -6,7 +6,7 @@
 
     - name: Download sources
       ansible.builtin.get_url:
-        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package }}_all.deb"
+        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/amdgpu-install_{{ amd_rocm_package_version }}_all.deb"
         dest: /tmp
         mode: '0755'
       register: amd_rocm_tmp_archive
@@ -34,10 +34,9 @@
         state: absent
       when: pinned_kernel.stat.exists
 
-
     - name: Run amdgpu-install # noqa no-changed-when
       ansible.builtin.shell: |
-        echo Y | amdgpu-install --usecase=graphics,rocm
+        amdgpu-install -y --usecase=graphics,rocm
       args:
         chdir: "/tmp"
 

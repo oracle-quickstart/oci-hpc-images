@@ -1,6 +1,14 @@
 ---
 - name: Install rvs
   block:
+    - name: Enable ol8_developer_EPEL repository
+      command: yum-config-manager --enable ol8_developer_EPEL
+      when: ansible_distribution_major_version | int == 8 
+  
+    - name: Enable ol9_developer_EPEL repository
+      command: yum-config-manager --enable ol9_developer_EPEL
+      when: ansible_distribution_major_version | int == 9 
+
     - name: Install the rocm-validation-suite package
       ansible.builtin.yum:
         name: rocm-validation-suite
