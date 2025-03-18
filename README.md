@@ -41,13 +41,35 @@ ansible-galaxy install -r oci-hpc-images-main/requirements.yml
 ```
 </details>
 
+<details>
+  <summary>Ubuntu 24.04</summary>
+
+```
+wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install packer tmux
+sudo apt install python3-venv
+python3 -m venv packer_env
+source packer_env/bin/activate 
+python -m pip install --upgrade pip
+pip install ansible-core==2.16.14
+ansible-galaxy install -r oci-hpc-images-main/requirements.yml
+```
+</details>
 ## Configure Environment
 
 
 Using defaults.pkr.hcl.example create a new version of the file: `defaults.pkr.hcl` and fill in the variables.
+If your build node is Ubuntu 24.04 or later. Make sure to add set the line as 
+```
+OpenSSH9 = true
+```
+
 In the image file, you will need to edit the image OCID for your region. OCIDs can be found here: https://docs.oracle.com/en-us/iaas/images/
 
-In the image directory, choose the OS folder you would like to build for and edit the file with the image name and the specific modules to install. Since this takes quite some time, we recommend running this in a tmux session: 
+In the image directory, choose the OS folder you would like to build for and edit the file with the image name and the specific modules to install. 
+
+Since this takes quite some time, we recommend running this in a tmux session: 
 ```
 tmux new
 ```

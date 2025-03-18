@@ -6,3 +6,8 @@ subnet_ocid = "ocid1.subnet.oc1.iad.aaaaaaaa"
 access_cfg_file = "/home/opc/.oci/config"
 access_cfg_file_account = "DEFAULT"
 use_instance_principals = true
+OpenSSH9 = false
+shape_config = {
+    ocpus = 8
+    memory_in_gbs = 32
+}

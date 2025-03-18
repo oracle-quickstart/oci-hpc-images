@@ -7,4 +7,14 @@
 
 - name: Resize Root FS # noqa no-changed-when
   ansible.builtin.command: /usr/libexec/oci-growfs -y
-  when: ansible_distribution == "OracleLinux"
+  when: ansible_os_family == 'RedHat'
+
+- name: Resize Root FS # noqa no-changed-when
+  ansible.builtin.command: growpart /dev/sda 1
+  when: ansible_os_family == "Debian"
+  ignore_errors: true
+
+- name: Resize Root FS # noqa no-changed-when
+  ansible.builtin.command: resize2fs /dev/sda1
+  when: ansible_os_family == "Debian"
+  ignore_errors: true

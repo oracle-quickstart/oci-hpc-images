@@ -20,6 +20,8 @@
 
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
+        name: resize_rootfs
+    - ansible.builtin.import_role: # noqa name[missing]
         name: oracle_cloud_agent_update_disable
     - ansible.builtin.import_role: # noqa name[missing]
         name: rdma_configuration
