@@ -33,6 +33,9 @@
         name:
           - "{{ cuda_toolkit_version }}"
         state: present
+      register: result
+      until: result is not failed
+      retries: 5
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
     - name: Install nvidia-container-toolkit for RHEL
