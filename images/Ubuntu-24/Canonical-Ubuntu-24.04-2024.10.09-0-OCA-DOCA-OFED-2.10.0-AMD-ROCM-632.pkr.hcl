@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2024.10.04-0"
+  default = "Canonical-Ubuntu-24.04-2024.10.09-0"
 }
 
 variable "operating_system" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "OCA-DOCA-OFED-2.10.0-ROCM-632"
+  default = "OCA-DOCA-OFED-2.10.0-AMD-ROCM-632"
 }
 
 variable "release" {
@@ -48,7 +48,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2181", "openmpi_414", "amd_rocm_632", "oca_150_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2212", "openmpi_414", "amd_rocm_632", "oca_150_ubuntu"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

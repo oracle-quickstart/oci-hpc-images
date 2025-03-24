@@ -31,9 +31,10 @@ variable "ssh_username" {
   type    = string
   default = "ubuntu"
 }
+
 variable "features" {
   type    = string
-  default = "OCA-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
+  default = "OCA-DOCA-OFED-2.10.0"
 }
 
 variable "release" {
@@ -43,14 +44,14 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins"
+  default = "noselinux,nomitigations,openmpi,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_2100", "hpcx_2221", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "oca_150_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_2100", "hpcx_2212", "openmpi_414", "oca_150_ubuntu"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+/* authentication variables, edit and use defaults.pkr.hcl instead */
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -58,9 +59,9 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" { 
-  type = string 
-  default = "DEFAULT" 
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
 }
 variable "access_cfg_file" {
   type = string
