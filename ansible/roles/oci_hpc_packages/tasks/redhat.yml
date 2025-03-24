@@ -65,6 +65,13 @@
         name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
         state: present
         disable_gpg_check: true
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
+    - name: Install oci-hpc-network-device-names (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.rpm"
+        state: present
+        disable_gpg_check: true
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
 
     - name: Install oci-hpc-dapl-configure (HPC)
       ansible.builtin.yum:
