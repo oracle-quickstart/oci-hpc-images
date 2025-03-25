@@ -1,5 +1,1 @@
-oci_cloud_agent_version_ubuntu: 1.50.0-3
-oca_download_url: >-
-  https://hpc.objectstorage.eu-frankfurt-1.oci.customer-oci.com/p/HLqeFPXgKK7K8jKO4oTfCzuqz6lq21YU1T9rJR00-eo9BLCoGr8LbfV0NRyJocXI/n/hpc/b/hpc-beta/o/
-
-#oci_cloud_agent_channel_ubuntu: 1.50.x/stable
+oci_cloud_agent_channel_ubuntu: 1.50.x/stable
