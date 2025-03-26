@@ -12,7 +12,9 @@
 
     - name: Install libpci-dev
       ansible.builtin.apt:
-        name: libpci-dev
+        name: 
+          - libpci-dev
+          - libtool
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu'
 
