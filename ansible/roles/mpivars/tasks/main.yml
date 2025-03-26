@@ -1,0 +1,28 @@
+---
+- name: Install mpivars
+  block:
+    - name: Get the openmpi version # noqa command-instead-of-shell no-changed-when
+      ansible.builtin.find:
+        paths: /usr/mpi/gcc/
+        patterns: "openmpi*"
+        recurse: false
+        file_type: directory
+      register: openmpi_dir
+      failed_when: false
+
+    - name: Check if mpivars.sh exists
+      ansible.builtin.stat:
+        path: "{{ openmpi_dir.files[0].path }}/bin/mpivars.sh"
+      register: mpivars
+      when: openmpi_dir.files | length > 0
+
+    - name: Create mpivars.sh
+      become: true
+      ansible.builtin.template:
+        src: mpivars.j2
+        dest: "{{ openmpi_dir.files[0].path }}/bin/mpivars.sh"
+        force: true
+        owner: root
+        group: root
+        mode: '0755'
+      when: openmpi_dir.files | length > 0 and not mpivars.stat.exists

@@ -1,0 +1,101 @@
+---
+- name: Mellanox HPCX Package for RedHat 7
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ rhel7_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/modulefiles"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+    - rhel7_mellanox_hpcx_package is defined
+
+- name: Mellanox HPCX Package for RedHat 8
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ rhel8_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/modulefiles"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+    - rhel8_mellanox_hpcx_package is defined
+
+- name: Mellanox HPCX Package for RedHat 9
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ rhel9_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/modulefiles"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '9'
+    - rhel9_mellanox_hpcx_package is defined
+
+- name: Mellanox HPCX Package Ubuntu 20
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ ubuntu20_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/environment-modules/modules"
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_distribution_major_version == '20'
+    - ubuntu20_mellanox_hpcx_package is defined
+
+- name: Mellanox HPCX Package Ubuntu 22
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ ubuntu22_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/environment-modules/modules"
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_distribution_major_version == '22'
+    - ubuntu22_mellanox_hpcx_package is defined
+
+- name: Mellanox HPCX Package Ubuntu 24
+  ansible.builtin.set_fact:
+    mellanox_hpcx_package: "{{ ubuntu24_mellanox_hpcx_package }}"
+    modulefile_directory: "/etc/environment-modules/modules"
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_distribution_major_version == '24'
+    - ubuntu24_mellanox_hpcx_package is defined
+
+- name: Install mpivars
+  when:
+    - mellanox_hpcx_package is defined
+  block:
+    - name: Extract HPC-X
+      ansible.builtin.unarchive:
+        src: "{{ mellanox_hpcx_download_url }}/{{ mellanox_hpcx_package }}.tbz"
+        dest: "{{ install_prefix }}"
+        remote_src: true
+        creates: "{{ install_prefix }}/{{ mellanox_hpcx_package }}"
+
+    - name: Create MPI directory
+      ansible.builtin.file:
+        path: "{{ modulefile_directory }}/hpcx/{{ mellanox_hpcx_version }}"
+        state: directory
+        recurse: true
+
+    - name: Find HPCX modules
+      ansible.builtin.find:
+        path: "{{ install_prefix }}/{{ mellanox_hpcx_package }}/modulefiles"
+      register: hpcx_modules
+
+    - name: Echo HPCX modules
+      ansible.builtin.debug:
+        msg: "{{ hpcx_modules }}"
+
+    - name: Link modulefiles from HPCX installation
+      ansible.builtin.file:
+        src: "{{ item.path }}"
+        dest: "{{ modulefile_directory }}/hpcx/{{ mellanox_hpcx_version }}/{{ item.path | basename }}"
+        state: link
+      loop: "{{ hpcx_modules.files }}"
+
+    - name: Create MPI module directory
+      ansible.builtin.file:
+        path: "{{ modulefile_directory }}/mpi/openmpi"
+        state: directory
+        mode: "0755"
+
+    - name: Create HPCX module file
+      ansible.builtin.template:
+        dest: "{{ modulefile_directory }}/mpi/openmpi/hpcx-{{ mellanox_hpcx_version }}"
+        src: templates/module.j2
+        owner: root
+        group: root
+        mode: "0644"

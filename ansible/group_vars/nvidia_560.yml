@@ -1,0 +1,4 @@
+nvidia_driver_version: "560"
+nvidia_driver_package_version: "560"
+nvidia_driver_branch: "560"
+nvidia_driver_skip_reboot: true

@@ -1,0 +1,36 @@
+---
+- name: Install dependencies
+  ansible.builtin.include_tasks: redhat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Install dependencies
+  ansible.builtin.include_tasks: ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install NCCL test
+  ansible.builtin.include_tasks: nccl-test.yml
+  when: (options is defined) and ('nvidia' in options)
+
+- name: Install GPUDirect-aware perftest
+  ansible.builtin.include_tasks: perftest.yml
+  when: (options is defined) and ('nvidia' in options)
+
+- name: Install gpuburn
+  ansible.builtin.include_tasks: gpuburn.yml
+  when: (options is defined) and ('nvidia' in options)
+
+# - name: Install CUDA samples
+#   ansible.builtin.include_tasks: cuda-samples.yml
+#   when:
+#     - "options is defined"
+#     - "'nvidia' in options"
+
+# - name: Install nvbandwidth
+#   ansible.builtin.include_tasks: nvbandwidth.yml
+#   when:
+#     - "options is defined"
+#     - "'nvidia' in options"
+#     - "(ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8') or ansible_distribution == 'Ubuntu'"
+
+- name: Install STREAM
+  ansible.builtin.include_tasks: stream.yml

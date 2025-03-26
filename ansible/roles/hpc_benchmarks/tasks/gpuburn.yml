@@ -1,0 +1,32 @@
+---
+- name: Install gpuburn
+  vars:
+    user: "{{ ansible_user }}"
+  block:
+    - name: Create gpuburn directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/gpuburn"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Clone gpuburn from repo
+      ansible.builtin.git:
+        repo: "{{ gpuburn_repo }}"
+        dest: "{{ benchmark_base_path }}/gpuburn"
+        force: true
+        version: "{{ gpuburn_version | default('master') }}"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Build gpuburn
+      environment:
+        CFLAGS: -std=c++11
+      community.general.make:
+        chdir: "{{ benchmark_base_path }}/gpuburn"
+        params:
+          COMPUTE: 80
+      become_user: "{{ user }}"
+      become: true

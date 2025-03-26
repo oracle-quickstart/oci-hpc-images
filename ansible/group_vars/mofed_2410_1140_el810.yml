@@ -1,0 +1,7 @@
+mellanox_ofed_version: "24.10-1.1.4.0"
+use_hpc_artifact: false
+# since this OFED was not updated for EL8.10 we need to override the OS version
+override_mellanox_os_version: "rhel8.9"
+mft_version: "mft-4.31.0-149"
+mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"
+install_mstflint: true
