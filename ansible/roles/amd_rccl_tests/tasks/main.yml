@@ -41,11 +41,11 @@
     - name: Install cmake and libstdc++-12-dev
       ansible.builtin.apt:
         name: cmake
-        state: present
+        state: latest
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu'
 
-    - name: Install dependencies
+    - name: Install OL dependencies
       ansible.builtin.yum:
         name:
           - cmake
