@@ -1,0 +1,79 @@
+---
+- name: Install NCCL tests
+  vars:
+    user: "{{ ansible_user }}"
+  block:
+    - name: Create nvbandwidth directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/nvbandwidth"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Install dependencies for OL8
+      ansible.builtin.yum:
+        name:
+          - boost-devel
+          - boost-program-options
+      become: true
+      when:
+        - ansible_os_family == 'RedHat'
+        - ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'
+
+    - name: Install dependencies for Ubuntu
+      ansible.builtin.apt:
+        name:
+          - libboost-program-options-dev
+        state: present
+        lock_timeout: 300
+      become: true
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Clone nvbandwidth
+      ansible.builtin.git:
+        repo: "{{ nvbandwidth_repo }}"
+        dest: "{{ benchmark_base_path }}/nvbandwidth"
+        version: "{{ nvbandwidth_version | default('master') }}"
+        force: true
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Get updated CMake from Kitware
+      ansible.builtin.get_url:
+        url: "{{ cmake_git_path }}"
+        dest: "/tmp/{{ cmake_installer }}"
+        mode: "0755"
+
+    - name: Create nvbandwidth/cmake directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/nvbandwidth/cmake"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+
+    - name: Install CMake
+      ansible.builtin.command: # noqa command-instead-of-shell no-changed-when
+        cmd: "bash /tmp/{{ cmake_installer }} --skip-license --prefix={{ benchmark_base_path }}/nvbandwidth/cmake"
+      args:
+        chdir: "/tmp"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Generate nvbandwidth Makefile from CMake # noqa command-instead-of-shell no-changed-when
+      ansible.builtin.command:
+        cmd: "{{ benchmark_base_path }}/nvbandwidth/cmake/bin/cmake . -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=80;90"
+      args:
+        chdir: "{{ benchmark_base_path }}/nvbandwidth"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Build nvbandwidth # noqa command-instead-of-shell no-changed-when
+      environment:
+        MAKEFLAGS: "-j 8"
+      community.general.make:
+        chdir: "{{ benchmark_base_path }}/nvbandwidth"
+      become_user: "{{ user }}"
+      become: true

@@ -1,0 +1,11 @@
+---
+- name: Ensure multi-user.target is set
+  when:
+    - ansible_distribution == 'Ubuntu'
+
+  block:
+    - name: Ensure multi-user.target is set
+      ansible.builtin.file:
+        src: /lib/systemd/system/multi-user.target
+        dest: /etc/systemd/system/default.target
+        state: link

@@ -1,0 +1,48 @@
+---
+- name: Install perftest
+  block:
+
+    - name: Clone perftest github repository
+      ansible.builtin.git:
+        repo: https://github.com/linux-rdma/perftest.git
+        dest: /opt/oci-hpc/perftest
+        clone: true
+        update: true
+        version: 6730e979998f8e58dfccf3de0b7d8bea6536fe4c
+
+    - name: Install libpci-dev
+      ansible.builtin.apt:
+        name: 
+          - libpci-dev
+          - libtool
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install pciutils-devel
+      ansible.builtin.yum:
+        name: pciutils-devel
+        lock_timeout: 300
+      when: ansible_os_family == 'RedHat'
+
+    - name: Run autogen
+      ansible.builtin.shell: |
+        bash autogen.sh
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+        creates: "/opt/oci-hpc/perftest/configure"
+
+    - name: Configure the directory
+      ansible.builtin.shell: |
+        ./configure --prefix=/opt/oci-hpc/perftest/ --enable-rocm --with-rocm=/opt/rocm
+      args:
+        chdir: "/opt/oci-hpc/perftest"
+        creates: "/opt/oci-hpc/perftest/Makefile"
+
+    - name: Build perftest
+      community.general.make:
+        chdir: "/opt/oci-hpc/perftest"
+
+    - name: Install perftest
+      community.general.make:
+        chdir: "/opt/oci-hpc/perftest"
+        target: install

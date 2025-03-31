@@ -1,0 +1,2 @@
+mellanox_ofed_version: "5.4-3.6.8.1"
+use_hpc_artifact: false

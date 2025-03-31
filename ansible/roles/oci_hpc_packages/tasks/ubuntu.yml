@@ -1,0 +1,55 @@
+- name: OCI HPC packages for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+  block:
+
+    - name: Ensure ifupdown is present
+      ansible.builtin.apt:
+        name: ifupdown
+        lock_timeout: 300
+
+    - name: Install wpa_supplicant
+      ansible.builtin.apt:
+        name: wpasupplicant
+        lock_timeout: 300
+      when: "'use_plugins' in options"
+
+    - name: Install oci-cn-auth (HPC)
+      ansible.builtin.apt:
+        deb: "{{ hpc_artifacts_download }}oci-cn-auth_{{ oci_cn_auth_version }}-compute_all.deb"
+        lock_timeout: 300
+      when: "'use_plugins' not in options"
+
+    - name: Stop oci-cn-auth renew timer
+      ansible.builtin.systemd:
+        name: oci-cn-auth-renew.timer
+        state: stopped
+        enabled: true
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc legacy packages (HPC)
+      ansible.builtin.apt:
+        deb:
+          - "{{ hpc_artifacts_download }}oci-hpc-mlx-configure_{{ oci_hpc_mlx_configure_version }}-compute_all.deb"
+          - "{{ hpc_artifacts_download }}oci-hpc-rdma-configure_{{ oci_hpc_rdma_configure_version }}-compute_all.deb"
+          - "{{ hpc_artifacts_download }}oci-hpc-dapl-configure_{{ oci_hpc_dapl_configure_version }}-compute_all.deb"
+        lock_timeout: 300
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc-network-device-names (HPC)
+      ansible.builtin.apt:
+        deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names_{{ oci_hpc_network_device_names_version }}-compute_all.deb"
+        lock_timeout: 300
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
+    - name: Install oci-hpc-network-device-names (HPC)
+      ansible.builtin.apt:
+        deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.deb"
+        lock_timeout: 300
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
+
+
+    - name: Install oci-hpc-nvidia-gpu-configure (HPC)
+      ansible.builtin.apt:
+        deb: "{{ hpc_artifacts_download }}oci-hpc-nvidia-gpu-configure_{{ oci_hpc_nvidia_gpu_configure_version }}-compute_all.deb"
+        lock_timeout: 300
+      when: "'nvidia' in options"

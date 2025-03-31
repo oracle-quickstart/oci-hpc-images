@@ -1,0 +1,27 @@
+# NOTE: This is an automatically-generated file!
+
+# path
+if ("" == "`echo $path | grep {{ openmpi_path }}`") then
+    set path=({{ openmpi_path }} $path)
+endif
+
+# LD_LIBRARY_PATH
+if ("1" == "$?LD_LIBRARY_PATH") then
+    if ("$LD_LIBRARY_PATH" !~ *{{ openmpi_libpath }}*) then
+        setenv LD_LIBRARY_PATH {{ openmpi_libpath }}:${LD_LIBRARY_PATH}
+    endif
+else
+    setenv LD_LIBRARY_PATH {{ openmpi_libpath }}
+endif
+
+# MANPATH
+if ("1" == "$?MANPATH") then
+    if ("$MANPATH" !~ *{{ openmpi_manpath }}*) then
+        setenv MANPATH {{ openmpi_manpath }}:${MANPATH}
+    endif
+else
+    setenv MANPATH {{ openmpi_manpath }}:
+endif
+
+# MPI_ROOT
+setenv MPI_ROOT {{ openmpi_root }}

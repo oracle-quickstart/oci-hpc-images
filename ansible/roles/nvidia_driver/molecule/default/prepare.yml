@@ -1,0 +1,12 @@
+---
+- name: Prepare
+  hosts: ubuntu
+  become: true
+  tasks:
+
+    - name: Update apt cache and install gpg-agent
+      ansible.builtin.apt:
+        update_cache: true
+        name: gpg-agent
+        state: present
+        lock_timeout: 300

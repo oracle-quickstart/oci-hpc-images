@@ -1,0 +1,54 @@
+---
+- name: Install perftest
+  vars:
+    user: "{{ ansible_user }}"
+  block:
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name:
+          - libtool
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu'
+    - name: Create perftest directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/perftest"
+        state: directory
+        mode: "0755"
+        owner: "{{ user }}"
+        group: "{{ user }}"
+      become: true
+
+    - name: Get the latest release tag from GitHub
+      ansible.builtin.uri:
+        url: "{{ perftest_repo | replace('.git', '') }}/releases/latest"
+        return_content: true
+      register: github_release
+      when: perftest_version is not defined
+
+    - name: Create perftest_version from latest
+      ansible.builtin.set_fact:
+        perftest_version: "{{ github_release.url | regex_replace('.*/', '') }}"
+      when: perftest_version is not defined
+
+    - name: Clone IB perftest
+      ansible.builtin.git:
+        repo: "{{ perftest_repo }}"
+        dest: "{{ benchmark_base_path }}/perftest"
+        force: true
+        version: "{{ perftest_version }}"
+      become_user: "{{ user }}"
+      become: true
+
+    - name: Autogen IB perftest # noqa no-changed-when
+      ansible.builtin.command: ./autogen.sh
+      args:
+        chdir: "{{ benchmark_base_path }}/perftest"
+
+    - name: Configure IB perftest for GPUDirect # noqa no-changed-when
+      ansible.builtin.command: ./configure CUDA_H_PATH=/usr/local/cuda/include/cuda.h
+      args:
+        chdir: "{{ benchmark_base_path }}/perftest"
+
+    - name: Build IB perftest
+      community.general.make:
+        chdir: "{{ benchmark_base_path }}/perftest"

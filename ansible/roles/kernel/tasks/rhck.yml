@@ -1,0 +1,50 @@
+---
+- name: Ensure default kernel is RHCK
+
+  block:
+
+    - name: Ensure default kernel setting is not OracleLinux UEK
+      ansible.builtin.lineinfile:
+        path: /etc/sysconfig/kernel
+        regexp: '^DEFAULTKERNEL='
+        line: DEFAULTKERNEL=kernel
+
+    - name: Find RHCK kernel(s) in /boot
+      ansible.builtin.find:
+        paths: /boot
+        patterns: 'vmlinuz-{{ rhck_kernel_level }}*'
+        excludes: '*.el*uek.*'
+      register: found_files
+
+    - name: Get latest RHCK kernel
+      ansible.builtin.set_fact:
+        latest_rhck_kernel: "{{ found_files.files | sort(attribute='mtime', reverse=true) | first }}"
+
+    - name: Display latest RHCK kernel
+      ansible.builtin.debug:
+        msg: "{{ latest_rhck_kernel.path }}"
+
+    - name: Switch GRUB to RHCK kernel # noqa no-changed-when
+      ansible.builtin.command: "grubby --set-default={{ latest_rhck_kernel.path }}"
+
+    - name: Set RHCK kernel version
+      ansible.builtin.set_fact:
+        kernel_version: "{{ latest_rhck_kernel.path | regex_search('/boot/vmlinuz-(.*)$', '\\1') | first }}"
+
+    - name: Install RHCK kernel devel packages
+      ansible.builtin.yum:
+        name:
+          - "kernel-devel-{{ kernel_version }}"
+          - "kernel-headers-{{ kernel_version }}"
+        state: present
+
+    - name: Reboot to install kernel updates
+      become: true
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+
+    - name: Install RHCK kernel devel packages
+      ansible.builtin.yum:
+        name:
+          - "kernel*uek*"
+        state: absent

@@ -1,0 +1,13 @@
+---
+- name: Disclaimer for AMD image
+  when:
+    - "'amd' in options"
+
+  block:
+    - name: Disclaimer for AMD image
+      ansible.builtin.copy:
+        src: README.txt
+        dest: "/home/{{ ansible_user }}/README.txt"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0644"

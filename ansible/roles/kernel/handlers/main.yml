@@ -1,0 +1,4 @@
+- name: Reboot
+  ansible.builtin.reboot:
+    reboot_timeout: 900
+    msg: "Rebooting the system to apply kernel changes"

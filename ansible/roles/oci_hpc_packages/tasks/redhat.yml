@@ -1,0 +1,94 @@
+---
+- name: EL 7 facts
+  ansible.builtin.set_fact:
+    oci_hpc_package_os: "el7"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '7'
+
+- name: EL 8 facts
+  ansible.builtin.set_fact:
+    oci_hpc_package_os: "el8"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '8'
+
+- name: EL 9 facts
+  ansible.builtin.set_fact:
+    oci_hpc_package_os: "el8"
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '9'
+
+- name: OCI HPC packages for EL 7/8/9
+  when:
+    - ansible_os_family == 'RedHat'
+  block:
+
+    - name: Install wpa_supplicant
+      ansible.builtin.yum:
+        name: wpa_supplicant
+        state: present
+      when: "'use_plugins' in options"
+
+    - name: Install oci-cn-auth (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-cn-auth-{{ oci_cn_auth_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        enablerepo: "*developer_EPEL*"
+        state: present
+        disable_gpg_check: true
+      when: "'use_plugins' not in options"
+
+    - name: Stop oci-cn-auth renew timer
+      ansible.builtin.systemd:
+        name: oci-cn-auth-renew.timer
+        state: stopped
+        enabled: true
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc-mlx-configure (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-mlx-configure-{{ oci_hpc_mlx_configure_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        state: present
+        disable_gpg_check: true
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc-rdma-configure (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-rdma-configure-{{ oci_hpc_rdma_configure_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        state: present
+        disable_gpg_check: true
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc-network-device-names (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        state: present
+        disable_gpg_check: true
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
+    - name: Install oci-hpc-network-device-names (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.rpm"
+        state: present
+        disable_gpg_check: true
+      when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
+
+    - name: Install oci-hpc-dapl-configure (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-dapl-configure-{{ oci_hpc_dapl_configure_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        state: present
+        disable_gpg_check: true
+      when: "'use_plugins' not in options"
+
+    - name: Install oci-hpc-nvidia-gpu-configure (HPC)
+      ansible.builtin.yum:
+        name: "{{ hpc_artifacts_download }}oci-hpc-nvidia-gpu-configure-{{ oci_hpc_nvidia_gpu_configure_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
+        state: present
+        disable_gpg_check: true
+      when: "'nvidia' in options"
+
+    - name: Ensure oci-hpc-nvidia-gpu-configure service enabled
+      ansible.builtin.systemd:
+        name: oci-hpc-nvidia-gpu-configure
+        enabled: true
+      when: "'nvidia' in options"

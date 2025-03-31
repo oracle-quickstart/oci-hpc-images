@@ -1,0 +1,38 @@
+---
+- name: Edit the rdma_network.json file
+  when:
+    - ansible_os_family == 'Debian'
+  block:
+    - name: Edit the rdma_network.json file
+      ansible.builtin.copy:
+        src: 'rdma_network.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Edit the rdma_network.json file
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version != '9'
+  block:
+    - name: Edit the rdma_network.json file
+      ansible.builtin.copy:
+        src: 'rdma_network.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: Edit the rdma_network.json file
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version == '9'
+  block:
+    - name: Edit the rdma_network.json file
+      ansible.builtin.copy:
+        src: 'rdma_network_el9.json'
+        dest: '/etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-configure/rdma_network.json'
+        owner: root
+        group: root
+        mode: '0644'
