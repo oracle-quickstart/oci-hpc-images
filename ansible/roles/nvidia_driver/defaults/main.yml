@@ -33,10 +33,10 @@ nvidia_driver_ubuntu_install_from_cuda_repo: true
 
 # Installing with Canonical repositories
 nvidia_driver_ubuntu_packages:
-  - "nvidia-headless-{{ nvidia_driver_ubuntu_branch }}-server"
+  - "nvidia-headless-{{ nvidia_driver_branch_open }}-server"
   - "nvidia-utils-{{ nvidia_driver_ubuntu_branch }}-server"
-  - "nvidia-headless-no-dkms-{{ nvidia_driver_ubuntu_branch }}-server"
-  - "nvidia-kernel-source-{{ nvidia_driver_ubuntu_branch }}-server"
+  - "nvidia-headless-no-dkms-{{ nvidia_driver_branch_open }}-server"
+  - "nvidia-kernel-source-{{ nvidia_driver_branch_open }}-server"
 
 # Installing with CUDA repositories
 nvidia_driver_ubuntu_cuda_repo_gpgkey_url: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir }}/{{ nvidia_repo_ubuntu_gpgkey }}.pub"

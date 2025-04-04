@@ -1,4 +1,5 @@
 nvidia_driver_version: "470"
 nvidia_driver_package_version: "470"
 nvidia_driver_branch: "470"
+nvidia_driver_branch_open: "470" 
 nvidia_driver_skip_reboot: true

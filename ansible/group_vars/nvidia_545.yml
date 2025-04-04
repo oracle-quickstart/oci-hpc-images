@@ -1,4 +1,5 @@
 nvidia_driver_version: "545"
 nvidia_driver_package_version: "545"
 nvidia_driver_branch: "545"
+nvidia_driver_branch_open: "545" 
 nvidia_driver_skip_reboot: true
