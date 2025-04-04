@@ -8,7 +8,7 @@
         dest: /opt/oci-hpc/perftest
         clone: true
         update: true
-        version: 6730e979998f8e58dfccf3de0b7d8bea6536fe4c
+        version: "{{amd_perftest_commit}}"
 
     - name: Install libpci-dev
       ansible.builtin.apt:
@@ -41,8 +41,10 @@
     - name: Build perftest
       community.general.make:
         chdir: "/opt/oci-hpc/perftest"
+        jobs: "{{ ansible_processor_vcpus }}"
 
     - name: Install perftest
       community.general.make:
         chdir: "/opt/oci-hpc/perftest"
         target: install
+        jobs: "{{ ansible_processor_vcpus }}"

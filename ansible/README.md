@@ -42,7 +42,8 @@ group_vars/ folder specified variables used by the build job
 | gcc_version                           | Version of GCC                                                              |
 | gpuburn_repo                          | Repository for GPU burn tests                                               |
 | gpu_sysctl                            | Sysctl settings for GPU                                                     |
-| grub_cmdline                          | GRUB command line settings                                                  |
+| grub_cmdline_other                    | GRUB command line settings                                                  |
+| grub_cmdline_ubuntu24                 | GRUB command line settings for Ubuntu 24.04 (IOMMU turned off)              |
 | grub_cmdline_disable_mitigations      | GRUB command line settings to disable mitigations                           |
 | grub_cmdline_enroot                   | GRUB command line settings for Enroot                                       |
 | grub_cmdline_network_device_names     | GRUB command line settings for network device names                         |
@@ -61,6 +62,7 @@ group_vars/ folder specified variables used by the build job
 | nccltest_repo                         | Repository for NCCL tests                                                   |
 | nccltests_version                     | Version of NCCL tests                                                       |
 | nvidia_driver_branch                  | Branch of NVIDIA driver                                                     |
+| nvidia_driver_open                    | Boolean to select open version of the packages                              |
 | nvidia_driver_package_version         | Version of NVIDIA driver package                                            |
 | nvidia_driver_skip_reboot             | Flag to skip reboot after NVIDIA driver installation                        |
 | nvidia_driver_version                 | Version of NVIDIA driver                                                    |
@@ -162,7 +164,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_54_3681", "hpcx_2131", "openmpi_414", "nvidia_515", "nvidia_cuda_11_7", "ol7_rhck" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_54_3681", "hpcx_2131", "openmpi_508", "nvidia_515", "nvidia_cuda_11_7", "ol7_rhck" ]
 }
 ....
 build {

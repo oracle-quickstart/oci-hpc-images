@@ -75,5 +75,6 @@
         MAKEFLAGS: "-j 8"
       community.general.make:
         chdir: "{{ benchmark_base_path }}/nvbandwidth"
+        jobs: "{{ ansible_processor_vcpus }}"
       become_user: "{{ user }}"
       become: true

@@ -1,5 +1,6 @@
 doca_ofed_version: "2.10.0"
-doca_subversion: "093000-25.01"
+doca_subversion_ubuntu: "093000-25.01"
+doca_subversion_rhel: "093000_25.01"
 use_hpc_artifact: false
 doca: true
 mft_version: "mft-4.31.0-149"

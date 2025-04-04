@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-9.5-2025.02.28-0"
+  default = "Oracle-Linux-9.5-2025.05.19-0"
 }
 
 variable "operating_system" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "OCA-RHCK-OFED-24.10-1.1.4.0"
+  default = "RHCK-DOCA-OFED-3.0.0-AMD-ROCM-641"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,benchmarks,amd,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2212", "openmpi_414", "ol9_rhck", "oca_150_OL"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300_el95", "hpcx_223", "openmpi_508", "amd_rocm_641", "ol9_rhck"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

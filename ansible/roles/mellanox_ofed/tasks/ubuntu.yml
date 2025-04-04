@@ -59,6 +59,7 @@
           - libnl-route-3-dev
           - gfortran
           - libnuma-dev
+          - numactl
           - environment-modules
         state: present
         lock_timeout: 300
@@ -102,6 +103,50 @@
           - autotools-dev
           - graphviz
           - libnuma-dev
+          - numactl
+          - environment-modules
+        state: present
+        lock_timeout: 300
+
+- name: OFED for Ubuntu 24 specific tasks
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version == '24'
+  block:
+
+    - name: Ensure required packages are installed for Mellanox OFED
+      ansible.builtin.apt:
+        name:
+          - chrpath
+          - libgfortran5
+          - libc6-dev
+          - libltdl-dev
+          - libnl-3-dev
+          - dkms
+          - tcl
+          - tcl-dev
+          - tk
+          - tk-dev
+          - zlib1g-dev
+          - libnl-route-3-dev
+          - libnl-route-3-200
+          - pkg-config
+          - gcc
+          - swig
+          - make
+          - quilt
+          - gfortran
+          - flex
+          - m4
+          - bison
+          - automake
+          - libfuse2
+          - autoconf
+          - debhelper
+          - autotools-dev
+          - graphviz
+          - libnuma-dev
+          - numactl
           - environment-modules
         state: present
         lock_timeout: 300
@@ -151,12 +196,18 @@
     - name: Get package name
       ansible.builtin.set_fact:
         doca_package_name: |-
-          doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
-
-    - name: Install DOCA package using dpkg
-      ansible.builtin.apt:
-        deb: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
-        state: present
+          doca-host_{{ doca_ofed_version }}-{{ doca_subversion_ubuntu }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
+    - name: try and rescue
+      block: 
+        - name: Install DOCA package using dpkg
+          ansible.builtin.apt:
+            deb: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
+            state: present
+      rescue: 
+        - name: Install DOCA package using dpkg
+          ansible.builtin.apt:
+            deb: "{{hpc_beta_download}}{{ doca_package_name }}"
+            state: present
 
     - name: Update APT package list
       ansible.builtin.apt:

@@ -1,0 +1,7 @@
+doca_ofed_version: "3.1.0"
+doca_subversion_ubuntu: "045000-25.07"
+doca_subversion_rhel: "045000_25.07"
+use_hpc_artifact: false
+doca: true
+mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"
+install_mstflint: true

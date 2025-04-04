@@ -4,11 +4,38 @@
     - ansible_os_family == 'RedHat'
 
   block:
-    - name: Ensure latest microcode_ctl is installed
-      ansible.builtin.yum:
-        name:
-          - microcode_ctl
+    - name: microcode_ctl
+      block: 
+        - name: Ensure latest microcode_ctl is installed
+          ansible.builtin.yum:
+            name:
+              - microcode_ctl
+            state: present
+      rescue:
+        - name: Add ol9_UEKR8 repository
+          yum_repository:
+            name: ol9_UEKR8
+            description: Oracle Linux 9 UEK Release 8 (aarch64)
+            baseurl: https://yum.oracle.com/repo/OracleLinux/OL9/UEKR8/aarch64/
+            gpgkey: https://yum.oracle.com/RPM-GPG-KEY-oracle-ol9
+            gpgcheck: yes
+            enabled: yes
+          when: 
+            - ansible_architecture == "aarch64"
+            - ansible_distribution_major_version == '9'
+
+        - name: Ensure DNF metadata is up to date
+          dnf:
+            update_cache: yes
+          when: 
+            - ansible_architecture == "aarch64"
+            - ansible_distribution_major_version == '9'
+
+    - name: Ensure microcode_ctl is installed (optional)
+      dnf:
+        name: microcode_ctl
         state: present
+      when: ansible_architecture == "aarch64"
 
     - name: Ensure dracut early_microcode="yes" is configured
       ansible.builtin.lineinfile:
