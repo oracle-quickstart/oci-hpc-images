@@ -1,5 +1,5 @@
 nvidia_driver_version: "570"
 nvidia_driver_package_version: "570"
 nvidia_driver_branch: "570"
-nvidia_driver_branch_open: "570-open" 
+nvidia_driver_open: true
 nvidia_driver_skip_reboot: true

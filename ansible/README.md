@@ -61,6 +61,7 @@ group_vars/ folder specified variables used by the build job
 | nccltest_repo                         | Repository for NCCL tests                                                   |
 | nccltests_version                     | Version of NCCL tests                                                       |
 | nvidia_driver_branch                  | Branch of NVIDIA driver                                                     |
+| nvidia_driver_open                    | Boolean to select open version of the packages                              |
 | nvidia_driver_package_version         | Version of NVIDIA driver package                                            |
 | nvidia_driver_skip_reboot             | Flag to skip reboot after NVIDIA driver installation                        |
 | nvidia_driver_version                 | Version of NVIDIA driver                                                    |

@@ -40,11 +40,12 @@
 
 - name: Install driver packages
   ansible.builtin.apt:
-    name: "{{ nvidia_driver_package_version | ternary(nvidia_driver_ubuntu_cuda_package + '-' + nvidia_driver_package_version, nvidia_driver_ubuntu_cuda_package) }}" # noqa yaml[line-length]
+    name: "{{ item }}" # noqa yaml[line-length]
     state: "{{ nvidia_driver_package_state }}"
     autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
     purge: "{{ nvidia_driver_package_state == 'absent' }}"
     lock_timeout: 300
+  with_items: "{{nvidia_driver_ubuntu_cuda_packages}}"
   register: install_driver
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
 

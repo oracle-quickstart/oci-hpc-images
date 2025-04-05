@@ -1,5 +1,4 @@
 nvidia_driver_version: "555"
 nvidia_driver_package_version: "555"
 nvidia_driver_branch: "555"
-nvidia_driver_branch_open: "555" 
 nvidia_driver_skip_reboot: true

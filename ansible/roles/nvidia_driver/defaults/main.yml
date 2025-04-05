@@ -33,13 +33,21 @@ nvidia_driver_ubuntu_install_from_cuda_repo: true
 
 # Installing with Canonical repositories
 nvidia_driver_ubuntu_packages:
-  - "nvidia-headless-{{ nvidia_driver_branch_open }}-server"
+  - "nvidia-headless-{{ nvidia_driver_ubuntu_branch }}-server"
   - "nvidia-utils-{{ nvidia_driver_ubuntu_branch }}-server"
-  - "nvidia-headless-no-dkms-{{ nvidia_driver_branch_open }}-server"
-  - "nvidia-kernel-source-{{ nvidia_driver_branch_open }}-server"
+  - "nvidia-headless-no-dkms-{{ nvidia_driver_ubuntu_branch }}-server"
+  - "nvidia-kernel-source-{{ nvidia_driver_ubuntu_branch }}-server"
 
+# Installing with Cuda (open nvidia_driver_package_state:)
+nvidia_driver_ubuntu_cuda_packages_open:
+  - "nvidia-open-{{ nvidia_driver_ubuntu_branch }}"
+  - "nvlink5-{{ nvidia_driver_ubuntu_branch }}"
+
+nvidia_driver_ubuntu_cuda_packages_default:
+  - "cuda-drivers-fabricmanager-{{ nvidia_driver_ubuntu_branch }}"
 # Installing with CUDA repositories
 nvidia_driver_ubuntu_cuda_repo_gpgkey_url: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir }}/{{ nvidia_repo_ubuntu_gpgkey }}.pub"
 nvidia_driver_ubuntu_cuda_repo_gpgkey_id: "{{ nvidia_repo_ubuntu_gpgkey }}"
 nvidia_driver_ubuntu_cuda_repo_baseurl: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir }}"
-nvidia_driver_ubuntu_cuda_package: "cuda-drivers-fabricmanager"
+nvidia_driver_ubuntu_cuda_packages: >-
+  {{ (nvidia_driver_open is defined and nvidia_driver_open) | ternary(nvidia_driver_ubuntu_cuda_packages_open, nvidia_driver_ubuntu_cuda_packages_default) }}
