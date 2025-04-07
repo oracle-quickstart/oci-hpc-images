@@ -135,7 +135,6 @@
           - swig
           - make
           - quilt
-          - dpatch
           - gfortran
           - flex
           - m4
