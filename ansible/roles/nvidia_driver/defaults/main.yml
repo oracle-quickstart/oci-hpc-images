@@ -42,12 +42,18 @@ nvidia_driver_ubuntu_packages:
 nvidia_driver_ubuntu_cuda_packages_open:
   - "nvidia-open-{{ nvidia_driver_ubuntu_branch }}"
   - "nvlink5-{{ nvidia_driver_ubuntu_branch }}"
+  - "nvidia-imex-{{ nvidia_driver_ubuntu_branch }}"
+  - "libnvidia-nscq-{{ nvidia_driver_ubuntu_branch }}"
 
 nvidia_driver_ubuntu_cuda_packages_default:
   - "cuda-drivers-fabricmanager-{{ nvidia_driver_ubuntu_branch }}"
+  - "libnvidia-nscq-{{ nvidia_driver_ubuntu_branch }}"
+
 # Installing with CUDA repositories
-nvidia_driver_ubuntu_cuda_repo_gpgkey_url: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir }}/{{ nvidia_repo_ubuntu_gpgkey }}.pub"
+nvidia_driver_ubuntu_cuda_repo_baseurl_x86: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir_x86 }}"
+nvidia_driver_ubuntu_cuda_repo_baseurl_arm: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir_arm }}"
+nvidia_driver_ubuntu_cuda_repo_gpgkey_url_x86: "{{ nvidia_driver_ubuntu_cuda_repo_baseurl_x86 }}/{{ nvidia_repo_ubuntu_gpgkey }}.pub"
+nvidia_driver_ubuntu_cuda_repo_gpgkey_url_arm: "{{ nvidia_driver_ubuntu_cuda_repo_baseurl_arm }}/{{ nvidia_repo_ubuntu_gpgkey }}.pub"
 nvidia_driver_ubuntu_cuda_repo_gpgkey_id: "{{ nvidia_repo_ubuntu_gpgkey }}"
-nvidia_driver_ubuntu_cuda_repo_baseurl: "https://developer.download.nvidia.com/compute/cuda/repos/{{ _ubuntu_repo_dir }}"
 nvidia_driver_ubuntu_cuda_packages: >-
   {{ (nvidia_driver_open is defined and nvidia_driver_open) | ternary(nvidia_driver_ubuntu_cuda_packages_open, nvidia_driver_ubuntu_cuda_packages_default) }}

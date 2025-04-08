@@ -15,10 +15,17 @@
 
 - name: Add key
   ansible.builtin.apt_key:
-    url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url }}"
+    url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url_x86 }}"
     id: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_id }}"
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when: nvidia_driver_add_repos | bool
+  when: nvidia_driver_add_repos | bool and ansible_architecture == 'x86_64'
+
+- name: Add key
+  ansible.builtin.apt_key:
+    url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url_arm }}"
+    id: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_id }}"
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: nvidia_driver_add_repos | bool and ansible_architecture != 'x86_64'
 
 - name: Esure kmod is installed
   ansible.builtin.apt:
@@ -33,10 +40,17 @@
 
 - name: Add repo
   ansible.builtin.apt_repository:
-    repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl }} /"
+    repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl_arm }} /"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when: nvidia_driver_add_repos | bool
+  when: nvidia_driver_add_repos | bool and ansible_architecture != 'x86_64'
+
+- name: Add repo
+  ansible.builtin.apt_repository:
+    repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl_x86 }} /"
+    update_cache: true
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: nvidia_driver_add_repos | bool and ansible_architecture == 'x86_64'
 
 - name: Install driver packages
   ansible.builtin.apt:

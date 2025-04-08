@@ -11,15 +11,47 @@
   when:
     - ansible_os_family == 'Debian'
 
+- name: MFT RPM download
+  ansible.builtin.set_fact:
+    architecture: "arm64"
+  when:
+    - ansible_architecture == 'aarch64'
+
+- name: MTF DEB download
+  ansible.builtin.set_fact:
+    architecture: "x86_64"
+  when:
+    - ansible_architecture == 'x86_64'
+
+- name: Get DEB architecture # noqa no-changed-when
+  ansible.builtin.command: dpkg --print-architecture
+  register: deb_architecture_output
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_architecture == 'x86_64'
+
+- name: set deb_architecture
+  ansible.builtin.set_fact:
+    deb_architecture: "{{deb_architecture_output.stdout}}"
+  when:
+    - ansible_architecture == 'x86_64'
+
+- name: set deb_architecture 
+  ansible.builtin.set_fact:
+    deb_architecture: "arm64"
+  when:
+    - ansible_os_family == 'Debian'
+    - ansible_architecture == 'aarch64'
+
 - name: Extract Mellanox MFT installation tarball
   ansible.builtin.unarchive:
-    src: "{{ mellanox_mft_download }}/{{ mft_version }}-{{ ansible_architecture }}-{{ package_extension }}.tgz"
+    src: "{{ mellanox_mft_download }}/{{ mft_version }}-{{ architecture }}-{{ package_extension }}.tgz"
     dest: /tmp
     remote_src: true
 
 - name: Install Mellanox MFT update (yum/dnf)
   ansible.builtin.yum:
-    name: "/tmp/{{ mft_version }}-{{ ansible_architecture }}-rpm/RPMS/{{ mft_version }}.{{ ansible_architecture }}.rpm"
+    name: "/tmp/{{ mft_version }}-{{ architecture }}-rpm/RPMS/{{ mft_version }}.{{ architecture }}.rpm"
     state: present
     disable_gpg_check: true
   when:
@@ -36,15 +68,9 @@
     lock_timeout: 300
   when: ansible_os_family == 'Debian' and install_mstflint is defined and install_mstflint | bool
 
-- name: Get DEB architecture # noqa no-changed-when
-  ansible.builtin.command: dpkg --print-architecture
-  register: deb_architecture
-  when:
-    - ansible_os_family == 'Debian'
-
 - name: Install Mellanox MFT update (apt)
   ansible.builtin.apt:
-    deb: "/tmp/{{ mft_version }}-{{ ansible_architecture }}-deb/DEBS/{{ mft_version | replace('-', '_', 1) }}_{{ deb_architecture.stdout }}.deb"
+    deb: "/tmp/{{ mft_version }}-{{ architecture }}-deb/DEBS/{{ mft_version | replace('-', '_', 1) }}_{{ deb_architecture }}.deb"
     lock_timeout: 300
   when:
     - ansible_os_family == 'Debian'
