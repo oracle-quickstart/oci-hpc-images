@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-20.04-2024.10.02-0"
+  default = "Canonical-Ubuntu-22.04-aarch64-2025.01.31-1"
 }
 
 variable "operating_system" {
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "20"
+  default = "22"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
+  default = "OFED-24.10-1.1.4.0-GPU-570-OPEN-CUDA-12.8"
 }
 
 variable "release" {
@@ -48,7 +48,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2181", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "kernel_5.15.0_131", "oca_150_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2212", "openmpi_414", "nvidia_open_570", "nvidia_cuda_12_8", "oca_151_ubuntu", "kernel-nvidia-hwe"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -130,6 +130,7 @@ build {
     extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]
     groups = local.ansible_groups
     user = var.ssh_username
+    use_proxy = false
   }
 
   provisioner "shell" {

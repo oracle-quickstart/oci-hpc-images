@@ -14,8 +14,8 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-9.5-2025.02.28-0"
-}
+  default = "Oracle-Linux-8.10-2025.03.18-0"
+} 
 
 variable "operating_system" {
   type    = string
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "9"
+  default = "8"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "OCA-RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
+  default = "RHCK-OFED-24.10-1.1.4.0-GPU-550-CUDA-12.4"
 }
 
 variable "release" {
@@ -48,10 +48,10 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2212", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol9_rhck", "oca_150_OL"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_2212", "openmpi_414", "nvidia_550", "nvidia_cuda_12_4", "ol8_rhck" ]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+/* authentication variables, edit and use defaults.pkr.hcl instead */
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -59,11 +59,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" { 
-  type = string 
-  default = "DEFAULT" 
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
 }
-variable "access_cfg_file" { 
+variable "access_cfg_file" {
   type = string
   default = "~/.oci/config"
 }
@@ -124,7 +124,7 @@ locals {
 build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
-
+  
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
     extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]
