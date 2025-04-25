@@ -34,6 +34,7 @@
   ansible.builtin.set_fact:
     deb_architecture: "{{deb_architecture_output.stdout}}"
   when:
+    - ansible_os_family == 'Debian'
     - ansible_architecture == 'x86_64'
 
 - name: set deb_architecture 
