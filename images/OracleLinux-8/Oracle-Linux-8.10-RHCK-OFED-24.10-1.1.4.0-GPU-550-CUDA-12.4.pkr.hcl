@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-8.10-2025.03.18-0"
+  default = "Oracle-Linux-8.10-2025.04.16-0"
 } 
 
 variable "operating_system" {

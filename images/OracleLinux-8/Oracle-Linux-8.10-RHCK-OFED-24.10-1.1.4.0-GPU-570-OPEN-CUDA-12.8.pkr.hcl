@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "RHCK-OFED-24.10-1.1.4.0"
+  default = "RHCK-OFED-24.10-1.1.4.0-GPU-570-OPEN-CUDA-12.8"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_2212", "openmpi_414", "ol8_rhck" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_2212", "openmpi_414", "nvidia_open_570", "nvidia_cuda_12_8", "ol8_rhck" ]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */

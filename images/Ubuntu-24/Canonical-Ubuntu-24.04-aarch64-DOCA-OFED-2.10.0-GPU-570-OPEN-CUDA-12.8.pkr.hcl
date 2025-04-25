@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "DOCA-OFED-2.10.0-GPU-570-CUDA-12.8"
+  default = "DOCA-OFED-2.10.0-GPU-570-OPEN-CUDA-12.8"
 }
 
 variable "release" {

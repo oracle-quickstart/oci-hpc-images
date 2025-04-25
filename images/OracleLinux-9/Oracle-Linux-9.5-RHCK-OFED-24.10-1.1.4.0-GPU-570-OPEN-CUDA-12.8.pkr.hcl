@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "RHCK-OFED-24.10-1.1.4.0-GPU-570-CUDA-12.8"
+  default = "RHCK-OFED-24.10-1.1.4.0-GPU-570-OPEN-CUDA-12.8"
 }
 
 variable "release" {
