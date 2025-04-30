@@ -78,17 +78,54 @@
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: ansible_distribution_major_version < '8' and ansible_distribution == 'OracleLinux'
 
-- name: Install driver packages RHEL/CentOS 8 and newer
+- name: Install driver packages RHEL/CentOS 8 and newer for Proprietary Drivers
   ansible.builtin.yum:
     name:
 #      - "{{ nvidia_driver_package_version | ternary('@nvidia-driver:'+nvidia_driver_package_version, '@nvidia-driver:'+nvidia_driver_rhel_branch+'-dkms') }}"
       - "{{ '@nvidia-driver:' + nvidia_driver_rhel_branch + '-dkms' }}"
       - "nvidia-fabricmanager-{{ nvidia_driver_version }}"
+      - "libnvidia-nscq-{{ nvidia_driver_version }}"
     state: "{{ nvidia_driver_package_state }}"
     autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
   register: install_driver_rhel8
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when: ansible_distribution_major_version > '7'
+  when: ansible_distribution_major_version > '7' and not (nvidia_driver_open is defined and nvidia_driver_open) 
+
+- name: Install Open Drivers
+  when: ansible_distribution_major_version > '7' and (nvidia_driver_open is defined and nvidia_driver_open) 
+  block:
+    - name: Install driver packages RHEL/CentOS 8 and newer for open drivers
+      ansible.builtin.yum:
+        name:
+          - "libmnl-devel"
+        state: "{{ nvidia_driver_package_state }}"
+        enablerepo: "ol{{ansible_distribution_major_version}}_codeready_builder"
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+    - name: Fix libcurl dependencies
+      ansible.builtin.shell: "dnf swap libcurl libcurl-minimal"
+    - name: Install driver packages RHEL/CentOS 8 and newer for open drivers
+      ansible.builtin.yum:
+        name:
+          - "nvidia-open-{{ nvidia_driver_version }}"
+          - "nvlink5-{{ nvidia_driver_version }}"
+          - "nvidia-imex-{{ nvidia_driver_version }}"
+          - "libnvidia-nscq-{{ nvidia_driver_version }}"
+        state: "{{ nvidia_driver_package_state }}"
+        autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
+      register: install_driver_rhel8
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  rescue:
+    - name: Install driver packages RHEL/CentOS 8 and newer for open drivers (second try with nvidia-open)
+      ansible.builtin.yum:
+        name:
+          - "nvidia-open"
+          - "nvlink5-{{ nvidia_driver_version }}"
+          - "nvidia-imex-{{ nvidia_driver_version }}"
+          - "libnvidia-nscq-{{ nvidia_driver_version }}"
+        state: "{{ nvidia_driver_package_state }}"
+        autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
+      register: install_driver_rhel8
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
 - name: Set install_driver.changed var for RHEL 7/8
   ansible.builtin.debug:
