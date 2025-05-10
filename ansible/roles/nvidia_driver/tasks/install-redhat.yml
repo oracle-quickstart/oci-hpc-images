@@ -102,7 +102,7 @@
         enablerepo: "ol{{ansible_distribution_major_version}}_codeready_builder"
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
     - name: Fix libcurl dependencies
-      ansible.builtin.shell: "dnf swap libcurl libcurl-minimal"
+      ansible.builtin.shell: "dnf swap libcurl libcurl-minimal -y"
     - name: Install driver packages RHEL/CentOS 8 and newer for open drivers
       ansible.builtin.yum:
         name:
