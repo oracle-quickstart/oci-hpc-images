@@ -27,6 +27,19 @@
     lock_timeout: 300
   when:
     - ansible_distribution == 'Ubuntu'
+    - "'stable_dcgm' not in options"
+  with_items: 
+    - datacenter-gpu-manager-4-core
+    - datacenter-gpu-manager-4-cuda12
+
+- name: Install DCGM for Ubuntu
+  ansible.builtin.apt:
+    name: "{{item}}=1:{{ stable_nvidia_dcgm_version }}"
+    state: present
+    lock_timeout: 300
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - "'stable_dcgm' in options"
   with_items: 
     - datacenter-gpu-manager-4-core
     - datacenter-gpu-manager-4-cuda12

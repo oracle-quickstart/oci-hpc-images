@@ -44,7 +44,7 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins,stable_dcgm"
 }
 
 variable "build_groups" {
