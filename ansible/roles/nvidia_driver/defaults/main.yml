@@ -4,6 +4,8 @@ nvidia_driver_persistence_mode_on: true
 nvidia_driver_skip_reboot: true
 nvidia_driver_module_file: /etc/modprobe.d/nvidia.conf
 nvidia_driver_module_params: ''
+nvidia_driver_module_params_arm64: 'options nvidia NVreg_CreateImexChannel0=1'
+
 nvidia_driver_add_repos: true
 nvidia_driver_branch: "470"
 nvidia_repo_redhat_gpgkey: "D42D0685"
@@ -44,6 +46,7 @@ nvidia_driver_ubuntu_cuda_packages_open:
   - "nvlink5-{{ nvidia_driver_ubuntu_branch }}"
   - "nvidia-imex-{{ nvidia_driver_ubuntu_branch }}"
   - "libnvidia-nscq-{{ nvidia_driver_ubuntu_branch }}"
+  - "nvlsm"
 
 nvidia_driver_ubuntu_cuda_packages_default:
   - "cuda-drivers-fabricmanager-{{ nvidia_driver_ubuntu_branch }}"
