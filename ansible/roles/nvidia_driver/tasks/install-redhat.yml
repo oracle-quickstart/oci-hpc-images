@@ -117,6 +117,7 @@
           - "nvlink5-{{ nvidia_driver_version }}"
           - "nvidia-imex-{{ nvidia_driver_version }}"
           - "libnvidia-nscq-{{ nvidia_driver_version }}"
+          - "nvlsm"
         state: "{{ nvidia_driver_package_state }}"
         autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
       register: install_driver_rhel8

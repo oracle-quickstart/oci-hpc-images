@@ -40,6 +40,10 @@ nvidia_driver_ubuntu_packages:
   - "nvidia-headless-no-dkms-{{ nvidia_driver_ubuntu_branch }}-server"
   - "nvidia-kernel-source-{{ nvidia_driver_ubuntu_branch }}-server"
 
+nvidia_driver_ubuntu_additionnal_package_not_latest:
+  - "nvidia-modprobe={{ nvidia_subversion_latest.stdout }}"
+  - "nvidia-persistenced={{ nvidia_subversion_latest.stdout }}"
+
 # Installing with Cuda (open nvidia_driver_package_state:)
 nvidia_driver_ubuntu_cuda_packages_open:
   - "nvidia-open-{{ nvidia_driver_ubuntu_branch }}"
