@@ -69,7 +69,7 @@
   when: ansible_distribution == 'Ubuntu'
 
 - name: Run Dracut
-  ansible.builtin.command: dracut -f"
+  ansible.builtin.command: dracut -f
   when: ansible_distribution == 'OracleLinux'
   
 - name: Reboot after driver install
