@@ -42,7 +42,8 @@ group_vars/ folder specified variables used by the build job
 | gcc_version                           | Version of GCC                                                              |
 | gpuburn_repo                          | Repository for GPU burn tests                                               |
 | gpu_sysctl                            | Sysctl settings for GPU                                                     |
-| grub_cmdline                          | GRUB command line settings                                                  |
+| grub_cmdline_other                    | GRUB command line settings                                                  |
+| grub_cmdline_ubuntu24                 | GRUB command line settings for Ubuntu 24.04 (IOMMU turned off)              |
 | grub_cmdline_disable_mitigations      | GRUB command line settings to disable mitigations                           |
 | grub_cmdline_enroot                   | GRUB command line settings for Enroot                                       |
 | grub_cmdline_network_device_names     | GRUB command line settings for network device names                         |

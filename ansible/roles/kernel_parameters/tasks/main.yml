@@ -1,4 +1,19 @@
 ---
+
+- name: set grub_commandline
+  set_fact: 
+    grub_cmdline: grub_cmdline_other
+  when: 
+    - grub_cmdline_other is defined
+    - ansible_distribution_major_version != '24'
+
+- name: set grub_commandline
+  set_fact: 
+    grub_cmdline: grub_cmdline_ubuntu24
+  when: 
+    - grub_cmdline_ubuntu24 is defined
+    - ansible_distribution_major_version == '24'
+
 - name: Build list of kernel boot parameters
   ansible.builtin.set_fact:
     kernel_parameters: "{{ grub_cmdline
