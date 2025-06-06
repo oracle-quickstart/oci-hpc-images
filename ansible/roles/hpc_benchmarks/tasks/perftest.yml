@@ -49,6 +49,15 @@
       args:
         chdir: "{{ benchmark_base_path }}/perftest"
 
-    - name: Build IB perftest
-      community.general.make:
-        chdir: "{{ benchmark_base_path }}/perftest"
+    - name: make block
+      block:
+        - name: Build IB perftest
+          community.general.make:
+            chdir: "{{ benchmark_base_path }}/perftest"
+      rescue:
+        - name: Build IB perftest (Needed on OL8)
+          community.general.make:
+            chdir: "{{ benchmark_base_path }}/perftest"
+            params:
+              LD: g++
+              LDFLAGS: "-L/usr/local/cuda/lib64 -lstdc++ -lcudart"

@@ -41,6 +41,11 @@
         deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names_{{ oci_hpc_network_device_names_version }}-compute_all.deb"
         lock_timeout: 300
       when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
+      
+    - name: Add aarch64 architecture # noqa no-changed-when
+      ansible.builtin.command: dpkg --add-architecture aarch64
+      when: ansible_architecture == "aarch64"
+
     - name: Install oci-hpc-network-device-names (HPC)
       ansible.builtin.apt:
         deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.deb"

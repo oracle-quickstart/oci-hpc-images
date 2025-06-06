@@ -1,0 +1,5 @@
+nvidia_driver_version: "575"
+nvidia_driver_package_version: "575"
+nvidia_driver_branch: "575"
+nvidia_driver_open: true
+nvidia_driver_skip_reboot: true

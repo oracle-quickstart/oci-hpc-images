@@ -12,7 +12,7 @@ gcc_version: 11.2.0
 nccltests_version: v2.13.9
 mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
 nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
-stable_nvidia_dcgm_version: 3.2.6
+stable_nvidia_dcgm_version: 4.2.3
 
 latest_ol7_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/ZDonynauGjz9zDxkaG0oM9Ktz4imVccxI7EhYaq_S0qokb-kLYn7_qq0n6TAhJV4/n/imagegen/b/agents/o/latest_el7_rpm_par_url"
 latest_ol7_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/LKfhdVsIEEYyOViDUEsehnjVDxNpeuMe_n3Uwfpit92cSTtRx0BPHE7BxbXjJQCL/n/imagegen/b/agents/o/latest_el7_arch_rpm_par_url"

@@ -64,6 +64,14 @@
     dest: "{{ nvidia_driver_module_file }}"
     mode: '0644'
 
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Run Dracut
+  ansible.builtin.command: dracut -f
+  when: ansible_distribution == 'OracleLinux'
+  
 - name: Reboot after driver install
   ansible.builtin.reboot:
   when: install_driver.changed and not nvidia_driver_skip_reboot

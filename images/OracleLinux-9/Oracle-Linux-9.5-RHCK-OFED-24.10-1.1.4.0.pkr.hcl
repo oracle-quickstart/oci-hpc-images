@@ -14,27 +14,27 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-20.04-2024.10.02-0"
+  default = "Oracle-Linux-9.5-2025.05.19-0"
 }
 
 variable "operating_system" {
   type    = string
-  default = "Ubuntu"
+  default = "Oracle Linux"
 }
 
 variable "operating_system_version" {
   type    = string
-  default = "20"
+  default = "9"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "ubuntu"
+  default = "opc"
 }
 
 variable "features" {
   type    = string
-  default = "OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
+  default = "RHCK-OFED-24.10-1.1.4.0"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2181", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6" , "kernel_5.15.0_131", "oca_150_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2212", "openmpi_414", "ol9_rhck", "oca_152_OL"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
@@ -112,7 +112,7 @@ source "oracle-oci" "oracle" {
   ssh_timeout         = "90m"
   instance_name       = "HPC-ImageBuilder-${local.image_base_name}"
   skip_create_image   = var.skip_create_image
-  }
+}
 
 locals {
   ansible_args    = "options=[${var.build_options}]"
@@ -136,7 +136,7 @@ build {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
   }
 
-post-processor "manifest" {
+  post-processor "manifest" {
     output = "${local.image_base_name}.manifest.json"
     custom_data = {
         image_name = local.image_base_name
