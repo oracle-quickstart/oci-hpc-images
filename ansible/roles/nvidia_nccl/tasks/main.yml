@@ -1,22 +1,59 @@
 ---
-- name: Install NCCL from CUDA repository for RHEL
-  ansible.builtin.yum:
-    name:
-      - "libnccl-{{ nccl_package_version }}"
-      - "libnccl-devel-{{ nccl_package_version }}"
-      - "libnccl-static-{{ nccl_package_version }}"
-    state: present
-  environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when:
-    - ansible_os_family == 'RedHat'
+- name: make block
+  block:
+    - name: Install NCCL from CUDA repository for RHEL
+      ansible.builtin.yum:
+        name:
+          - "libnccl-{{ nccl_package_version }}"
+          - "libnccl-devel-{{ nccl_package_version }}"
+          - "libnccl-static-{{ nccl_package_version }}"
+        state: present
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when:
+        - ansible_os_family == 'RedHat'
 
-- name: Install NCCL from CUDA repository for Ubuntu
-  ansible.builtin.apt:
-    name:
-      - "libnccl2={{ nccl_package_version }}"
-      - "libnccl-dev={{ nccl_package_version }}"
-    state: present
-    lock_timeout: 300
-  environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when:
-    - ansible_distribution == 'Ubuntu'
+    - name: Install NCCL from CUDA repository for Ubuntu
+      ansible.builtin.apt:
+        name:
+          - "libnccl2={{ nccl_package_version }}"
+          - "libnccl-dev={{ nccl_package_version }}"
+        state: present
+        lock_timeout: 300
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when:
+        - ansible_distribution == 'Ubuntu'
+  rescue:
+    - name: Set architecture for Arm
+      ansible.builtin.set_fact:
+        architecture: "arm64"
+      when:
+        - ansible_architecture == 'aarch64'
+
+    - name: Set architecture for X86
+      ansible.builtin.set_fact:
+        architecture: "x86_64"
+      when:
+        - ansible_architecture == 'x86_64'
+
+    - name: Install NCCL from CUDA repository for Ubuntu
+      ansible.builtin.apt:
+        deb: "{{ item }}"
+        state: present
+        lock_timeout: 300
+      with_items:
+        - "{{ hpc_beta_download }}nccl/libnccl2_{{ nccl_package_version }}_{{ architecture }}.deb"
+        - "{{ hpc_beta_download }}nccl/libnccl-dev_{{ nccl_package_version }}_{{ architecture }}.deb"
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install NCCL from CUDA repository for RHEL
+      yum:
+        name:
+          - "{{ hpc_beta_download }}nccl/libnccl-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+          - "{{ hpc_beta_download }}nccl/libnccl-devel-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+          - "{{ hpc_beta_download }}nccl/libnccl-static-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+        state: latest
+        disable_gpg_check: true
+      environment: "{{proxy_env if proxy_env is defined else {}}}"
+      when:
+        - ansible_os_family == 'RedHat'
