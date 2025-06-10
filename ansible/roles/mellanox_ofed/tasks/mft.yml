@@ -1,23 +1,23 @@
 ---
-- name: MFT RPM download
+- name: Set package extension on OL
   ansible.builtin.set_fact:
     package_extension: "rpm"
   when:
     - ansible_os_family == 'RedHat'
 
-- name: MTF DEB download
+- name: Set package extension on Ubuntu
   ansible.builtin.set_fact:
     package_extension: "deb"
   when:
     - ansible_os_family == 'Debian'
 
-- name: MFT RPM download
+- name: Set architecture var on ARM
   ansible.builtin.set_fact:
     architecture: "arm64"
   when:
     - ansible_architecture == 'aarch64'
 
-- name: MTF DEB download
+- name: Set architecture var on X86
   ansible.builtin.set_fact:
     architecture: "x86_64"
   when:
