@@ -5,6 +5,7 @@
     state: present
   when:
     - ansible_os_family == 'RedHat'
+    - ansible_architecture == 'x86_64'
 
 - name: Install NVIDIA fabric manager for Ubuntu
   ansible.builtin.apt:
@@ -13,8 +14,11 @@
     lock_timeout: 300
   when:
     - ansible_distribution == 'Ubuntu'
+    - ansible_architecture == 'x86_64'
 
 - name: Enable NVIDIA fabric manager service
   ansible.builtin.systemd:
     name: nvidia-fabricmanager
     enabled: true
+  when:
+    - ansible_architecture == 'x86_64'

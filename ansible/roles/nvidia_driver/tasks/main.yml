@@ -56,7 +56,10 @@
   ansible.builtin.systemd:
     name: nvidia-fabricmanager
     enabled: true
-  when: nvidia_driver_package_state != 'absent'
+  when:
+    - nvidia_driver_package_state != 'absent' 
+    - ansible_architecture == 'x86_64'
+
 
 - name: Set module parameters
   ansible.builtin.template:
@@ -94,6 +97,20 @@
     mode: "0644"
   when: ansible_architecture == 'aarch64'
 
+- name: Check if /etc/nvidia-imex/config.cfg exists
+  ansible.builtin.stat:
+    path: /etc/nvidia-imex/config.cfg
+  register: imex_config_path
+
+- name: Set NETWORK_INTERFACE to eth0 in config.cfg
+  ansible.builtin.lineinfile:
+    path: /etc/nvidia-imex/config.cfg
+    regexp: '^NETWORK_INTERFACE='
+    line: 'NETWORK_INTERFACE=eth0'
+    backrefs: yes
+  when:
+    - ansible_architecture == 'aarch64'
+    - imex_config_path.stat.exists
   
 - name: Ensure DKMS modules are built for OL7/OL8
   when: ansible_distribution == 'OracleLinux'
