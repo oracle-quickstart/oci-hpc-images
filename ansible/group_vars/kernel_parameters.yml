@@ -1,17 +1,13 @@
 ---
 grub_cmdline_other:
   - processor.max_cstate=1
-  - intel_idle.max_cstate=0
   - mce=ignore_ce
-  - nohz=off
   - skew_tick=1
   - iommu=pt
   - numa_balancing=disable
 grub_cmdline_ubuntu24:
   - processor.max_cstate=1
-  - intel_idle.max_cstate=0
   - mce=ignore_ce
-  - nohz=off
   - skew_tick=1
   - iommu=off
   - numa_balancing=disable
