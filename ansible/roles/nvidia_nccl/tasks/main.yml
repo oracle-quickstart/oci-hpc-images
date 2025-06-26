@@ -35,25 +35,64 @@
       when:
         - ansible_architecture == 'x86_64'
 
-    - name: Install NCCL from CUDA repository for Ubuntu
+    - name: Download NCCL source
+      get_url:
+        url: "https://github.com/NVIDIA/nccl/archive/refs/tags/v{{ nccl_version }}.tar.gz"
+        dest: "/tmp/v{{ nccl_version }}.tar.gz"
+        mode: '0644'
+
+    - name: Extract NCCL tarball
+      ansible.builtin.unarchive:
+        src: "/tmp/v{{ nccl_version }}.tar.gz"
+        dest: "/tmp"
+        remote_src: yes
+
+    - name: Build NCCL Debian package
+      community.general.make:
+        chdir: "/tmp/nccl-{{ nccl_version }}"
+        target: "pkg.debian.build"
+        params:
+          NUM_THREADS: "{{ ansible_processor_vcpus }}"
+      when:
+        - ansible_distribution == 'Ubuntu'
+
+    - name: Build NCCL Debian package
+      community.general.make:
+        chdir: "/tmp/nccl-{{ nccl_version }}"
+        target: "pkg.redhat.build"
+        params:
+          NUM_THREADS: "{{ ansible_processor_vcpus }}"
+
+      when:
+        - ansible_distribution == 'RedHat'
+
+    - name: Install NCCL build dependencies on Debian/Ubuntu
+      apt:
+        name:
+          - build-essential
+          - devscripts
+          - debhelper
+          - fakeroot
+        state: present
+        update_cache: yes
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install NCCL from local build for Ubuntu
       ansible.builtin.apt:
         deb: "{{ item }}"
         state: present
         lock_timeout: 300
       with_items:
-        - "{{ hpc_beta_download }}nccl/libnccl2_{{ nccl_package_version }}_{{ architecture }}.deb"
-        - "{{ hpc_beta_download }}nccl/libnccl-dev_{{ nccl_package_version }}_{{ architecture }}.deb"
-      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+        - "/tmp/nccl-{{ nccl_version }}/build/pkg/deb/libnccl2_{{ nccl_package_version }}_{{ architecture }}.deb"
+        - "/tmp/nccl-{{ nccl_version }}/build/pkg/deb/libnccl-dev_{{ nccl_package_version }}_{{ architecture }}.deb"
       when: ansible_distribution == 'Ubuntu'
 
-    - name: Install NCCL from CUDA repository for RHEL
+    - name: Install NCCL from local build for RHEL
       yum:
         name:
-          - "{{ hpc_beta_download }}nccl/libnccl-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
-          - "{{ hpc_beta_download }}nccl/libnccl-devel-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
-          - "{{ hpc_beta_download }}nccl/libnccl-static-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+          - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm//libnccl-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+          - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm//libnccl-devel-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+          - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm//libnccl-static-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
         state: latest
         disable_gpg_check: true
-      environment: "{{proxy_env if proxy_env is defined else {}}}"
-      when:
-        - ansible_os_family == 'RedHat'
+      when: ansible_distribution == 'RedHat'
