@@ -3,8 +3,10 @@ nvidia_driver_package_version: ''
 nvidia_driver_persistence_mode_on: true
 nvidia_driver_skip_reboot: true
 nvidia_driver_module_file: /etc/modprobe.d/nvidia.conf
-nvidia_driver_module_params: ''
-nvidia_driver_module_params_arm64: 'options nvidia NVreg_CreateImexChannel0=1'
+nvidia_driver_module_params: 'options nvidia NVreg_RestrictProfilingToAdminUsers=0'
+nvidia_driver_module_params_arm64:  |
+  options nvidia NVreg_RestrictProfilingToAdminUsers=0
+  options nvidia NVreg_CreateImexChannel0=1
 
 nvidia_driver_add_repos: true
 nvidia_driver_branch: "470"
