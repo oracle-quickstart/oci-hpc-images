@@ -49,6 +49,7 @@
     src: "{{ mellanox_mft_download }}/{{ mft_version }}-{{ architecture }}-{{ package_extension }}.tgz"
     dest: /tmp
     remote_src: true
+  when: mft_version is defined
 
 - name: Install Mellanox MFT update (yum/dnf)
   ansible.builtin.yum:
@@ -57,6 +58,7 @@
     disable_gpg_check: true
   when:
     - ansible_os_family == 'RedHat'
+    - mft_version is defined
 
 - name: Install mstflint
   ansible.builtin.yum:
@@ -75,3 +77,4 @@
     lock_timeout: 300
   when:
     - ansible_os_family == 'Debian'
+    - mft_version is defined
