@@ -92,3 +92,4 @@
           MPI_HOME={{openmpi_dirs.files[0].path}}
           NCCL_HOME=/opt/rccl
           HIP_HOME=/opt/rocm
+        jobs: "{{ ansible_processor_vcpus }}"

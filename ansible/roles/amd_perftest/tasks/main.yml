@@ -41,8 +41,10 @@
     - name: Build perftest
       community.general.make:
         chdir: "/opt/oci-hpc/perftest"
+        jobs: "{{ ansible_processor_vcpus }}"
 
     - name: Install perftest
       community.general.make:
         chdir: "/opt/oci-hpc/perftest"
         target: install
+        jobs: "{{ ansible_processor_vcpus }}"
