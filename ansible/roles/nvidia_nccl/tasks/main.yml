@@ -129,9 +129,9 @@
         - name: Install NCCL from local build for RHEL
           ansible.builtin.yum:
             name:
-              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
-              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-devel-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
-              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-static-{{ nccl_package_version }}.el{{ansible_distribution_major_version}}.{{architecture}}.rpm"
+              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-{{ nccl_package_version }}.{{architecture}}.rpm"
+              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-devel-{{ nccl_package_version }}.{{architecture}}.rpm"
+              - "/tmp/nccl-{{ nccl_version }}/build/pkg/rpm/{{architecture}}/libnccl-static-{{ nccl_package_version }}.{{architecture}}.rpm"
             state: latest
             disable_gpg_check: true
           when: ansible_os_family == "RedHat"
