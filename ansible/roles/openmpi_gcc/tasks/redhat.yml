@@ -13,6 +13,7 @@
         --with-ucx=/opt/{{ mellanox_hpcx_package }}/ucx/
         --with-hcoll=/opt/{{ mellanox_hpcx_package }}/hcoll
         --enable-mpirun-prefix-by-default
+        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %}
         --with-platform=contrib/platform/mellanox/optimized && make -j && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
