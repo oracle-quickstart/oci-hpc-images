@@ -164,7 +164,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_54_3681", "hpcx_2131", "openmpi_414", "nvidia_515", "nvidia_cuda_11_7", "ol7_rhck" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_54_3681", "hpcx_2131", "openmpi_508", "nvidia_515", "nvidia_cuda_11_7", "ol7_rhck" ]
 }
 ....
 build {
