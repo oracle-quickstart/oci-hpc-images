@@ -197,11 +197,17 @@
       ansible.builtin.set_fact:
         doca_package_name: |-
           doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
-
-    - name: Install DOCA package using dpkg
-      ansible.builtin.apt:
-        deb: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
-        state: present
+    - name: try and rescue
+      block: 
+        - name: Install DOCA package using dpkg
+          ansible.builtin.apt:
+            deb: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
+            state: present
+      rescue: 
+        - name: Install DOCA package using dpkg
+          ansible.builtin.apt:
+            deb: "{{hpc_beta_download}}{{ doca_package_name }}"
+            state: present
 
     - name: Update APT package list
       ansible.builtin.apt:
