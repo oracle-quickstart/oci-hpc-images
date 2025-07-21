@@ -1,2 +1,4 @@
 openmpi_version: 5.0.8
 openmpi_release: 5.0
+ucx_version: v1.18.x
+ucc_version: v1.4.x

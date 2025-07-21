@@ -5,3 +5,4 @@ use_hpc_artifact: false
 doca: true
 mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"
 install_mstflint: true
+override_mellanox_os_version: "rhel94"
