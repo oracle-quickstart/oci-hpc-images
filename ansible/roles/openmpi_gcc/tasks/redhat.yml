@@ -1,6 +1,57 @@
 ---
 - name: Install OpenMPI
   block:
+
+    - name: Clone UCX github repository
+      ansible.builtin.git:
+        repo: https://github.com/openucx/ucx.git
+        dest: "/tmp/ucx-{{ ucx_version }}"
+        clone: true
+        update: true
+        version: "{{ucx_version}}"
+      when: ucx_version is defined
+
+    - name: Configure and build UCX
+      ansible.builtin.shell: >
+        ./autogen.sh && \
+        ./configure \
+        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %} \
+        {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
+        --disable-logging --disable-debug --disable-assertions \
+        --disable-params-check --with-rdmacm --with-verbs --with-mlx5 --enable-cma \
+        --enable-examples --without-java --without-go --enable-mt \
+        --without-xpmem --prefix=/opt/openmpi-{{ openmpi_version }} \
+        && make -j \
+        && make install
+      args:
+        chdir: "/tmp/ucx-{{ ucx_version }}"
+        executable: /bin/bash
+      when: ucx_version is defined
+
+    - name: Clone UCC github repository
+      ansible.builtin.git:
+        repo: https://github.com/openucx/ucc.git
+        dest: "/tmp/ucc-{{ ucc_version }}"
+        clone: true
+        update: true
+        version: "{{ucc_version}}"
+      when: ucc_version is defined
+
+    - name: Configure and build UCC
+      ansible.builtin.shell: >
+        ./autogen.sh && \
+        ./configure \
+        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %} \
+        {% if 'amd' in options %}--with-rocm=/opt/rocm --with-rocm-arch=all-arch-no-native{% endif %} \
+        --with-ucx=/opt/openmpi-{{ openmpi_version }} \
+        --prefix=/opt/openmpi-{{ openmpi_version }} \
+        && make -j \
+        && make install
+      args:
+        chdir: "/tmp/ucc-{{ ucc_version }}"
+        executable: /bin/bash
+      when: ucc_version is defined
+
     - name: Download and unpack OpenMPI
       ansible.builtin.unarchive:
         src: "https://download.open-mpi.org/release/open-mpi/v{{ openmpi_release }}/openmpi-{{ openmpi_version }}.tar.gz"
@@ -9,15 +60,19 @@
 
     - name: Configure and build OpenMPI
       ansible.builtin.shell: >
-        ./configure --prefix=/opt/openmpi-{{ openmpi_version }}
-        --with-ucx=/opt/{{ mellanox_hpcx_package }}/ucx/
-        --with-hcoll=/opt/{{ mellanox_hpcx_package }}/hcoll
-        --enable-mpirun-prefix-by-default
-        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %}
-        --with-platform=contrib/platform/mellanox/optimized && make -j && make install
+        ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \
+                    --with-ucx=/opt/openmpi-{{ openmpi_version }} \
+                    --with-hcoll \
+                    {% if ucc_version is defined %}--with-ucc=/opt/openmpi-{{ openmpi_version }} {% endif %} \
+                    {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda {% endif %} \
+                    {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
+                    --enable-mpirun-prefix-by-default \
+                    --with-platform=contrib/platform/mellanox/optimized \
+                    --with-pmix \
+        && make -j \
+        && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
-        creates: "/opt/openmpi-{{ openmpi_version }}"
         executable: /bin/bash
 
     - name: Ensure modulefile directory exists
@@ -37,7 +92,7 @@
     - name: Install OpenMPI shell files
       ansible.builtin.template:
         src: "{{ item.src }}"
-        dest: "{{ openmpi_path }}/{{ item.dest }}"
+        dest: "/opt/openmpi-{{ openmpi_version }}/bin/{{ item.dest }}"
         owner: root
         group: root
         mode: '0644'
