@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-24.04-2025.05.20-0"
+  default = "Canonical-Ubuntu-22.04-2025.05.20-0"
 }
 
 variable "operating_system" {
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "24"
+  default = "22"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "DOCA-OFED-2.10.0-GPU-570-OPEN-CUDA-12.8"
+  default = "DOCA-OFED-3.0.0-AMD-ROCM-641"
 }
 
 variable "release" {
@@ -44,14 +44,14 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm"
+  default = "noselinux,nomitigations,openmpi,benchmarks,amd,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_2100", "hpcx_2212", "openmpi_508", "nvidia_open_570", "nvidia_cuda_12_8", "oca_152_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300", "hpcx_223", "openmpi_508", "amd_rocm_641", "oca_153_ubuntu"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -59,11 +59,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" {
-  type = string
-  default = "DEFAULT"
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
-variable "access_cfg_file" {
+variable "access_cfg_file" { 
   type = string
   default = "~/.oci/config"
 }

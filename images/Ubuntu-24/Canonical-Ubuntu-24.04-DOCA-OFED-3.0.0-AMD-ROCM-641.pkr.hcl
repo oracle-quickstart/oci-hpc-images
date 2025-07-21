@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2025.05.20-0"
+  default = "Canonical-Ubuntu-24.04-2025.05.20-0"
 }
 
 variable "operating_system" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "DOCA-OFED-3.1.0-GPU-570-OPEN-CUDA-12.8"
+  default = "DOCA-OFED-3.0.0-AMD-ROCM-641"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm"
+  default = "noselinux,nomitigations,openmpi,benchmarks,amd,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_2212", "openmpi_508", "nvidia_open_570", "nvidia_cuda_12_8", "oca_152_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300", "hpcx_223", "openmpi_508", "amd_rocm_641"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

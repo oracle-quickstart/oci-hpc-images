@@ -14,27 +14,27 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-24.04-aarch64-2025.05.20-0"
-}
+  default = "Oracle-Linux-8.10-2025.06.17-0"
+} 
 
 variable "operating_system" {
   type    = string
-  default = "Ubuntu"
+  default = "Oracle Linux"
 }
 
 variable "operating_system_version" {
   type    = string
-  default = "24"
+  default = "8"
 }
 
 variable "ssh_username" {
   type    = string
-  default = "ubuntu"
+  default = "opc"
 }
 
 variable "features" {
   type    = string
-  default = "DOCA-OFED-2.10.0-GPU-570-OPEN-CUDA-12.8"
+  default = "RHCK-DOCA-OFED-3.0.0-GPU-575-OPEN-CUDA-12.9"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm"
+  default = "noselinux,rhck,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins,stable_dcgm"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_2100", "hpcx_2212", "openmpi_508", "nvidia_open_570", "nvidia_cuda_12_8", "oca_152_ubuntu","kernel-nvidia-hwe"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300_el810", "hpcx_223", "openmpi_508", "nvidia_open_575", "nvidia_cuda_12_9", "ol8_rhck" ]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */
@@ -112,7 +112,7 @@ source "oracle-oci" "oracle" {
   ssh_timeout         = "90m"
   instance_name       = "HPC-ImageBuilder-${local.image_base_name}"
   skip_create_image   = var.skip_create_image
-  }
+}
 
 locals {
   ansible_args    = "options=[${var.build_options}]"
@@ -124,20 +124,19 @@ locals {
 build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
-
+  
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
     extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]
     groups = local.ansible_groups
     user = var.ssh_username
-    use_proxy = false
   }
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
   }
 
-post-processor "manifest" {
+  post-processor "manifest" {
     output = "${local.image_base_name}.manifest.json"
     custom_data = {
         image_name = local.image_base_name
