@@ -196,7 +196,7 @@
     - name: Get package name
       ansible.builtin.set_fact:
         doca_package_name: |-
-          doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
+          doca-host_{{ doca_ofed_version }}-{{ doca_subversion_ubuntu }}-{{ mellanox_os_version | replace('.', '') }}_{{ deb_architecture.stdout }}.deb
     - name: try and rescue
       block: 
         - name: Install DOCA package using dpkg

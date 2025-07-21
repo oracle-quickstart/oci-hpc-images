@@ -203,7 +203,7 @@
 
 - name: Common Mellanox OFED installation tasks
   when:
-    - not doca is defined or doca | bool
+    - not doca is defined or not (doca | bool)
   block:
     - name: Create temporary directory to extract Mellanox OFED installer
       ansible.builtin.tempfile:
@@ -247,14 +247,20 @@
   block:
     - name: Get package name
       ansible.builtin.set_fact:
-        doca_package_name: doca-host_{{ doca_ofed_version }}-{{ doca_subversion }}_{{ mellanox_os_version }}.{{ ansible_architecture }}.rpm
+        doca_package_name: doca-host-{{ doca_ofed_version }}-{{ doca_subversion_rhel }}_{{ mellanox_os_version }}.{{ ansible_architecture }}.rpm
 
-    - name: Install Mellanox MFT update (yum/dnf)
+    - name: Install DOCA (yum/dnf)
       ansible.builtin.yum:
+        enablerepo: "ol{{ansible_distribution_major_version}}_developer_EPEL,ol{{ansible_distribution_major_version}}_codeready_builder"
         name: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
         state: present
+        disable_gpg_check: true
 
-    - name: Install Mellanox MFT update (yum/dnf)
+
+    - name: Install doca-all (yum/dnf)
       ansible.builtin.yum:
+        enablerepo: "ol{{ansible_distribution_major_version}}_developer_EPEL,ol{{ansible_distribution_major_version}}_codeready_builder"
         name: "doca-all"
         state: present
+        disable_gpg_check: true
+
