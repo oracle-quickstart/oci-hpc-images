@@ -62,8 +62,7 @@
     - name: Make rccl
       community.general.make:
         chdir: "/opt/rccl/build"
-        params:
-          NUM_THREADS: "{{ ansible_processor_vcpus }}"
+        jobs: "{{ ansible_processor_vcpus }}"
 
     - name: Find matching directories
       ansible.builtin.find:
