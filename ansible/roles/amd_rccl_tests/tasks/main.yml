@@ -40,10 +40,21 @@
 
     - name: Install cmake
       ansible.builtin.apt:
-        name: cmake
+        name:
+          - cmake=3.31.8-0kitware1ubuntu22.04.1
+          - cmake-data=3.31.8-0kitware1ubuntu22.04.1
         state: latest
         lock_timeout: 300
-      when: ansible_distribution == 'Ubuntu'
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
+
+    - name: Install cmake
+      ansible.builtin.apt:
+        name:
+          - cmake
+          - cmake-data
+        state: latest
+        lock_timeout: 300
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version != '22'
 
     - name: Install OL dependencies
       ansible.builtin.yum:
