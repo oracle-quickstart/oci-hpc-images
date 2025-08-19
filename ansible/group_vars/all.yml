@@ -1,4 +1,6 @@
 hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/E0th3c7g499s5q2NuJDAaeK19H3OlcWeAjnXjJgCAr602ZCUuKbcWTUBv42g5j8K/n/hpc/b/source/o/" # noqa yaml[line-length]
+hpc_beta_download:  "https://hpc.objectstorage.eu-frankfurt-1.oci.customer-oci.com/p/HLqeFPXgKK7K8jKO4oTfCzuqz6lq21YU1T9rJR00-eo9BLCoGr8LbfV0NRyJocXI/n/hpc/b/hpc-beta/o/"
+
 mlx_ofed_download_link: "https://content.mellanox.com/ofed/"
 doca_ofed_download_link: "https://www.mellanox.com/downloads/DOCA/"
 install_prefix: "/opt"
@@ -12,7 +14,7 @@ gcc_version: 11.2.0
 nccltests_version: v2.13.9
 mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
 nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
-stable_nvidia_dcgm_version: 3.2.6
+stable_nvidia_dcgm_version: 4.2.3
 
 latest_ol7_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/ZDonynauGjz9zDxkaG0oM9Ktz4imVccxI7EhYaq_S0qokb-kLYn7_qq0n6TAhJV4/n/imagegen/b/agents/o/latest_el7_rpm_par_url"
 latest_ol7_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/LKfhdVsIEEYyOViDUEsehnjVDxNpeuMe_n3Uwfpit92cSTtRx0BPHE7BxbXjJQCL/n/imagegen/b/agents/o/latest_el7_arch_rpm_par_url"

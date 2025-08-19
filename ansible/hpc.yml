@@ -51,11 +51,6 @@
         name: tuned
       when: "'noselinux' in options"
     - ansible.builtin.import_role: # noqa name[missing]
-        name: openmpi_gcc
-      when: "'openmpi' in options"
-    - ansible.builtin.import_role: # noqa name[missing]
-        name: mpivars
-    - ansible.builtin.import_role: # noqa name[missing]
         name: systemd
 
 - name: AMD configuration
@@ -123,6 +118,11 @@
   become: true
 
   tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: openmpi_gcc
+      when: "'openmpi' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: mpivars
     - ansible.builtin.import_role: # noqa name[missing]
         name: hpc_benchmarks
       when: "'benchmarks' in options"

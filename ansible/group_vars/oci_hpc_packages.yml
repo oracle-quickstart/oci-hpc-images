@@ -1,6 +1,6 @@
 oci_cn_auth_version: "2.1.7"
 oci_hpc_mlx_configure_version: "2.1.5"
 oci_hpc_rdma_configure_version: "2.3.0"
-oci_hpc_network_device_names_version: "2.0.25"
+oci_hpc_network_device_names_version: "2.0.26"
 oci_hpc_dapl_configure_version: "2.0.4"
 oci_hpc_nvidia_gpu_configure_version: "0.2.1"

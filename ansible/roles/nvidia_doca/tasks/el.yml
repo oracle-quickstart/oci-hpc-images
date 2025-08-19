@@ -11,7 +11,7 @@
     - name: Set OS name
       ansible.builtin.set_fact:
         doca_os_name: "{{
-          'rhel' if ansible_distribution == 'RedHat' else
+          'rhel' if ansible_os_family == 'RedHat' else
           'rhel' if ansible_distribution == 'OracleLinux' and 'rhck' in options else
           'ol' if ansible_distribution == 'OracleLinux' and 'rhck' not in options
           }}"

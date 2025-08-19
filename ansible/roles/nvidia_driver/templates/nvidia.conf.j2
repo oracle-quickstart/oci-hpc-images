@@ -1,1 +1,1 @@
-{{ nvidia_driver_module_params }}
+{{ nvidia_driver_module_params if ansible_architecture == 'x86_64' else nvidia_driver_module_params_arm64 }}

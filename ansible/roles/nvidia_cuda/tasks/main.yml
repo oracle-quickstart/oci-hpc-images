@@ -51,8 +51,16 @@
   block:
     - name: Add repository
       ansible.builtin.apt_repository:
-        repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl }} /"
+        repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl_x86 }} /"
         update_cache: true
+      when: ansible_architecture == 'x86_64'
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+    - name: Add repository
+      ansible.builtin.apt_repository:
+        repo: "deb {{ nvidia_driver_ubuntu_cuda_repo_baseurl_arm }} /"
+        update_cache: true
+      when: ansible_architecture != 'x86_64'
       environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
     - name: Install CUDA toolkit for Ubuntu

@@ -28,5 +28,6 @@
         chdir: "{{ benchmark_base_path }}/gpuburn"
         params:
           COMPUTE: 80
+        jobs: "{{ ansible_processor_vcpus }}"
       become_user: "{{ user }}"
       become: true

@@ -40,7 +40,6 @@
       ansible.builtin.shell: |
         . /etc/profile.d/modules.sh
         module load hpcx/{{ mellanox_hpcx_version }}/hpcx-ompi
-        module list
         make MPI=1 CUDA_HOME=/usr/local/cuda CXXFLAGS=-std=c++11 -j
       args:
         chdir: "{{ benchmark_base_path }}/nccl-test"

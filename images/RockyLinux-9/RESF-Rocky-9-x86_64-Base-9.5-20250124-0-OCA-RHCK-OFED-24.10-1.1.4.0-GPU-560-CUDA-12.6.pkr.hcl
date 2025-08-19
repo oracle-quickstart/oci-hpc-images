@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "OCA-RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
+  default = "RHCK-OFED-24.10-1.1.4.0-GPU-560-CUDA-12.6"
 }
 
 variable "release" {
@@ -48,7 +48,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2181", "openmpi_414", "nvidia_560", "nvidia_cuda_12_6", "ol9_rhck" , "use_plugins", "oca_149_OL"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140", "hpcx_2181", "openmpi_508", "nvidia_560", "nvidia_cuda_12_6", "ol9_rhck" , "use_plugins", "oca_149_OL"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
