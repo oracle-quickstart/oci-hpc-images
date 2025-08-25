@@ -87,3 +87,12 @@ This project welcomes contributions from the community. Before submitting a pull
 ## Security
 
 Please consult the [security guide](./SECURITY.md) for our responsible security vulnerability disclosure process
+
+
+
+# OpenAI
+
+Building from within an OCI VM 
+- Make sure that the OCI VM instance OCID belongs to the packer dynamic group in the 
+  - Needed for permissions for instance profile to launch other instances
+-

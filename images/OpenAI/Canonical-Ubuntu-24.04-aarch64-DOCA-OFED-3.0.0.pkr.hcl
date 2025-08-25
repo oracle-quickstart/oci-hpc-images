@@ -1,0 +1,170 @@
+/*
+Adapted from Oracle's HPC Image builder, from the Ubuntu-24 aarch64 base image. 
+This base image already includes a DOCA install of mlx ofed.
+*/
+
+packer {
+    required_plugins {
+      oracle = {
+        source = "github.com/hashicorp/oracle"
+        version = ">= 1.0.3"
+      }
+    ansible = {
+      version = "~> 1"
+      source = "github.com/hashicorp/ansible"
+    }
+    }
+}
+variable "base_image_name" {
+  type    = string
+  default = "Canonical-Ubuntu-24.04-aarch64-2025.05.20-0"
+}
+
+variable "operating_system" {
+  type    = string
+  default = "Ubuntu"
+}
+
+variable "operating_system_version" {
+  type    = string
+  default = "24"
+}
+
+variable "ssh_username" {
+  type    = string
+  default = "ubuntu"
+}
+
+variable "features" {
+  type    = string
+  default = "DOCA-OFED-3.0.0"
+}
+
+variable "release" {
+  type    = number
+  default = 0
+}
+
+variable "build_options" {
+  type    = string
+  default = "noselinux,nomitigations,openmpi,networkdevicenames,use_plugins"
+}
+
+# These should include the IB drivers?
+variable "build_groups" {
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300", "hpcx_223", "openmpi_508", "oca_152_ubuntu","kernel-nvidia-hwe"]
+}
+
+/* authentication variables, edit and use defaults.pkr.hcl instead */
+
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
+}
+variable "access_cfg_file" {
+  type = string
+  default = "~/.oci/config"
+}
+variable OpenSSH9 {
+  type = bool
+  default = false
+}
+variable "shape_config" {
+  type = object({
+    ocpus         = number
+    memory_in_gbs = number
+  })
+  default = {
+    ocpus         = 8
+    memory_in_gbs = 64
+  }
+}
+
+variable "skip_create_image" {
+  type    = bool
+  default = false
+}
+
+/* changes should not be required below */
+
+source "oracle-oci" "oracle" {
+  availability_domain = var.ad
+
+  # At the time of writing, the Ubuntu 24 arm OCI image has not been replicated to the Kulai Region.
+  # As a workaround in order to build images in region, we clone in this base Ubuntu image from another region.
+  base_image_ocid = "ocid1.image.oc1.ap-kulai-1.aaaaaaaac5igyers3zvtixtvog7xqoogoutd3x5actrdy2gukpwvli5ikqha"
+  # base_image_filter { 
+  #   display_name = var.base_image_name
+  # }
+  compartment_ocid    = var.compartment_ocid
+  image_name          = local.image_base_name
+  shape               = var.shape
+  shape_config {
+    ocpus         = var.shape_config.ocpus
+    memory_in_gbs = var.shape_config.memory_in_gbs
+  }
+  ssh_username        = var.ssh_username
+  subnet_ocid         = var.subnet_ocid
+  access_cfg_file     = var.use_instance_principals ? null : var.access_cfg_file
+  access_cfg_file_account = var.use_instance_principals ? null : var.access_cfg_file_account
+  region              = var.use_instance_principals ? null : var.region
+  user_data_file      = "${path.root}/../files/user_data.txt"
+  disk_size           = 100
+  use_instance_principals = var.use_instance_principals
+  ssh_timeout         = "90m"
+  instance_name       = "HPC-ImageBuilder-${local.image_base_name}"
+  skip_create_image   = var.skip_create_image
+  }
+
+locals {
+  ansible_args    = "options=[${var.build_options}]"
+  ansible_groups  = "${var.build_groups}"
+  timestamp       = "${formatdate("YYYY.MM.DD", timestamp())}"
+  image_base_name = "${var.base_image_name}-${var.features}-${local.timestamp}-${var.release}"
+}
+
+build {
+  name    = "buildname"
+  sources = ["source.oracle-oci.oracle"]
+
+  provisioner "shell" {
+      script          = "${path.root}/../../provisioner-scripts/setup.sh"
+      execute_command = "sudo bash -c '{{ .Vars }} {{ .Path }}'"
+  }
+
+
+  provisioner "ansible" {
+    playbook_file   = "${path.root}/../../ansible/hpc.yml"
+    extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]
+    groups = local.ansible_groups
+    user = var.ssh_username
+    use_proxy = false
+  }
+
+
+  provisioner "shell" {
+      script          = "${path.root}/../../provisioner-scripts/gb200-ubuntu-2404-gpu-nvidia-570.sh"
+      execute_command = "sudo bash -c '{{ .Vars }} {{ .Path }}'"
+  }
+
+  provisioner "shell" {
+    inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
+  }
+
+post-processor "manifest" {
+    output = "${local.image_base_name}.manifest.json"
+    custom_data = {
+        image_name = local.image_base_name
+        ssh_username = var.ssh_username
+        display_name = var.base_image_name
+        operating_system = var.operating_system
+        operating_system_version = var.operating_system_version
+    }
+  }
+}
