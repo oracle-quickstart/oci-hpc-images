@@ -4,6 +4,7 @@ sudo apt update
 sudo apt install jq git iputils-ping numactl vim host software-properties-common -y
 
 install_oci_cli() {
+    # Install OCI CLI
     echo "Installing OCI CLI"
     bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/v3.2.1/scripts/install/install.sh)" -- --accept-all-defaults
 }

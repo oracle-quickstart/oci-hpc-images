@@ -10,8 +10,8 @@ KUBERNETES_MAJOR_RELEASE="1.33"
 KUBERNETES_PACKAGE_VERSION="${KUBERNETES_MAJOR_RELEASE}.2-1.1"
 
 # Find the version here: https://network.nvidia.com/products/infiniband-drivers/linux/mlnx_ofed/
-# MELLANOX_DRIVER_VERSION="24.10-1.1.4.0"
-# MELLANOX_DKMS_DRIVER_VERSION="24.10.1.1.4.1"
+MELLANOX_DRIVER_VERSION="24.10-1.1.4.0"
+MELLANOX_DKMS_DRIVER_VERSION="24.10.1.1.4.1"
 
 # nvidia container toolkits are here: https://github.com/NVIDIA/nvidia-container-toolkit/releases
 NVIDIA_CONTAINER_TOOLKIT_VERSION="1.17.8-1"
@@ -75,64 +75,64 @@ EOF
 }
 
 
-# install_infiniband_drivers () {
-#     mkdir -p /mnt/setup
-#     cd /mnt/setup
+install_infiniband_drivers () {
+    mkdir -p /mnt/setup
+    cd /mnt/setup
 
-#     mellanox_file="MLNX_OFED_LINUX-${MELLANOX_DRIVER_VERSION}-ubuntu24.04-aarch64"
-#     mellanox_file_url="https://content.mellanox.com/ofed/MLNX_OFED-${MELLANOX_DRIVER_VERSION}/${mellanox_file}.tgz"
-#     echo "Downloading Mellanox OFED: ${mellanox_file_url}"
-#     curl --http1.1 -fLSs -o "${mellanox_file}.tgz" "${mellanox_file_url}"
-#     tar xzf "${mellanox_file}.tgz"
-#     pushd "${mellanox_file}/DEBS"
+    mellanox_file="MLNX_OFED_LINUX-${MELLANOX_DRIVER_VERSION}-ubuntu24.04-aarch64"
+    mellanox_file_url="https://content.mellanox.com/ofed/MLNX_OFED-${MELLANOX_DRIVER_VERSION}/${mellanox_file}.tgz"
+    echo "Downloading Mellanox OFED: ${mellanox_file_url}"
+    curl --http1.1 -fLSs -o "${mellanox_file}.tgz" "${mellanox_file_url}"
+    tar xzf "${mellanox_file}.tgz"
+    pushd "${mellanox_file}/DEBS"
 
-#     apt install -y \
-#       ./ibacm_2410mlnx54-1.2410068_arm64.deb \
-#       ./ibverbs-providers_2410mlnx54-1.2410068_arm64.deb \
-#       ./ibverbs-utils_2410mlnx54-1.2410068_arm64.deb \
-#       ./infiniband-diags_2410mlnx54-1.2410068_arm64.deb \
-#       ./kernel-mft-dkms_4.30.1.8-1_all.deb \
-#       ./libibmad5_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibmad-dev_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibnetdisc5_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibumad3_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibumad-dev_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibverbs1_2410mlnx54-1.2410068_arm64.deb \
-#       ./libibverbs-dev_2410mlnx54-1.2410068_arm64.deb \
-#       ./librdmacm1_2410mlnx54-1.2410068_arm64.deb \
-#       ./librdmacm-dev_2410mlnx54-1.2410068_arm64.deb \
-#       ./mft_4.30.1-8_arm64.deb \
-#       ./mlnx-ethtool_6.9-1.2410068_arm64.deb \
-#       ./mlnx-iproute2_6.10.0-1.2410114_arm64.deb \
-#       ./mlnx-ofed-kernel-utils_24.10.OFED.24.10.1.1.4.1-1_arm64.deb \
-#       ./mlnx-ofed-kernel-dkms_24.10.OFED.24.10.1.1.4.1-1_all.deb \
-#       ./mlnx-tools_24.10-0.2410068_arm64.deb \
-#       ./ofed-scripts_24.10.OFED.24.10.1.1.4-1_arm64.deb \
-#       ./rdmacm-utils_2410mlnx54-1.2410068_arm64.deb \
-#       ./rdma-core_2410mlnx54-1.2410068_arm64.deb
+    apt install -y \
+      ./ibacm_2410mlnx54-1.2410068_arm64.deb \
+      ./ibverbs-providers_2410mlnx54-1.2410068_arm64.deb \
+      ./ibverbs-utils_2410mlnx54-1.2410068_arm64.deb \
+      ./infiniband-diags_2410mlnx54-1.2410068_arm64.deb \
+      ./kernel-mft-dkms_4.30.1.8-1_all.deb \
+      ./libibmad5_2410mlnx54-1.2410068_arm64.deb \
+      ./libibmad-dev_2410mlnx54-1.2410068_arm64.deb \
+      ./libibnetdisc5_2410mlnx54-1.2410068_arm64.deb \
+      ./libibumad3_2410mlnx54-1.2410068_arm64.deb \
+      ./libibumad-dev_2410mlnx54-1.2410068_arm64.deb \
+      ./libibverbs1_2410mlnx54-1.2410068_arm64.deb \
+      ./libibverbs-dev_2410mlnx54-1.2410068_arm64.deb \
+      ./librdmacm1_2410mlnx54-1.2410068_arm64.deb \
+      ./librdmacm-dev_2410mlnx54-1.2410068_arm64.deb \
+      ./mft_4.30.1-8_arm64.deb \
+      ./mlnx-ethtool_6.9-1.2410068_arm64.deb \
+      ./mlnx-iproute2_6.10.0-1.2410114_arm64.deb \
+      ./mlnx-ofed-kernel-utils_24.10.OFED.24.10.1.1.4.1-1_arm64.deb \
+      ./mlnx-ofed-kernel-dkms_24.10.OFED.24.10.1.1.4.1-1_all.deb \
+      ./mlnx-tools_24.10-0.2410068_arm64.deb \
+      ./ofed-scripts_24.10.OFED.24.10.1.1.4-1_arm64.deb \
+      ./rdmacm-utils_2410mlnx54-1.2410068_arm64.deb \
+      ./rdma-core_2410mlnx54-1.2410068_arm64.deb
 
 
-#     # 4. Force a DKMS build/install for your running kernel
-#     dkms build   -m mlnx-ofed-kernel -v 24.10.OFED.${MELLANOX_DKMS_DRIVER_VERSION} -k $(uname -r)
-#     dkms install -m mlnx-ofed-kernel -v 24.10.OFED.${MELLANOX_DKMS_DRIVER_VERSION} -k $(uname -r)
+    # 4. Force a DKMS build/install for your running kernel
+    dkms build   -m mlnx-ofed-kernel -v 24.10.OFED.${MELLANOX_DKMS_DRIVER_VERSION} -k $(uname -r)
+    dkms install -m mlnx-ofed-kernel -v 24.10.OFED.${MELLANOX_DKMS_DRIVER_VERSION} -k $(uname -r)
 
-#     popd
+    popd
 
-#     /etc/init.d/openibd restart
+    /etc/init.d/openibd restart
 
-# }
+}
 
-# configure_waagent () {
-#     # Enable RDMA/Infiniband in waagent, should run after install_infiniband_drivers
-#     sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' /etc/waagent.conf
-#     echo "Extensions.GoalStatePeriod=300" | tee -a /etc/waagent.conf
-#     echo "OS.EnableFirewallPeriod=300" | tee -a /etc/waagent.conf
-#     echo "OS.RemovePersistentNetRulesPeriod=300" | tee -a /etc/waagent.conf
-#     echo "OS.RootDeviceScsiTimeoutPeriod=300" | tee -a /etc/waagent.conf
-#     echo "OS.MonitorDhcpClientRestartPeriod=60" | tee -a /etc/waagent.conf
-#     echo "Provisioning.MonitorHostNamePeriod=60" | tee -a /etc/waagent.conf
-#     systemctl restart walinuxagent
-# }
+configure_waagent () {
+    # Enable RDMA/Infiniband in waagent, should run after install_infiniband_drivers
+    sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' /etc/waagent.conf
+    echo "Extensions.GoalStatePeriod=300" | tee -a /etc/waagent.conf
+    echo "OS.EnableFirewallPeriod=300" | tee -a /etc/waagent.conf
+    echo "OS.RemovePersistentNetRulesPeriod=300" | tee -a /etc/waagent.conf
+    echo "OS.RootDeviceScsiTimeoutPeriod=300" | tee -a /etc/waagent.conf
+    echo "OS.MonitorDhcpClientRestartPeriod=60" | tee -a /etc/waagent.conf
+    echo "Provisioning.MonitorHostNamePeriod=60" | tee -a /etc/waagent.conf
+    systemctl restart walinuxagent
+}
 
 
 install_nvidia_drivers () {

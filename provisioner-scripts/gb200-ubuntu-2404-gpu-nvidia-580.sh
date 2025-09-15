@@ -575,7 +575,7 @@ boot_sequence() {
     install_azure_cli
     install_kubelogin
 
-    apt install -y jq
+    apt install -y jq mdadm
 
     install_containerd
     install_kubelet
