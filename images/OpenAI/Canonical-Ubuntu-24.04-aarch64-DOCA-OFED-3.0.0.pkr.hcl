@@ -52,7 +52,7 @@ variable "build_options" {
 
 # These should include the IB drivers?
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300", "hpcx_223", "openmpi_508", "oca_152_ubuntu","kernel-nvidia-hwe"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_300", "hpcx_223", "openmpi_508", "oca_152_ubuntu","kernel-nvidia-64k-hwe"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */
@@ -148,10 +148,17 @@ build {
   }
 
 
+  # provisioner "shell" {
+  #     script          = "${path.root}/../../provisioner-scripts/gb200-ubuntu-2404-gpu-nvidia-570.sh"
+  #     execute_command = "sudo bash -c '{{ .Vars }} {{ .Path }}'"
+  # }
+
   provisioner "shell" {
-      script          = "${path.root}/../../provisioner-scripts/gb200-ubuntu-2404-gpu-nvidia-570.sh"
+      script          = "${path.root}/../../provisioner-scripts/gb200-ubuntu-2404-gpu-nvidia-580.sh"
       execute_command = "sudo bash -c '{{ .Vars }} {{ .Path }}'"
   }
+
+  
 
   provisioner "shell" {
     inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"]
