@@ -1,0 +1,4 @@
+cuda_version: "13-0"
+cuda_toolkit_version: "cuda-toolkit-{{ cuda_version }}"
+nccl_version: "2.28.7-1"
+nccl_package_version: "{{ nccl_version }}+cuda{{ cuda_version | regex_replace('-', '.') }}"

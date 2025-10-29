@@ -7,7 +7,7 @@
     - "'stable_dcgm' not in options"
   with_items: 
     - datacenter-gpu-manager-4-core
-    - datacenter-gpu-manager-4-cuda12
+    - datacenter-gpu-manager-4-cuda-all
 
 - name: Install stable DCGM for EL
   ansible.builtin.yum:
@@ -18,7 +18,7 @@
     - "'stable_dcgm' in options"
   with_items: 
     - datacenter-gpu-manager-4-core
-    - datacenter-gpu-manager-4-cuda12
+    - datacenter-gpu-manager-4-cuda-all
 
 - name: Install DCGM for Ubuntu
   ansible.builtin.apt:
@@ -30,7 +30,7 @@
     - "'stable_dcgm' not in options"
   with_items: 
     - datacenter-gpu-manager-4-core
-    - datacenter-gpu-manager-4-cuda12
+    - datacenter-gpu-manager-4-cuda-all
 
 - name: Install DCGM for Ubuntu
   ansible.builtin.apt:
@@ -42,7 +42,7 @@
     - "'stable_dcgm' in options"
   with_items: 
     - datacenter-gpu-manager-4-core
-    - datacenter-gpu-manager-4-cuda12
+    - datacenter-gpu-manager-4-cuda-all
 
 - name: Enable DCGM service
   ansible.builtin.systemd:

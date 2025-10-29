@@ -67,9 +67,8 @@
       ansible.builtin.shell: >
         ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \
                     --with-ucx=/opt/openmpi-{{ openmpi_version }} \
-                    --with-hcoll \
                     {% if ucc_version is defined %}--with-ucc=/opt/openmpi-{{ openmpi_version }} {% endif %} \
-                    {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda {% endif %} \
+                    {% if 'nvidia' in options %}--with-hcoll --with-cuda=/usr/local/cuda {% endif %} \
                     {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
