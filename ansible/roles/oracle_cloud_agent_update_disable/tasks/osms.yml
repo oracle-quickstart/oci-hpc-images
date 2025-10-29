@@ -52,6 +52,7 @@
     - name: Unregister agent # noqa no-changed-when
       ansible.builtin.command: osms unregister
       when: agent_file.stat.exists
+      ignore_errors: true
 
     # Present in OL images prior to May/June 2020, later replaced with oracle cloud agent
     - name: Check if osms-agent service exist # noqa no-changed-when command-instead-of-shell command-instead-of-module

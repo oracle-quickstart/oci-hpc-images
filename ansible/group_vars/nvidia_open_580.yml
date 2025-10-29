@@ -1,0 +1,5 @@
+nvidia_driver_version: "580"
+nvidia_driver_package_version: "580"
+nvidia_driver_branch: "580"
+nvidia_driver_open: true
+nvidia_driver_skip_reboot: true

@@ -14,8 +14,8 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-8.10-2025.08.31-0"
-} 
+  default = "Oracle-Linux-9.5-2025.05.19-0"
+}
 
 variable "operating_system" {
   type    = string
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "8"
+  default = "9"
 }
 
 variable "ssh_username" {
@@ -48,10 +48,10 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_223", "openmpi_508", "ol8_rhck", "oca_152_OL" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_3250", "hpcx_223", "openmpi_508", "ol9_rhck", "oca_152_OL"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -59,11 +59,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" {
-  type = string
-  default = "DEFAULT"
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
-variable "access_cfg_file" {
+variable "access_cfg_file" { 
   type = string
   default = "~/.oci/config"
 }
@@ -124,7 +124,7 @@ locals {
 build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
-  
+
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
     extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]

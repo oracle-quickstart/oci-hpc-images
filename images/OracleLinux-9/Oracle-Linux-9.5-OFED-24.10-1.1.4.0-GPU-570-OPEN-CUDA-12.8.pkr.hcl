@@ -14,8 +14,8 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-8.10-2025.08.31-0"
-} 
+  default = "Oracle-Linux-9.5-2025.05.19-0"
+}
 
 variable "operating_system" {
   type    = string
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "8"
+  default = "9"
 }
 
 variable "ssh_username" {
@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "RHCK-OFED-24.10-1.1.4.0"
+  default = "RHCK-OFED-24.10-1.1.4.0-GPU-570-OPEN-CUDA-12.8"
 }
 
 variable "release" {
@@ -44,14 +44,14 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins"
+  default = "noselinux,openmpi,benchmarks,nvidia,monitoring,enroot,networkdevicenames,use_plugins,stable_dcgm"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_223", "openmpi_508", "ol8_rhck", "oca_152_OL" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_3250", "hpcx_223", "openmpi_508", "nvidia_open_570", "nvidia_cuda_12_8", "oca_152_OL"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */
+/* authentication variables, edit and use defaults.pkr.hcl instead */ 
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -59,11 +59,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" {
-  type = string
-  default = "DEFAULT"
+variable "access_cfg_file_account" { 
+  type = string 
+  default = "DEFAULT" 
 }
-variable "access_cfg_file" {
+variable "access_cfg_file" { 
   type = string
   default = "~/.oci/config"
 }
@@ -91,9 +91,10 @@ variable "skip_create_image" {
 
 source "oracle-oci" "oracle" {
   availability_domain = var.ad
-  base_image_filter { 
-    display_name = var.base_image_name
-  }
+  #base_image_filter { 
+  #  display_name = var.base_image_name
+  #}
+  source_ocid         = "ocid1.image.oc1.ca-montreal-1.aaaaaaaa2ypuhnls34zphh3b4x3bwutgh7jvrpdlsh6u2dgrczcft6qodwjq"
   compartment_ocid    = var.compartment_ocid
   image_name          = local.image_base_name
   shape               = var.shape
@@ -124,7 +125,7 @@ locals {
 build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
-  
+
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"
     extra_arguments = var.OpenSSH9 ? [ "-e", local.ansible_args, "--scp-extra-args", "'-O'"] : [ "-e", local.ansible_args]

@@ -15,6 +15,10 @@
         name: 
           - libpci-dev
           - libtool
+          - libibverbs-dev
+          - librdmacm-dev
+          - libibmad-dev
+          - libibumad-dev
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu'
 
