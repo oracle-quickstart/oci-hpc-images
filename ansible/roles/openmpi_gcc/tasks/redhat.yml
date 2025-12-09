@@ -36,6 +36,10 @@
         update: true
         version: "{{ucc_version}}"
       when: ucc_version is defined
+      register: git_clone_result
+      retries: 5          # number of retry attempts
+      delay: 30           # wait time (seconds) between retries
+      until: git_clone_result is succeeded
 
     - name: Configure and build UCC
       ansible.builtin.shell: >

@@ -34,7 +34,7 @@ variable "ssh_username" {
 
 variable "features" {
   type    = string
-  default = "DOCA-OFED-3.1.0-GPU-580-OPEN-CUDA-13.0"
+  default = "DOCA-OFED-3.1.0-AMD-ROCM-71"
 }
 
 variable "release" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm"
+  default = "noselinux,nomitigations,openmpi,benchmarks,amd,enroot,networkdevicenames,use_plugins"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_2241", "openmpi_508", "nvidia_open_580", "nvidia_cuda_13_0", "oca_155_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_223", "openmpi_508", "amd_rocm_71", "oca_155_ubuntu"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

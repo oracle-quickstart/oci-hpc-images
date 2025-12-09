@@ -4,10 +4,12 @@
     - ansible_os_family == 'RedHat'
   block:
     - name: Install Nvidia CUDNN for RedHat
+      vars:
+        cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
       ansible.builtin.yum:
         name:
-          - libcudnn8
-          - libcudnn8-devel
+          - "libcudnn9-cuda-{{cuda_major_version}}"
+          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
 
 - name: NVIDIA CUDNN for Ubuntu
   when:
@@ -15,10 +17,12 @@
     - ansible_distribution_major_version == '22'
   block:
     - name: Install Nvidia CUDNN for Ubuntu
+      vars:
+        cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
       ansible.builtin.apt:
         name:
-          - libcudnn8
-          - libcudnn8-dev
+          - "libcudnn9-cuda-{{ cuda_major_version }}"
+          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
         lock_timeout: 300
 
 - name: NVIDIA CUDNN for Ubuntu
@@ -27,8 +31,10 @@
     - ansible_distribution_major_version == '24'
   block:
     - name: Install Nvidia CUDNN for Ubuntu
+      vars:
+        cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
       ansible.builtin.apt:
         name:
-          - libcudnn9-cuda-12
-          - libcudnn9-dev-cuda-12
+          - "libcudnn9-cuda-{{ cuda_major_version }}"
+          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
         lock_timeout: 300

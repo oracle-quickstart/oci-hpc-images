@@ -52,19 +52,26 @@
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: nvidia_driver_add_repos | bool and ansible_architecture == 'x86_64'
 
-- name: Get latest subversion of drivers
-  shell: "apt-cache madison nvidia-modprobe | grep {{ nvidia_driver_ubuntu_branch }} | head -n1 | awk '{print $3}'"
-  register: nvidia_subversion_latest
-  changed_when: false
-
-- name: Install modprobe and persistenced packages (Otherwise it installs latest and cause dep issues)
+- name: Pin version
   ansible.builtin.apt:
-    name: "{{ item }}"
-    state: present
+    name: "nvidia-driver-pinning-{{nvidia_driver_ubuntu_branch}}" # noqa yaml[line-length]
+    state: "present"
     lock_timeout: 300
-  register: install_driver
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  with_items: "{{nvidia_driver_ubuntu_additionnal_package_not_latest}}"
+
+# - name: Get latest subversion of drivers
+#   shell: "apt-cache madison nvidia-modprobe | grep {{ nvidia_driver_ubuntu_branch }} | head -n1 | awk '{print $3}'"
+#   register: nvidia_subversion_latest
+#   changed_when: false
+
+# - name: Install modprobe and persistenced packages (Otherwise it installs latest and cause dep issues)
+#   ansible.builtin.apt:
+#     name: "{{ item }}"
+#     state: present
+#     lock_timeout: 300
+#   register: install_driver
+#   environment: "{{ proxy_env if proxy_env is defined else {} }}"
+#   with_items: "{{nvidia_driver_ubuntu_additionnal_package_not_latest}}"
 
 - name: Install driver packages
   ansible.builtin.apt:

@@ -24,6 +24,11 @@
   when:
     - ansible_os_family == 'RedHat'
   block:
+    - name: Install radvd
+      ansible.builtin.yum:
+        name: radvd
+        lock_timeout: 300
+      when: "'use_plugins' in options"
 
     - name: Install wpa_supplicant
       ansible.builtin.yum:
@@ -66,9 +71,17 @@
         state: present
         disable_gpg_check: true
       when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
+
+    - name: Set RPM architecture mapping
+      ansible.builtin.set_fact:
+        rpm_architecture: >-
+          {{ 'amd64' if ansible_architecture == 'x86_64'
+          else 'arm64' if ansible_architecture == 'aarch64'
+          else ansible_architecture }}
+
     - name: Install oci-hpc-network-device-names (HPC)
       ansible.builtin.yum:
-        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.rpm"
+        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{rpm_architecture}}.rpm"
         state: present
         disable_gpg_check: true
       when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
