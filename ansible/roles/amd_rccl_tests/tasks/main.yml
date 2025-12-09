@@ -88,7 +88,7 @@
         dest: /opt/rccl-tests
         clone: true
         update: true
-        version: 52aee698fa255c1eb081d1f33368cca1a82b1b67
+        version: 6405c76e6826663bbb67bd40aeee8c70aa5d3094
 
     - name: Create symlink from openmpi /lib64 to /lib as rccl test build expects /lib
       command: ln -s {{openmpi_dirs.files[0].path}}/lib64 {{openmpi_dirs.files[0].path}}/lib

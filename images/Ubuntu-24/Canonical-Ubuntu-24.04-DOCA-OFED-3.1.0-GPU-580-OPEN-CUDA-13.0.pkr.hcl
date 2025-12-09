@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2025.09.22-0"
+  default = "Canonical-Ubuntu-24.04-2025.09.22-0"
 }
 
 variable "operating_system" {
@@ -24,7 +24,7 @@ variable "operating_system" {
 
 variable "operating_system_version" {
   type    = string
-  default = "22"
+  default = "24"
 }
 
 variable "ssh_username" {
@@ -51,7 +51,7 @@ variable "build_groups" {
   default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_2241", "openmpi_508", "nvidia_open_580", "nvidia_cuda_13_0", "oca_155_ubuntu"]
 }
 
-/* authentication variables, edit and use defaults.pkr.hcl instead */ 
+/* authentication variables, edit and use defaults.pkr.hcl instead */
 
 variable "region" { type = string }
 variable "ad" { type = string }
@@ -59,11 +59,11 @@ variable "compartment_ocid" { type = string }
 variable "shape" { type = string }
 variable "subnet_ocid" { type = string }
 variable "use_instance_principals" { type = bool }
-variable "access_cfg_file_account" { 
-  type = string 
-  default = "DEFAULT" 
+variable "access_cfg_file_account" {
+  type = string
+  default = "DEFAULT"
 }
-variable "access_cfg_file" { 
+variable "access_cfg_file" {
   type = string
   default = "~/.oci/config"
 }

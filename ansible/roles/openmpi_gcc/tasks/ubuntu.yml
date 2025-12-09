@@ -41,6 +41,10 @@
         update: true
         version: "{{ucc_version}}"
       when: ucc_version is defined
+      register: git_clone_result
+      retries: 5          # number of retry attempts
+      delay: 30           # wait time (seconds) between retries
+      until: git_clone_result is succeeded
 
     - name: Configure and build UCC
       ansible.builtin.shell: >
@@ -79,6 +83,15 @@
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
         executable: /bin/bash
 
+    - name: Ensure directory exists
+      ansible.builtin.file:
+        path: /etc/environment-modules/modules/mpi/openmpi/
+        state: directory
+        mode: '0775'
+        owner: ubuntu
+        group: ubuntu
+        recurse: true
+        
     - name: Install OpenMPI module file
       ansible.builtin.template:
         src: templates/module.j2

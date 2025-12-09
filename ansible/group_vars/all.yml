@@ -14,8 +14,7 @@ gcc_version: 11.2.0
 nccltests_version: v2.17.2
 mellanox_ofed_public_repo: "https://linux.mellanox.com/public/repo/mlnx_ofed/"
 nvidia_public_repo: "http://developer.download.nvidia.com/compute/cuda/repos/"
-stable_nvidia_dcgm_version: 4.4.1-1
-
+stable_nvidia_dcgm_version: 4.4.2-1
 latest_ol7_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/ZDonynauGjz9zDxkaG0oM9Ktz4imVccxI7EhYaq_S0qokb-kLYn7_qq0n6TAhJV4/n/imagegen/b/agents/o/latest_el7_rpm_par_url"
 latest_ol7_oca_arm_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/LKfhdVsIEEYyOViDUEsehnjVDxNpeuMe_n3Uwfpit92cSTtRx0BPHE7BxbXjJQCL/n/imagegen/b/agents/o/latest_el7_arch_rpm_par_url"
 latest_ol8_oca_x86_url: "https://objectstorage.us-phoenix-1.oraclecloud.com/p/8FBqPsfqQDuUPqrvbKfvYUAQFA8bdoqcDexI2ka6nTRBvCD5boyGvxHucM88ZAGE/n/imagegen/b/agents/o/latest_el8_rpm_par_url"
@@ -27,6 +26,7 @@ gpu_sysctl:
   - { name: net.ipv4.neigh.default.gc_thresh1, value: 32768 }
   - { name: net.ipv4.neigh.default.gc_thresh2, value: 65535 }
   - { name: net.ipv4.neigh.default.gc_thresh3, value: 131072 }
+  - { name: kernel.perf_event_paranoid, value: 2 }
 
 ubuntu_22_kernel_version: "5.15.0-1074-oracle"
 oca_update: true

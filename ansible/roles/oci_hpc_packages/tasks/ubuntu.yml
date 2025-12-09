@@ -2,7 +2,11 @@
   when:
     - ansible_distribution == 'Ubuntu'
   block:
-
+    - name: Install radvd
+      ansible.builtin.apt:
+        name: radvd
+        lock_timeout: 300
+      
     - name: Ensure ifupdown is present
       ansible.builtin.apt:
         name: ifupdown
@@ -42,13 +46,16 @@
         lock_timeout: 300
       when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
       
-    - name: Add aarch64 architecture # noqa no-changed-when
-      ansible.builtin.command: dpkg --add-architecture aarch64
-      when: ansible_architecture == "aarch64"
+    - name: Set Debian architecture mapping
+      ansible.builtin.set_fact:
+        deb_architecture: >-
+          {{ 'amd64' if ansible_architecture == 'x86_64'
+          else 'arm64' if ansible_architecture == 'aarch64'
+          else ansible_architecture }}
 
     - name: Install oci-hpc-network-device-names (HPC)
       ansible.builtin.apt:
-        deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ansible_architecture}}.deb"
+        deb: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{deb_architecture}}.deb"
         lock_timeout: 300
       when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
 
