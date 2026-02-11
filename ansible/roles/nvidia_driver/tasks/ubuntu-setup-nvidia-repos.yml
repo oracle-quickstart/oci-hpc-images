@@ -1,0 +1,50 @@
+---
+- name: Remove ppa
+  ansible.builtin.apt_repository:
+    repo: ppa:graphics-drivers/ppa
+    state: absent
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+- name: NVIDIA CUDA for Ubuntu (x86_64)
+  when: ansible_architecture == 'x86_64'
+  block:
+    - name: Download NVIDIA CUDA Repository GPG key
+      become: true
+      ansible.builtin.get_url:
+        url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url_x86 }}"
+        dest: /tmp/nvidia.asc.gpg
+        mode: '0644'
+        force: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+    - name: Convert key to binary keyring
+      become: true
+      ansible.builtin.command:
+        cmd: "gpg --dearmor -o /etc/apt/keyrings/nvidia.gpg /tmp/nvidia.asc.gpg"
+        creates: /etc/apt/keyrings/nvidia.gpg
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+    - name: Add repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/nvidia.gpg] {{ nvidia_driver_ubuntu_cuda_repo_baseurl_x86 }} /"
+        update_cache: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+- name: NVIDIA CUDA for Ubuntu (ARM64)
+  when: ansible_architecture != 'x86_64'
+  block:
+    - name: Download NVIDIA CUDA Repository GPG key
+      become: true
+      ansible.builtin.get_url:
+        url: "{{ nvidia_driver_ubuntu_cuda_repo_gpgkey_url_arm64 }}"
+        dest: /tmp/nvidia.asc.gpg
+        mode: '0644'
+        force: true
+    - name: Convert key to binary keyring
+      become: true
+      ansible.builtin.command:
+        cmd: "gpg --dearmor -o /etc/apt/keyrings/nvidia.gpg /tmp/nvidia.asc.gpg"
+        creates: /etc/apt/keyrings/nvidia.gpg
+    - name: Add repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/nvidia.gpg] {{ nvidia_driver_ubuntu_cuda_repo_baseurl_arm64 }} /"
+        update_cache: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"

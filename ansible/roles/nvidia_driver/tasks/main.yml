@@ -14,16 +14,28 @@
     mode: '0644'
   when: nvidia_driver_branch | int >= 510
 
-- name: Ubuntu install tasks (canonical repos)
-  ansible.builtin.include_tasks: install-ubuntu.yml
+- name: Ensure GSP firmware is disabled for branch version 510
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/nvidia-gsp.conf
+    line: "options nvidia NVreg_RestrictProfilingToAdminUsers=0"
+    create: true
+    mode: '0644'
+
+
+- name: Ubuntu install tasks (with Canonical repos)
+  ansible.builtin.include_tasks: ubuntu-install-canonical.yml
   when: ansible_distribution == 'Ubuntu' and (not nvidia_driver_ubuntu_install_from_cuda_repo)
 
-- name: Ubuntu install tasks (CUDA repo)
-  ansible.builtin.include_tasks: install-ubuntu-cuda-repo.yml
+- name: Ubuntu install tasks (with NVIDIA repos)
+  block:
+    - name: Setup NVIDIA repos
+      ansible.builtin.include_tasks: ubuntu-setup-nvidia-repos.yml
+    - name: Install packages
+      ansible.builtin.include_tasks: ubuntu-install-nvidia.yml
   when: ansible_distribution == 'Ubuntu' and nvidia_driver_ubuntu_install_from_cuda_repo
 
 - name: Redhat family install tasks
-  ansible.builtin.include_tasks: install-redhat.yml
+  ansible.builtin.include_tasks: redhat.yml
   when: ansible_os_family == 'RedHat'
 
 - name: Create persistenced override dir

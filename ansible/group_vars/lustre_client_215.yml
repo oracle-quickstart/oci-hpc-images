@@ -1,0 +1,11 @@
+lustre_client_default_repo: "https://github.com/robo-cap/lustre-release"
+lustre_client_default_tag:
+  "RedHat":
+    "kernel_4": "2.15.5-oci"
+    "kernel_5": "2.15.91-oci"
+  "Debian":
+    "kernel_5": "2.15.5-oci"
+    "kernel_6": "2.15.91-oci"
+
+# lustre_client_repo: "https://github.com/lustre/lustre-release" # override default lustre client repo
+# lustre_client_tag: "2.15.91" # override default lustre client tag

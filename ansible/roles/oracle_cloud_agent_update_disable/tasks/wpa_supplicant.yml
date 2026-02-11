@@ -1,0 +1,7 @@
+- name: Enable wpa_supplicant
+  ansible.builtin.systemd:
+    name: wpa_supplicant
+    enabled: true
+  when: 
+    - ansible_distribution == 'OracleLinux'
+    - "'rhck' not in options"

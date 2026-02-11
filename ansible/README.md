@@ -12,6 +12,7 @@ ansible_hpc is a collection of ansible roles and playbook to build an HPC image.
 | kernel-limits        | Sets kernel limits changes - specifications - [OpenHPC Install Guide](http://openhpc.community/wp-content/uploads/Install_guide-CentOS7.1-1.0.pdf)                                                                                                                                                                  | 
 | packages             | Installs/Disables Packages from the OS vendor repos                                                                                          |
 | kernel               | Modifies kernel version / installation                                                                                                       |
+| lustre-client        | Builds and installs lustre-client                                                                                                            |
 | oci-utils            | Clean utils we wrote                                                                                                                         |
 | oracle-cloud-agent   | Configures OCA and OSMS                                                                                                                      |
 | nozeroconf           | Configures NOZERCONFIG settings for Redhat - [Network Configuration](https://www.brennan.id.au/04-Network_Configuration.html)                |
@@ -51,12 +52,14 @@ group_vars/ folder specified variables used by the build job
 | install_prefix                        | Prefix path for installation                                                |
 | kernel_limits_amd                     | Kernel limits for AMD                                                       |
 | kernel_limits_default                 | Default kernel limits                                                       |
+| lustre_client_repo                    | Override default lustre-client git repository                               |
+| lustre_client_tag                     | Override default lustre-client tag                                          |
 | mellanox_hpcx_download_url            | URL to download Mellanox HPC-X                                              |
 | mellanox_hpcx_version                 | Version of Mellanox HPC-X                                                   |
 | mellanox_mft_download                 | URL to download Mellanox MFT                                                |
 | mellanox_ofed_public_repo             | Public repository for Mellanox OFED                                         |
 | mellanox_ofed_version                 | Version of Mellanox OFED                                                    |
-| mft_version                           | Version of Mellanox Firmware Tools (MFT)                                     |
+| mft_version                           | Version of Mellanox Firmware Tools (MFT)                                    |
 | mlx_ofed_download_link                | Download link for Mellanox OFED                                             |
 | nccl_package_version                  | Version of NCCL package                                                     |
 | nccltest_repo                         | Repository for NCCL tests                                                   |
@@ -71,11 +74,11 @@ group_vars/ folder specified variables used by the build job
 | oci_cloud_agent_channel_ubuntu        | Channel for Oracle Cloud Agent on Ubuntu                                    |
 | oci_cloud_agent_version               | Version of Oracle Cloud Agent                                               |
 | oci_cn_auth_version                   | Version of OCI CN Auth                                                      |
-| oci_hpc_dapl_configure_version        | Version of OCI HPC DAPL configuration                                        |
-| oci_hpc_mlx_configure_version         | Version of OCI HPC Mellanox configuration                                    |
-| oci_hpc_network_device_names_version  | Version of OCI HPC network device names configuration                        |
-| oci_hpc_nvidia_gpu_configure_version  | Version of OCI HPC NVIDIA GPU configuration                                  |
-| oci_hpc_rdma_configure_version        | Version of OCI HPC RDMA configuration                                        |
+| oci_hpc_dapl_configure_version        | Version of OCI HPC DAPL configuration                                       |
+| oci_hpc_mlx_configure_version         | Version of OCI HPC Mellanox configuration                                   |
+| oci_hpc_network_device_names_version  | Version of OCI HPC network device names configuration                       |
+| oci_hpc_nvidia_gpu_configure_version  | Version of OCI HPC NVIDIA GPU configuration                                 |
+| oci_hpc_rdma_configure_version        | Version of OCI HPC RDMA configuration                                       |
 | openmpi_release                       | Release version of Open MPI                                                 |
 | openmpi_version                       | Version of Open MPI                                                         |
 | override_mellanox_os_version          | Override version for Mellanox OS                                            |
@@ -160,7 +163,7 @@ The packer file uses build_options and build_groups to pass the ansible variable
 # from a packer file
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,rhck,upgrade,openmpi,nvidia,enroot,monitoring,benchmarks"
+  default = "noselinux,nomitigations,rhck,upgrade,openmpi,nvidia,enroot,monitoring,benchmarks,lustre_client,oke"
 }
 
 variable "build_groups" {

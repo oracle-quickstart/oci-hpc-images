@@ -11,6 +11,17 @@
         mlx_ofed_download: "{{ hpc_artifacts_download if use_hpc_artifact else mlx_ofed_download_link }}"
         dir: "{{ '' if use_hpc_artifact else 'MLNX_OFED-{{ mellanox_ofed_version }}/' }}"
 
+#This needs to be done here, if it's done after OFED install, it will remove openmpi install from OFED
+
+- name: Uninstall ucx
+  ansible.builtin.apt:
+    name: ucx
+    state: absent
+    autoremove: yes
+    purge: yes
+  become: true
+  when: "'amd' in options"
+
 - name: OFED for Ubuntu 20 specific tasks
   when:
     - ansible_distribution == 'Ubuntu'

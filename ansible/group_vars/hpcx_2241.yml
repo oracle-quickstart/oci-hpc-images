@@ -1,0 +1,8 @@
+mellanox_hpcx_version: "v2.24.1"
+cuda_major: "{{ (cuda_version | default('13-0')) | split('-') | first }}"
+rhel8_mellanox_hpcx_package: "hpcx-{{mellanox_hpcx_version}}-gcc-doca_ofed-redhat8-cuda{{cuda_major}}-{{ ansible_architecture }}"
+rhel9_mellanox_hpcx_package: "hpcx-{{mellanox_hpcx_version}}-gcc-doca_ofed-redhat9-cuda{{cuda_major}}-{{ ansible_architecture }}"
+ubuntu20_mellanox_hpcx_package: "hpcx-{{mellanox_hpcx_version}}-gcc-doca_ofed-ubuntu20.04-cuda{{cuda_major}}-{{ ansible_architecture }}"
+ubuntu22_mellanox_hpcx_package: "hpcx-{{mellanox_hpcx_version}}-gcc-doca_ofed-ubuntu22.04-cuda{{cuda_major}}-{{ ansible_architecture }}"
+ubuntu24_mellanox_hpcx_package: "hpcx-{{mellanox_hpcx_version}}-gcc-doca_ofed-ubuntu24.04-cuda{{cuda_major}}-{{ ansible_architecture }}"
+mellanox_hpcx_download_url: "https://content.mellanox.com/hpc/hpc-x/{{ mellanox_hpcx_version }}_cuda{{cuda_major}}"

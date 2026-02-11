@@ -34,6 +34,17 @@
     - "mellanox_os_version is not defined"
     - ansible_os_family == 'RedHat'
 
+#This needs to be done here, if it's done after OFED install, it will remove openmpi install from OFED
+- name: Uninstall ucx
+  ansible.builtin.yum:
+    name: ucx
+    state: absent
+    autoremove: yes
+  become: true
+  when: 
+    - "'amd' in options"
+    - ansible_os_family == 'RedHat'
+
 - name: Mellanox OFED for Oracle Linux
   when:
     - ansible_os_family == 'RedHat'

@@ -1,0 +1,5 @@
+---
+- name: Mirror OKE packages for Ubuntu
+  ansible.builtin.include_tasks: ubuntu.yml
+  when: ansible_os_family == 'Debian'
+

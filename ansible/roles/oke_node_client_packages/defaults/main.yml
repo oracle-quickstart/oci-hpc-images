@@ -1,0 +1,15 @@
+---
+# OKE Node Client Packages role defaults
+
+# PAR URL for OKE packages repository
+oke_par_base: "https://objectstorage.us-sanjose-1.oraclecloud.com/p/_Zaa2khW3lPESEbqZ2JB3FijAd0HeKmiP-KA2eOMuWwro85dcG2WAqua2o_a-PlZ/n/odx-oke/b/okn-repositories-private/o/prod"
+
+# Local path to store mirrored packages
+oke_packages_path: "/opt/oke-node-client-packages"
+
+# Kubernetes versions to mirror
+oke_k8s_versions:
+  - "1.31"
+  - "1.32"
+  - "1.33"
+  - "1.34"

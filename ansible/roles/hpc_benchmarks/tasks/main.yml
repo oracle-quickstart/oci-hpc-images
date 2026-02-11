@@ -15,9 +15,9 @@
   ansible.builtin.include_tasks: perftest.yml
   when: (options is defined) and ('nvidia' in options)
 
-- name: Install gpuburn
-  ansible.builtin.include_tasks: gpuburn.yml
-  when: (options is defined) and ('nvidia' in options)
+# - name: Install gpuburn
+#   ansible.builtin.include_tasks: gpuburn.yml
+#   when: (options is defined) and ('nvidia' in options)
 
 # - name: Install CUDA samples
 #   ansible.builtin.include_tasks: cuda-samples.yml

@@ -26,7 +26,7 @@
         --disable-params-check --with-rdmacm --with-verbs --with-mlx5 --enable-cma \
         --enable-examples --without-java --without-go --enable-mt \
         --without-xpmem --prefix=/opt/openmpi-{{ openmpi_version }} \
-        && make -j \
+        && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/ucx-{{ ucx_version }}"
@@ -41,6 +41,10 @@
         update: true
         version: "{{ucc_version}}"
       when: ucc_version is defined
+      register: git_clone_result
+      retries: 5          # number of retry attempts
+      delay: 30           # wait time (seconds) between retries
+      until: git_clone_result is succeeded
 
     - name: Configure and build UCC
       ansible.builtin.shell: >
@@ -50,7 +54,7 @@
         {% if 'amd' in options %}--with-rocm=/opt/rocm --with-rocm-arch=all-arch-no-native{% endif %} \
         --with-ucx=/opt/openmpi-{{ openmpi_version }} \
         --prefix=/opt/openmpi-{{ openmpi_version }} \
-        && make -j \
+        && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/ucc-{{ ucc_version }}"
@@ -63,23 +67,64 @@
         dest: /tmp/
         remote_src: true
 
+    - name: Check if hcoll is installed
+      ansible.builtin.shell: dpkg -l hcoll
+      register: hcoll_pkg_result
+      ignore_errors: true
+
+    - name: Check if hcoll.pc exists at custom path
+      ansible.builtin.set_fact:
+        hcoll_pc_path: "{{ install_prefix }}/{{ mellanox_hpcx_package }}/hcoll/lib/pkgconfig/hcoll.pc"
+        hcoll_hpcx_base: "{{ install_prefix }}/{{ mellanox_hpcx_package }}"
+      when: mellanox_hpcx_package is defined
+
+    - name: Check if hcoll.pc exists at custom path
+      ansible.builtin.stat:
+        path: "{{ hcoll_pc_path }}"
+      register: hcoll_pc_file
+      when: mellanox_hpcx_package is defined
+
+    - name: Update hcoll.pc to reflect true HPC-X install location
+      ansible.builtin.replace:
+        path: "{{ hcoll_pc_path }}"
+        regexp: '^hpcx_home=.*$'
+        replace: "hpcx_home={{ hcoll_hpcx_base }}"
+      when: mellanox_hpcx_package is defined and hcoll_pkg_result != 0
+
+    - name: Set with_hcoll_flag
+      set_fact:
+        with_hcoll_flag: >-
+          {%- if 'nvidia' in options -%}
+            {%- if hcoll_pkg_result.rc == 0 -%}--with-hcoll
+            {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}--with-hcoll={{ hcoll_hpcx_base }}/hcoll
+            {%- endif -%}
+          {%- endif -%}
+          
     - name: Configure and build OpenMPI
       ansible.builtin.shell: >
         ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \
                     --with-ucx=/opt/openmpi-{{ openmpi_version }} \
-                    --with-hcoll \
                     {% if ucc_version is defined %}--with-ucc=/opt/openmpi-{{ openmpi_version }} {% endif %} \
+                    {{ with_hcoll_flag | default('') | replace('\n','') | trim}} \
                     {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda {% endif %} \
-                    {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
+                    {% if 'amd' in options %}--with-rocm=/opt/rocm {% endif %} \
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
-                    --with-pmix \
-        && make -j \
+                    --with-pmix  && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
         executable: /bin/bash
 
+    - name: Ensure directory exists
+      ansible.builtin.file:
+        path: /etc/environment-modules/modules/mpi/openmpi/
+        state: directory
+        mode: '0775'
+        owner: ubuntu
+        group: ubuntu
+        recurse: true
+        
     - name: Install OpenMPI module file
       ansible.builtin.template:
         src: templates/module.j2

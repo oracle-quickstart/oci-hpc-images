@@ -1,4 +1,4 @@
-- name: Import tasks for Ubuntu
+- name: Install AMD ROCm on Ubuntu
   ansible.builtin.include_tasks:
     file: ubuntu.yml
   when: ansible_distribution == 'Ubuntu'

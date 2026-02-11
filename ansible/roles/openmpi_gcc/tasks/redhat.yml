@@ -21,7 +21,7 @@
         --disable-params-check --with-rdmacm --with-verbs --with-mlx5 --enable-cma \
         --enable-examples --without-java --without-go --enable-mt \
         --without-xpmem --prefix=/opt/openmpi-{{ openmpi_version }} \
-        && make -j \
+        && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/ucx-{{ ucx_version }}"
@@ -36,6 +36,10 @@
         update: true
         version: "{{ucc_version}}"
       when: ucc_version is defined
+      register: git_clone_result
+      retries: 5          # number of retry attempts
+      delay: 30           # wait time (seconds) between retries
+      until: git_clone_result is succeeded
 
     - name: Configure and build UCC
       ansible.builtin.shell: >
@@ -45,7 +49,7 @@
         {% if 'amd' in options %}--with-rocm=/opt/rocm --with-rocm-arch=all-arch-no-native{% endif %} \
         --with-ucx=/opt/openmpi-{{ openmpi_version }} \
         --prefix=/opt/openmpi-{{ openmpi_version }} \
-        && make -j \
+        && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/ucc-{{ ucc_version }}"
@@ -69,7 +73,7 @@
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
                     --with-pmix \
-        && make -j \
+        && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"

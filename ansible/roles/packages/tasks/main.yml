@@ -5,7 +5,7 @@
 
   block:
     - name: microcode_ctl
-      block: 
+      block:
         - name: Ensure latest microcode_ctl is installed
           ansible.builtin.yum:
             name:
@@ -20,14 +20,14 @@
             gpgkey: https://yum.oracle.com/RPM-GPG-KEY-oracle-ol9
             gpgcheck: yes
             enabled: yes
-          when: 
+          when:
             - ansible_architecture == "aarch64"
             - ansible_distribution_major_version == '9'
 
         - name: Ensure DNF metadata is up to date
           dnf:
             update_cache: yes
-          when: 
+          when:
             - ansible_architecture == "aarch64"
             - ansible_distribution_major_version == '9'
 
@@ -55,6 +55,8 @@
           - libxml2
           - binutils-devel
           - environment-modules
+          - python3-psutil
+          - python3-distro
         state: present
 
     - name: Upgrade all packages # noqa package-latest
@@ -118,5 +120,15 @@
     - name: Install CMake
       ansible.builtin.apt:
         name: cmake
+        state: present
+        lock_timeout: 300
+    - name: Install python3-psutil
+      ansible.builtin.apt:
+        name: python3-psutil
+        state: present
+        lock_timeout: 300
+    - name: Install python3-distro
+      ansible.builtin.apt:
+        name: python3-distro
         state: present
         lock_timeout: 300

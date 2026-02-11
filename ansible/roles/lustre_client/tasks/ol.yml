@@ -1,0 +1,182 @@
+- name: Install Lustre client on OracleLinux
+  block:
+    - name: Check if the host is running RHCK
+      ansible.builtin.shell: "uname -r"
+      register: kernel_release
+      changed_when: false
+
+    - name: Fail if not running RHCK
+      ansible.builtin.fail:
+        msg: "Host must be running RHCK, but uname -r is: {{ kernel_release.stdout }}"
+      when: "'uek' in kernel_release.stdout"
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+    - name: Set lustre-client build facts
+      ansible.builtin.set_fact:
+        lustre_chroot_path: "{{ ansible_env.HOME }}/lustre-client-chroot"
+        lustre_client_repository: "{{ lustre_client_default_repo if lustre_client_repo is not defined else lustre_client_repo }}"
+        lustre_client_version: "{{ lustre_client_tag if lustre_client_tag is defined else lustre_client_default_tag[ansible_os_family]['kernel_' ~ ansible_kernel.split('.')[0]] }}"
+        lustre_temporary_directory: "/tmp/lustre-client"
+
+    - name: Ensure lustre-client prerequisites are installed on the host
+      ansible.builtin.yum:
+        name:
+          - "git"
+          - "dkms"
+          - "libmount-devel"
+          - "libyaml-devel"
+        state: present
+        enablerepo: "ol{{ansible_distribution_major_version}}_codeready_builder,ol{{ansible_distribution_major_version}}_developer_EPEL"
+
+    - name: Cleanup any existing mounts (if any)
+      ansible.posix.mount: 
+        path: "{{ item }}"
+        state: "unmounted"
+      loop:
+        - "{{ lustre_chroot_path }}/dev/pts"
+        - "{{ lustre_chroot_path }}/sys"
+        - "{{ lustre_chroot_path }}/proc"
+
+    - name: Cleanup existing chroot environment (if any)
+      ansible.builtin.file:
+        path: "{{ lustre_chroot_path }}"
+        state: absent
+
+    - name: Cleanup existing chroot environment (if any)
+      ansible.builtin.file:
+        path: "{{ lustre_chroot_path }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ lustre_chroot_path }}/proc"
+        - "{{ lustre_chroot_path }}/sys"
+        - "{{ lustre_chroot_path }}/dev/pts"
+
+    - name: Create mounts for chroot
+      ansible.posix.mount: 
+        path: "{{ item.path }}"
+        src: "{{ item.src }}"
+        boot: false
+        state: "mounted"
+        fstype: "{{ item.fstype }}"
+        opts: "{{ item.opts }}"
+      loop:
+        - src: "/dev/pts"
+          path: "{{ lustre_chroot_path }}/dev/pts"
+          fstype: "devpts"
+          opts: "bind"
+        - src: "/sys"
+          path: "{{ lustre_chroot_path }}/sys"
+          fstype: "none"
+          opts: "bind"
+        - src: "/proc"
+          path: "{{ lustre_chroot_path }}/proc"
+          fstype: "none"
+          opts: "bind"
+
+    - name: Prepare and install dependencies in chroot environment for lustre-client on ol8
+      ansible.builtin.shell: |
+        release=$(cat /etc/os-release | grep ^VERSION= |cut -f2 -d\" |cut -f1 -d.)
+        yum --releasever=/ --installroot={{ lustre_chroot_path }} \
+          --enablerepo ol${release}_codeready_builder,ol${release}_developer_EPEL,ol${release}_developer \
+          install -y \
+          bash git libtool patch pkgconfig libnl3-devel libblkid-devel \
+          libuuid-devel rpm-build kernel-rpm-macros kernel-abi-whitelists \
+          libmount libmount-devel libyaml-devel \
+          kernel-devel-$(uname -r) kernel-headers-$(uname -r) kernel-$(uname -r)
+      when: ansible_distribution_major_version == '8'
+
+    - name: Prepare and install dependencies in chroot environment for lustre-client on ol9
+      ansible.builtin.shell: |
+        release=$(cat /etc/os-release | grep ^VERSION= |cut -f2 -d\" |cut -f1 -d.)
+        yum --releasever=/ --installroot={{ lustre_chroot_path }} \
+          --enablerepo ol${release}_codeready_builder,ol${release}_developer_EPEL,ol${release}_developer \
+          install -y \
+          bash git libtool patch pkgconfig libnl3-devel libblkid-devel \
+          libuuid-devel rpm-build kernel-rpm-macros keyutils-libs \
+          libmount libmount-devel libyaml-devel keyutils-libs-devel \
+          glibc-locale-source glibc-langpack-en kernel-abi-stablelists \
+          kernel-devel-$(uname -r) kernel-headers-$(uname -r) kernel-$(uname -r)
+      when: ansible_distribution_major_version == '9'
+
+    - name: Clone lustre-client git repo
+      ansible.builtin.git:
+        repo: "{{ lustre_client_repository }}"
+        dest: "{{ lustre_chroot_path }}/lustre-client"
+        version: "{{ lustre_client_version }}"
+
+    - name: Build the lustre-client rpms in the chroot environment
+      ansible.builtin.shell: |
+        chroot "{{ lustre_chroot_path }}" bash <<'EOF'
+        set -euo pipefail
+
+        cd lustre-client/
+        sh autogen.sh
+        ./configure --enable-client --disable-server
+        
+        make rpms
+        make dkms-rpms
+        
+        tar -czf lustre-client-dkms.tar.gz lustre-client-2.*.rpm lustre-client-dkms-2.*.noarch.rpm
+
+        EOF
+      args:
+        creates: "{{ lustre_chroot_path }}/lustre-client/lustre-client-dkms.tar.gz"
+
+    - name: Remove the temporary directory if it exists
+      ansible.builtin.file:
+        path: "{{ lustre_temporary_directory }}"
+        state: absent
+
+    - name: Ensure the temporary directory exists
+      ansible.builtin.file:
+        path: "{{ lustre_temporary_directory }}"
+        state: directory
+        mode: '0755'
+
+    - name: Extract the lustre-client tarball
+      ansible.builtin.unarchive:
+        src: "{{ lustre_chroot_path }}/lustre-client/lustre-client-dkms.tar.gz"
+        dest: "{{ lustre_temporary_directory }}"
+        remote_src: true
+
+    - name: Find lustre-client RPM files
+      ansible.builtin.find:
+        paths: "{{ lustre_temporary_directory }}"
+        patterns: "*.rpm"
+        file_type: file
+      register: lustre_rpms
+
+    - name: Install Lustre client RPMs
+      ansible.builtin.dnf:
+        name: "{{ lustre_rpms.files | map(attribute='path') | list }}"
+        state: present
+        disable_gpg_check: true
+
+    - name: Create /etc/modprobe.d/lnet.conf file
+      ansible.builtin.copy:
+        content: ""
+        dest: /etc/modprobe.d/lnet.conf
+        force: false
+        mode: 0755
+
+    - name: Cleanup any existing mounts (if any)
+      ansible.posix.mount: 
+        path: "{{ item }}"
+        state: "unmounted"
+      loop:
+        - "{{ lustre_chroot_path }}/dev/pts"
+        - "{{ lustre_chroot_path }}/sys"
+        - "{{ lustre_chroot_path }}/proc"
+
+    - name: Remove the installation files
+      ansible.builtin.file:
+        path: "{{ lustre_temporary_directory }}"
+        state: absent
+
+    - name: Remove the chroot environment
+      ansible.builtin.file:
+        path: "{{ lustre_chroot_path }}"
+        state: absent
