@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-8.10-2025.08.31-0"
+  default = "Oracle-Linux-8.10-2025.11.20-0"
 } 
 
 variable "operating_system" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins"
+  default = "noselinux,rhck,openmpi,networkdevicenames,use_plugins,lustre_client"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_223", "openmpi_508", "ol8_rhck", "oca_152_OL" ]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_2410_1140_el810", "hpcx_2251", "openmpi_508", "ol8_rhck", "oca_155_OL", "lustre_client_215"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */
@@ -124,6 +124,12 @@ locals {
 build {
   name    = "buildname"
   sources = ["source.oracle-oci.oracle"]
+  
+  provisioner "shell" {
+    inline = ["sudo dnf install -y oracle-epel-release-el8",
+              "sudo dnf config-manager --set-enabled ol8_codeready_builder",
+              "sudo dnf install -y python3.8"]
+  }
   
   provisioner "ansible" {
     playbook_file   = "${path.root}/../../ansible/hpc.yml"

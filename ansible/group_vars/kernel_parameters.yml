@@ -11,6 +11,12 @@ grub_cmdline_ubuntu24:
   - skew_tick=1
   - iommu=off
   - numa_balancing=disable
+grub_cmdline_ubuntu_cx8:
+  - processor.max_cstate=1
+  - mce=ignore_ce
+  - skew_tick=1
+  - iommu=on
+  - numa_balancing=disable
 grub_cmdline_disable_mitigations:
   - noibrs
   - noibpb

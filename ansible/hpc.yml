@@ -9,6 +9,7 @@
     #   intel-oneapi - Install Intel OneAPI MPI/MKL
     #   openmpi - Install OpenMPI against system gcc
     #   use_plugins - Do not install OCI HPC packages that are replaced by OCA HPC Plugins
+    #   oke - Mirror OKE node client packages for offline installation
 
     # groups:
     #   groups define the variables (group_vars) to use with the roles
@@ -25,6 +26,8 @@
         name: oracle_cloud_agent_update_disable
     - ansible.builtin.import_role: # noqa name[missing]
         name: rdma_configuration
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: rdma_ns
     - ansible.builtin.import_role: # noqa name[missing]
         name: ssh
     - ansible.builtin.import_role: # noqa name[missing]
@@ -52,6 +55,9 @@
       when: "'noselinux' in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: systemd
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: lustre_client
+      when: "'lustre_client' in options"
 
 - name: AMD configuration
   hosts: all
@@ -79,7 +85,6 @@
   any_errors_fatal: true
   become: true
   tasks:
-
     - ansible.builtin.import_role: # noqa name[missing]
         name: nvidia_driver
       when: "'nvidia' in options"
@@ -111,6 +116,16 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: gpu_tuning
       when: "'nvidia' in options or 'amd' in options"
+
+- name: OKE configuration
+  hosts: all
+  any_errors_fatal: true
+  become: true
+
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: oke_node_client_packages
+      when: "'oke' in options"
 
 - name: Benchmarks
   hosts: all

@@ -1,0 +1,13 @@
+---
+
+- name: Install lustre-client on OracleLinux
+  ansible.builtin.include_tasks: ol.yml
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution == 'OracleLinux'
+    - ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9'
+
+- name: Install lustre-client on Ubuntu
+  ansible.builtin.include_tasks: ubuntu.yml
+  when:
+    - ansible_distribution == 'Ubuntu'

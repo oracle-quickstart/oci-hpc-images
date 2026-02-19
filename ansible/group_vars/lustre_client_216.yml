@@ -1,0 +1,12 @@
+lustre_client_default_repo: "https://github.com/lustre/lustre-release"
+lustre_client_default_tag:
+  "RedHat":
+    "kernel_4": "2.16.61"
+    "kernel_5": "2.16.61"
+  "Debian":
+    "kernel_5": "2.16.61"
+    "kernel_6": "2.16.61"
+
+## Override the lustre client you want to install
+# lustre_client_repo: "https://github.com/lustre/lustre-release" # override default lustre client repo
+# lustre_client_tag: "2.16.61" # override default lustre client tag

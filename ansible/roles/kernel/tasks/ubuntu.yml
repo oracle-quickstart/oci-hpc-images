@@ -19,6 +19,7 @@
         name:
           - linux-headers*
           - linux-image*
+          - linux-modules-*
           - linux*headers*
           - linux*tools*
         state: absent
@@ -69,3 +70,6 @@
         mode: "0644"
       notify:
         - Reboot
+
+    - name: Flush handlers
+      meta: flush_handlers

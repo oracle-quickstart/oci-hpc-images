@@ -1,0 +1,18 @@
+---
+- name: Change RDMA namespace to exclusive
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/ib_core.conf
+    line: 'options ib_core netns_mode=0'
+    create: true
+    owner: root
+    group: root
+    mode: '0644'
+    state: present
+
+- name: Update initramfs
+  ansible.builtin.command: update-initramfs -u
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Run Dracut
+  ansible.builtin.command: dracut -f
+  when: ansible_distribution == 'OracleLinux'

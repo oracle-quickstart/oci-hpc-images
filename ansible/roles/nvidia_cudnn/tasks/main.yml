@@ -1,4 +1,3 @@
----
 - name: NVIDIA CUDNN for Redhat
   when:
     - ansible_os_family == 'RedHat'
@@ -6,35 +5,26 @@
     - name: Install Nvidia CUDNN for RedHat
       vars:
         cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
+        # Appends hyphen for RedHat versioning if cudnn_version is defined
+        version_suffix: "{{ '-' + cudnn_version if cudnn_version is defined else '' }}"
       ansible.builtin.yum:
         name:
-          - "libcudnn9-cuda-{{cuda_major_version}}"
-          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
+          - "libcudnn9-cuda-{{ cuda_major_version }}{{ version_suffix }}"
+          - "libcudnn9-devel-cuda-{{ cuda_major_version }}{{ version_suffix }}"
 
-- name: NVIDIA CUDNN for Ubuntu
+- name: NVIDIA CUDNN for Ubuntu (22.04 & 24.04)
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22'
+    - ansible_distribution_major_version in ['22', '24']
   block:
     - name: Install Nvidia CUDNN for Ubuntu
       vars:
         cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
+        # Appends equals sign for Apt versioning if cudnn_version is defined
+        version_suffix: "{{ '=' + cudnn_version if cudnn_version is defined else '' }}"
       ansible.builtin.apt:
         name:
-          - "libcudnn9-cuda-{{ cuda_major_version }}"
-          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
-        lock_timeout: 300
-
-- name: NVIDIA CUDNN for Ubuntu
-  when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '24'
-  block:
-    - name: Install Nvidia CUDNN for Ubuntu
-      vars:
-        cuda_major_version: "{{ (cuda_version | default('13-0')).split('-')[0] }}"
-      ansible.builtin.apt:
-        name:
-          - "libcudnn9-cuda-{{ cuda_major_version }}"
-          - "libcudnn9-dev-cuda-{{ cuda_major_version }}"
+          - "libcudnn9-cuda-{{ cuda_major_version }}{{ version_suffix }}"
+          - "libcudnn9-dev-cuda-{{ cuda_major_version }}{{ version_suffix }}"
+          - "libcudnn9-headers-cuda-{{ cuda_major_version }}{{ version_suffix }}"
         lock_timeout: 300

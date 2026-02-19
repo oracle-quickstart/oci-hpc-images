@@ -75,10 +75,6 @@
         path: "{{ install_prefix }}/{{ mellanox_hpcx_package }}/modulefiles"
       register: hpcx_modules
 
-    - name: Echo HPCX modules
-      ansible.builtin.debug:
-        msg: "{{ hpcx_modules }}"
-
     - name: Link modulefiles from HPCX installation
       ansible.builtin.file:
         src: "{{ item.path }}"

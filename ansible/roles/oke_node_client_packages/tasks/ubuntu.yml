@@ -1,0 +1,48 @@
+---
+- name: OKE Node Client Packages for Ubuntu
+  when: ansible_distribution == 'Ubuntu'
+  block:
+    - name: Set Ubuntu codename
+      ansible.builtin.set_fact:
+        oke_ubuntu_codename: "{{ ansible_distribution_release }}"
+
+    - name: Create OKE packages directory
+      ansible.builtin.file:
+        path: "{{ oke_packages_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Copy mirror script to target
+      ansible.builtin.copy:
+        src: mirror-oke-repos.py
+        dest: /tmp/mirror-oke-repos.py
+        mode: "0755"
+
+    - name: Mirror OKE packages for each Kubernetes version
+      ansible.builtin.command:
+        cmd: >-
+          python3 /tmp/mirror-oke-repos.py
+          {{ oke_packages_path }}
+          {{ oke_ubuntu_codename }}
+        creates: "{{ oke_packages_path }}/ubuntu-{{ oke_ubuntu_codename }}/kubernetes-{{ item }}/dists/stable/Release"
+      environment:
+        OKE_PAR_BASE: "{{ oke_par_base }}"
+      loop: "{{ oke_k8s_versions }}"
+      register: mirror_result
+      changed_when: mirror_result.rc == 0
+
+    - name: Remove mirror script
+      ansible.builtin.file:
+        path: /tmp/mirror-oke-repos.py
+        state: absent
+
+    - name: Set ownership of OKE packages directory
+      ansible.builtin.file:
+        path: "{{ oke_packages_path }}"
+        state: directory
+        owner: root
+        group: root
+        recurse: true
+

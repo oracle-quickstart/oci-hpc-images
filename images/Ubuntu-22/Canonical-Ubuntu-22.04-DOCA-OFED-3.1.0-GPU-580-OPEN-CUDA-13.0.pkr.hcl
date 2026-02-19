@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2025.09.22-0"
+  default = "Canonical-Ubuntu-22.04-2025.10.31-0"
 }
 
 variable "operating_system" {
@@ -44,11 +44,11 @@ variable "release" {
 
 variable "build_options" {
   type    = string
-  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm"
+  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,stable_dcgm,lustre_client,oke"
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_2241", "openmpi_508", "nvidia_open_580", "nvidia_cuda_13_0", "oca_155_ubuntu"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_310", "hpcx_2251", "openmpi_508", "nvidia_open_580", "nvidia_cuda_13_0", "oca_155_ubuntu", "lustre_client_215"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 
