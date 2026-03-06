@@ -3,7 +3,7 @@
     file: ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
-- name: Import tasks for EL
+- name: Install AMD ROCm on Oracle Linux
   ansible.builtin.include_tasks:
     file: el.yml
   when: ansible_os_family == 'RedHat'

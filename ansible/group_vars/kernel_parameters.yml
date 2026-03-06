@@ -1,11 +1,17 @@
 ---
-grub_cmdline_other:
+grub_cmdline_hpc:
+  - processor.max_cstate=1
+  - mce=ignore_ce
+  - skew_tick=1
+  - iommu=pt # must not be "off" for kernel to correctly boot high core-count systems
+  - numa_balancing=disable
+grub_cmdline_kernel5:
   - processor.max_cstate=1
   - mce=ignore_ce
   - skew_tick=1
   - iommu=pt
   - numa_balancing=disable
-grub_cmdline_ubuntu24:
+grub_cmdline_kernel6:
   - processor.max_cstate=1
   - mce=ignore_ce
   - skew_tick=1

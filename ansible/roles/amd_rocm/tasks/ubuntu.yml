@@ -17,26 +17,26 @@
 - name: Add AMD drivers repository
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/30.20.1/ubuntu noble main
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_dkms_ubuntu_repo_baseurl }}/{{ amd_dkms_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_dkms_repo_baseurl }}/{{ amd_dkms_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
 - name: Add AMD ROCm repository
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.1.1 noble main
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_rocm_ubuntu_repo_baseurl }}/{{ amd_rocm_version }} {{ ansible_facts['distribution_release'] }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_rocm_repo_baseurl }}/apt//{{ amd_rocm_version }} {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
 - name: Add AMD graphics repository
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/graphics/7.1.1/ubuntu noble main
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_graphics_ubuntu_repo_baseurl }}/{{ amd_rocm_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_graphics_repo_baseurl }}/{{ amd_rocm_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: amd_rocm_version is version('7.0', '>=')
 - name: Add AMD repository for amdgpu-lib
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.4.3/ubuntu noble main
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_dkms_ubuntu_repo_baseurl }}/{{ amd_rocm_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_dkms_repo_baseurl }}/{{ amd_rocm_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
   when: amd_rocm_version is version('7.0', '<')

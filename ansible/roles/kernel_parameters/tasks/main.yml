@@ -2,18 +2,18 @@
 
 - name: Set grub_commandline (non-Ubuntu 24)
   set_fact:
-    grub_cmdline: "{{ grub_cmdline_other | default([]) }}"
+    grub_cmdline: "{{ grub_cmdline_kernel5 | default([]) }}"
   when:
-    - grub_cmdline_other is defined
-    - ansible_distribution_major_version != '24'
+    - grub_cmdline_kernel5 is defined
+    - ansible_kernel is version('6.8', '<')
     - "'cx8' not in options"
 
 - name: Set grub_commandline (Ubuntu 24)
   set_fact:
-    grub_cmdline: "{{ grub_cmdline_ubuntu24 | default([]) }}"
+    grub_cmdline: "{{ grub_cmdline_kernel6 | default([]) }}"
   when:
-    - grub_cmdline_ubuntu24 is defined
-    - ansible_distribution_major_version == '24'
+    - grub_cmdline_kernel6 is defined
+    - ansible_kernel is version('6.8', '>=')
     - "'cx8' not in options"
 
 - name: Set grub_commandline (CX8)
@@ -22,6 +22,14 @@
   when:
     - grub_cmdline_ubuntu_cx8 is defined
     - "'cx8' in options"
+
+- name: Set grub_commandline (E5 HPC)
+  set_fact:
+    grub_cmdline: "{{ grub_cmdline_hpc | default([]) }}"
+  when:
+    - grub_cmdline_hpc is defined
+    - "'nvidia' not in options"
+    - "'amd' not in options"
 
 - name: Regather facts
   setup:
@@ -34,7 +42,9 @@
        + (('enroot' in options) | ternary(grub_cmdline_enroot, []))
        + (('networkdevicenames' in options) | ternary(grub_cmdline_network_device_names, []))
        + ((ansible_os_family == 'RedHat' and ansible_distribution_major_version | int > 7) | ternary(['ip=single-dhcp,dhcp6'], []))
-       + ((ansible_kernel is version('6.8', '>=')) | ternary(['pcie_ports=dpc-native'], [])) }}"
+       + ((ansible_kernel is version('6.8', '>=')) | ternary(['pcie_ports=dpc-native'], []))
+       + ((ansible_os_family == 'RedHat' and (ansible_distribution_version is version('9.6', '>=')))  | ternary(['dmesg_restrict=0'], [])) }}"
+       
   when:
     - "options is defined"
     - grub_cmdline is defined

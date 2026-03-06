@@ -1,6 +1,6 @@
 doca_ofed_version: "3.2.1"
 doca_subversion_ubuntu: "044000-25.10"
-doca_subversion_rhel: "044000-25.10"
+doca_subversion_rhel: "044000_25.10"
 use_hpc_artifact: false
 doca: true
 mellanox_mft_download: "https://www.mellanox.com/downloads/MFT"

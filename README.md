@@ -161,6 +161,28 @@ in the working directory to log in:
 ```sh
 ssh -i oci_oracle.pem ubuntu@[IP Address]
 ```
+## Utilities
+
+### Listing available image configurations
+
+`utils/list_images.py` is a small helper utility that will list all images defined in a given
+directory along with their build options and build groups.
+
+You can run this utility with uv like this (from the repository's base dir):
+
+
+```sh
+uv run utils/list_images.py
+```
+
+### Creating patches on build-hosts
+
+`utils/diff_to_zip.sh` can be helpful during image testing to summarize changes. It will compare an
+exported git archive (e.g. produced via `git archive --format=zip --output=../oci-hpc-images.zip HEAD`) with the unpacked "dirty" working directory of that zip file and show all the changes as a diff. This can be useful to bring changes that were found to be necessary back from the testing environment to the git repo.
+
+```sh
+utils/diff_to_zip.sh ../oci-hpc-images.zip 
+```
 
 ## Contributing
 

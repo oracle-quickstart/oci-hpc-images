@@ -1,40 +1,85 @@
 ---
-- name: ROCM for EL
-  when:
-    - ansible_os_family == 'RedHat'
-  block:
+- name: Check OL and AMD Graphics (for amdgpu-lib) version compatibility
+  ansible.builtin.fail:
+    msg: >-
+      Incompatible Oracle Linux and AMD ROCm combination:
+      Oracle Linux {{ ansible_facts['distribution_version'] }},
+      ROCm {{ amd_rocm_version }}. For ROCm < 7.0 only OL 9.6 and older are supported.
+  when: >
+    amd_rocm_version is version('7.0', '<')
+    and ansible_facts['distribution_version'] is version('9.7', '>=')
+  tags: always
 
-    - name: Set major.minor version
-      ansible.builtin.set_fact:
-        os_version: "{{ (ansible_distribution_version | split('.'))[0] }}.{{ (ansible_distribution_version | split('.'))[1] }}"
+- name: Add AMD ROCm {{ amd_rocm_version }} repository
+  ansible.builtin.yum_repository:
+    name: rocm
+    description: ROCm {{ amd_rocm_version }} repository
+    file: amd_rocm
+    enabled: true
+    priority: "50"
+    baseurl: "{{ amd_rocm_repo_baseurl }}/el{{ ansible_facts['distribution_major_version'] }}/{{ amd_rocm_version }}/main"
+    gpgcheck: true
+    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
 
-    - name: Download sources
-      ansible.builtin.get_url:
-        url: "{{ amd_rocm_repo }}/{{ amd_rocm_version }}/el/{{ os_version }}/amdgpu-install-{{ amd_rocm_package_version }}.el{{ ansible_distribution_major_version }}.noarch.rpm"
-        dest: /tmp
-        mode: '0755'
-      register: amd_rocm_tmp_archive
+- name: Add AMD Graphics {{ amd_rocm_version }} repository
+  ansible.builtin.yum_repository:
+    name: amdgraphics
+    description: AMD Graphics {{ amd_rocm_version }} repository
+    file: amd_rocm
+    enabled: true
+    priority: "50"
+    baseurl: "{{ amd_dkms_repo_baseurl }}/{{ amd_rocm_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
+    gpgcheck: true
+    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
+  when: amd_rocm_version is version('7.0', '<')
 
-    - name: Import GPG key for AMDGPU
-      ansible.builtin.rpm_key:
-        key: "https://repo.radeon.com/rocm/rocm.gpg.key"
-        state: present
-        
-    - name: Install amdgpu
-      ansible.builtin.yum:
-        name: "{{ amd_rocm_tmp_archive.dest }}"
-        lock_timeout: 300
+- name: Add AMD Graphics {{ amd_rocm_version }} repository
+  ansible.builtin.yum_repository:
+    name: amdgraphics
+    description: AMD Graphics {{ amd_rocm_version }} repository
+    file: amd_rocm
+    enabled: true
+    priority: "50"
+    baseurl: "{{ amd_graphics_repo_baseurl }}/{{ amd_rocm_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
+    gpgcheck: true
+    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
+  when: amd_rocm_version is version('7.0', '>=')
 
-    - name: Run amdgpu-install # noqa no-changed-when
-      ansible.builtin.shell: |
-        amdgpu-install -y --usecase=graphics,rocm
-      args:
-        chdir: "/tmp"
+- name: Add AMD DKMS repository
+  ansible.builtin.yum_repository:
+    name: amdgpu
+    description: AMD DKMS repository
+    file: amd_rocm
+    enabled: true
+    priority: "50"
+    baseurl: "{{ amd_dkms_repo_baseurl }}/{{ amd_dkms_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
+    gpgcheck: true
+    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
 
-- name: Add default user to render and video groups
-  block:
-    - name: Add ubuntu to render and video groups
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        groups: render,video
-        append: true
+- name: Install AMD driver package
+  ansible.builtin.dnf:
+    name: amdgpu-dkms
+    state: present
+    lock_timeout: 300
+
+- name: Reboot after driver install
+  ansible.builtin.reboot:
+
+- name: Install AMD ROCm packages
+  ansible.builtin.dnf:
+    enablerepo: "ol{{ ansible_facts['distribution_major_version'] }}_developer_EPEL,ol{{ ansible_facts['distribution_major_version'] }}_codeready_builder"
+    name:
+      - rocm
+      - amdgpu-lib
+    state: present
+    lock_timeout: 600
+  register: rocm_dnf
+  retries: 5
+  delay: 30
+  until: rocm_dnf is succeeded
+
+- name: Add opc to render and video groups
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: render,video
+    append: true

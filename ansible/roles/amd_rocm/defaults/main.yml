@@ -1,4 +1,5 @@
+amd_dkms_repo_baseurl: "https://repo.radeon.com/amdgpu"
+amd_rocm_repo_baseurl: "https://repo.radeon.com/rocm"
+amd_graphics_repo_baseurl: "https://repo.radeon.com/graphics"
+amd_rocm_el_repo_gpgkey_url: "https://repo.radeon.com/rocm/rocm.gpg.key"
 amd_rocm_ubuntu_repo_gpgkey_url: "https://repo.radeon.com/rocm/rocm.gpg.key"
-amd_dkms_ubuntu_repo_baseurl: "https://repo.radeon.com/amdgpu"
-amd_rocm_ubuntu_repo_baseurl: "https://repo.radeon.com/rocm/apt"
-amd_graphics_ubuntu_repo_baseurl: "https://repo.radeon.com/graphics/"
