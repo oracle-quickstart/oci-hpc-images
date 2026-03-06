@@ -1,0 +1,11 @@
+# repo format ubuntu "{{ amd_rocm_repo}}/{{ amd_rocm_version }}/ubuntu/{{ ansible_distribution_release }}/{{ amd_rocm_package }}_all.deb"
+# repo format rhel
+# rhel version: "{{ ansible_distribution_version | split('.') }}"
+# "{{ amd_rocm_repo}}/{{ amd_rocm_version }}/rhel/
+#     {{ rhel_version[0] }}.{{ rhel_version[1] }}/{{ amd_rocm_package }}_el{{ ansible_distribution_major_version }}.rpm"
+
+amd_dkms_version: "30.30"
+amd_rocm_version: "7.2"
+amd_rocm_repo: "https://repo.radeon.com/amdgpu-install/"
+amd_rccl_commit: 0d2c4fd4c5ea8aa96b4ac4eb468fb4146ab2c921 #2.27.7
+amd_perftest_commit: 8a1d3d7234add23fe006b2ff51d650ff022077a8 #25.10.0

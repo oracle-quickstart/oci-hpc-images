@@ -9,10 +9,20 @@
   when:
     - "override_mellanox_os_version is defined"
 
+- name: Check for Mellanox OS override
+  ansible.builtin.set_fact:
+    doca_version_major_or_minor: "{{ansible_distribution_version}}"
+
+- name: Check for Mellanox OS override
+  ansible.builtin.set_fact:
+    doca_version_major_or_minor: "{{ansible_distribution_major_version}}"
+  when:
+    - doca is defined and doca | bool
+    - doca_ofed_version is defined and doca_ofed_version is version('3.2.0', '>=')
 
 - name: Setup Oracle Linux Mellanox Installer
   ansible.builtin.set_fact:
-    mellanox_os_version: "ol{{ ansible_distribution_version }}"
+    mellanox_os_version: "ol{{ doca_version_major_or_minor }}"
   when:
     - "mellanox_os_version is not defined"
     - ansible_distribution == 'OracleLinux'
@@ -20,16 +30,15 @@
 
 - name: Set OL version string for OFED with RHCK
   ansible.builtin.set_fact:
-    mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+    mellanox_os_version: "rhel{{ doca_version_major_or_minor }}"
   when:
     - "mellanox_os_version is not defined"
     - ansible_distribution == 'OracleLinux'
-    - (ansible_distribution_major_version == '7')
     - "'rhck' in options"
 
 - name: Setup CentOS Mellanox Installer
   ansible.builtin.set_fact:
-    mellanox_os_version: "rhel{{ ansible_distribution_version }}"
+    mellanox_os_version: "rhel{{ doca_version_major_or_minor }}"
   when:
     - "mellanox_os_version is not defined"
     - ansible_os_family == 'RedHat'
@@ -45,7 +54,7 @@
     - "'amd' in options"
     - ansible_os_family == 'RedHat'
 
-- name: Mellanox OFED for Oracle Linux
+- name: Mellanox OFED for Oracle Linux 7
   when:
     - ansible_os_family == 'RedHat'
     - ansible_distribution_major_version == '7'
@@ -81,6 +90,8 @@
           - fuse-libs
           - dkms
           - kernel-devel
+          - libzip-devel
+          - libunwind
         state: present
 
     - name: Get default kernel name
@@ -100,7 +111,7 @@
 
     - name: Ensure required packages are installed for Mellanox OFED
       ansible.builtin.yum:
-        enablerepo: "*developer_EPEL*"
+        enablerepo: "ol{{ ansible_facts['distribution_major_version'] }}_developer_EPEL,ol{{ ansible_facts['distribution_major_version'] }}_codeready_builder"
         name:
           - createrepo
           - perl
@@ -127,12 +138,14 @@
           - dkms
           - kernel-devel
           - kernel-modules-extra
+          - libzip-devel
+          - libunwind
         state: present
       when: ansible_architecture != 'aarch64'
 
     - name: Ensure required packages are installed for Mellanox OFED
       ansible.builtin.yum:
-        enablerepo: "*developer_EPEL*"
+        enablerepo: "ol{{ ansible_facts['distribution_major_version'] }}_developer_EPEL,ol{{ ansible_facts['distribution_major_version'] }}_codeready_builder"
         name:
           - createrepo
           - perl
@@ -158,34 +171,11 @@
           - fuse-libs
           - dkms
           - kernel-devel
+          - libzip-devel
+          - libunwind
         state: present
       when: ansible_architecture == 'aarch64'
 
-    - name: Set OL version string for OFED with UEK
-      ansible.builtin.set_fact:
-        mellanox_os_version: "ol{{ ansible_distribution_version }}"
-      when:
-        - "mellanox_os_version is not defined"
-        - ansible_distribution == 'OracleLinux'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
-        - "'rhck' not in options"
-
-    - name: Set OL version string for OFED with RHCK
-      ansible.builtin.set_fact:
-        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
-      when:
-        - "mellanox_os_version is not defined"
-        - ansible_distribution == 'OracleLinux'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
-        - "'rhck' in options"
-
-    - name: Set OL version string for other EL systems
-      ansible.builtin.set_fact:
-        mellanox_os_version: "rhel{{ ansible_distribution_version }}"
-      when:
-        - "mellanox_os_version is not defined"
-        - ansible_os_family == 'RedHat'
-        - (ansible_distribution_major_version == '8' or ansible_distribution_major_version == '9')
 
     - name: Get default kernel name
       ansible.builtin.command: "grubby --default-kernel"
@@ -252,26 +242,43 @@
     - name: Run dracut handler
       ansible.builtin.meta: flush_handlers
 
-- name: Common Mellanox OFED installation tasks
+- name: Install DOCA OFED
   when:
     - doca is defined and doca | bool
   block:
+
+
+    - name: debug
+      debug: 
+        var: ansible_architecture
+
     - name: Get package name
       ansible.builtin.set_fact:
         doca_package_name: doca-host-{{ doca_ofed_version }}-{{ doca_subversion_rhel }}_{{ mellanox_os_version }}.{{ ansible_architecture }}.rpm
 
-    - name: Install DOCA (yum/dnf)
-      ansible.builtin.yum:
-        enablerepo: "ol{{ansible_distribution_major_version}}_developer_EPEL,ol{{ansible_distribution_major_version}}_codeready_builder"
-        name: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
+    - name: debug
+      debug: 
+        var: doca_package_name
+
+    - name: Download DOCA host RPM
+      ansible.builtin.get_url:
+        url: "{{ doca_ofed_download_link }}DOCA_v{{ doca_ofed_version }}/host/{{ doca_package_name }}"
+        dest: "/tmp/{{doca_package_name}}"
+        mode: "0644"
+
+    - name: Install DOCA host RPM (adds repo/config as packaged)
+      ansible.builtin.dnf:
+        name: "/tmp/{{doca_package_name}}"
         state: present
         disable_gpg_check: true
 
+    - name: Clean DNF metadata
+      ansible.builtin.command: dnf clean all
+      changed_when: false
 
-    - name: Install doca-all (yum/dnf)
-      ansible.builtin.yum:
-        enablerepo: "ol{{ansible_distribution_major_version}}_developer_EPEL,ol{{ansible_distribution_major_version}}_codeready_builder"
-        name: "doca-all"
+    - name: Install doca-all
+      ansible.builtin.dnf:
+        enablerepo: "ol{{ ansible_facts['distribution_major_version'] }}_developer_EPEL,ol{{ ansible_facts['distribution_major_version'] }}_codeready_builder"
+        name: doca-all
         state: present
-        disable_gpg_check: true
-
+        update_cache: true

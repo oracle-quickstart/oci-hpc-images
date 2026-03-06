@@ -94,10 +94,8 @@
     - name: Set with_hcoll_flag
       set_fact:
         with_hcoll_flag: >-
-          {%- if 'nvidia' in options -%}
-            {%- if hcoll_pkg_result.rc == 0 -%}--with-hcoll
-            {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}--with-hcoll={{ hcoll_hpcx_base }}/hcoll
-            {%- endif -%}
+          {%- if hcoll_pkg_result.rc == 0 -%}--with-hcoll
+          {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}--with-hcoll={{ hcoll_hpcx_base }}/hcoll
           {%- endif -%}
           
     - name: Configure and build OpenMPI
@@ -110,7 +108,7 @@
                     {% if 'amd' in options %}--with-rocm=/opt/rocm {% endif %} \
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
-                    --with-pmix  && make -j$(nproc) \
+                    --with-pmix --enable-ipv6 && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"

@@ -15,12 +15,13 @@
         state: directory
         mode: "0755"
 
-    - name: Install libstdc++-12-dev
+    - name: Install AMD RCCL dependencies
       ansible.builtin.apt:
         name:
           - libstdc++-12-dev
           - wget
           - gnupg
+          - libdrm-dev
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu'
 
@@ -63,21 +64,22 @@
         lock_timeout: 300
       when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version != '22'
 
-    - name: Install OL dependencies
+    - name: Install AMD RCLL dependencies
       ansible.builtin.yum:
         name:
           - cmake
           - libstdc++-devel
+          - libdrm-devel
       become: true
       when: ansible_os_family == 'RedHat'
 
-    - name: Set up CXX # noqa no-changed-when
+    - name: Run RCCL CMake # noqa no-changed-when
       ansible.builtin.shell: |
         CXX=/opt/rocm/bin/hipcc cmake -DCMAKE_PREFIX_PATH=/opt/rocm/ ..
       args:
         chdir: "/opt/rccl/build"
 
-    - name: Make rccl
+    - name: Build RCCL
       community.general.make:
         chdir: "/opt/rccl/build"
         jobs: "{{ ansible_processor_vcpus }}"

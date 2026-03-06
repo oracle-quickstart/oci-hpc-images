@@ -62,18 +62,55 @@
         dest: /tmp/
         remote_src: true
 
+    - name: Check if hcoll is installed
+      ansible.builtin.shell: rpm -q hcoll
+      register: hcoll_pkg_result
+      ignore_errors: true
+
+    - name: Check if hcoll.pc exists at custom path
+      ansible.builtin.set_fact:
+        hcoll_pc_path: "{{ install_prefix }}/{{ mellanox_hpcx_package }}/hcoll/lib/pkgconfig/hcoll.pc"
+        hcoll_hpcx_base: "{{ install_prefix }}/{{ mellanox_hpcx_package }}"
+      when: mellanox_hpcx_package is defined
+
+    - name: Check if hcoll.pc exists at custom path
+      ansible.builtin.stat:
+        path: "{{ hcoll_pc_path }}"
+      register: hcoll_pc_file
+      when: mellanox_hpcx_package is defined
+
+    - name: Update hcoll.pc to reflect true HPC-X install location
+      ansible.builtin.replace:
+        path: "{{ hcoll_pc_path }}"
+        regexp: '^hpcx_home=.*$'
+        replace: "hpcx_home={{ hcoll_hpcx_base }}"
+      when: mellanox_hpcx_package is defined and hcoll_pkg_result != 0
+
+    - name: Update hcoll.pc Libs line to include rpath and ocoms
+      ansible.builtin.replace:
+        path: "{{ hcoll_pc_path }}"
+        regexp: '^Libs: -L\$\{libdir\} -lhcoll$'
+        replace: "Libs: -L${libdir} -Wl,-rpath,${libdir} -lhcoll -locoms"
+      when: mellanox_hpcx_package is defined and hcoll_pkg_result != 0
+      
+    - name: Set with_hcoll_flag
+      set_fact:
+        with_hcoll_flag: >-
+            {%- if hcoll_pkg_result.rc == 0 -%}--with-hcoll
+            {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}--with-hcoll={{ hcoll_hpcx_base }}/hcoll
+            {%- endif -%}
+          
     - name: Configure and build OpenMPI
       ansible.builtin.shell: >
         ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \
                     --with-ucx=/opt/openmpi-{{ openmpi_version }} \
-                    --with-hcoll \
                     {% if ucc_version is defined %}--with-ucc=/opt/openmpi-{{ openmpi_version }} {% endif %} \
+                    {{ with_hcoll_flag | default('') | replace('\n','') | trim}} \
                     {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda {% endif %} \
-                    {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
+                    {% if 'amd' in options %}--with-rocm=/opt/rocm {% endif %} \
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
-                    --with-pmix \
-        && make -j$(nproc) \
+                    --with-pmix --enable-ipv6 && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
