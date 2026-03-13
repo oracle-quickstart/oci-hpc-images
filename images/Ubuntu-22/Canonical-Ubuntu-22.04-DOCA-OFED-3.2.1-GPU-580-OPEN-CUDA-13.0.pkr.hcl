@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Canonical-Ubuntu-22.04-2025.10.31-0"
+  default = "Canonical-Ubuntu-22.04-2026.02.28-0"
 }
 
 variable "operating_system" {

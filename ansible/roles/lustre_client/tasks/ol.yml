@@ -114,7 +114,7 @@
 
         cd lustre-client/
         sh autogen.sh
-        ./configure --enable-client --disable-server
+        ./configure --enable-client --disable-server --with-o2ib=no
         
         make rpms
         make dkms-rpms
@@ -124,6 +124,18 @@
         EOF
       args:
         creates: "{{ lustre_chroot_path }}/lustre-client/lustre-client-dkms.tar.gz"
+
+    - name: Ensure the temporary directory exists
+      ansible.builtin.file:
+        path: "/opt/oci-hpc/lustre_pkg"
+        state: directory
+        mode: '0755'
+
+    - name: Move Lustre to keep package on the image
+      ansible.builtin.copy:
+        src: "{{ lustre_chroot_path }}/lustre-client/lustre-client-dkms.tar.gz"
+        dest: "/opt/oci-hpc/lustre_pkg"
+        remote_src: true
 
     - name: Remove the temporary directory if it exists
       ansible.builtin.file:
@@ -149,18 +161,43 @@
         file_type: file
       register: lustre_rpms
 
+    - name: Set DKMS build parameters
+      ansible.builtin.lineinfile:
+        path: /etc/sysconfig/lustre
+        line: "LUSTRE_DKMS_CONFIGURE_EXTRA=\"--with-o2ib=no\""
+        create: true
+        state: present
+        mode: '0644'
+
+    - name: Uninstall Lustre client RPMs
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: absent
+        disable_gpg_check: true
+      with_items:
+      - lustre-client
+      - lustre-client-dkms
+
     - name: Install Lustre client RPMs
       ansible.builtin.dnf:
         name: "{{ lustre_rpms.files | map(attribute='path') | list }}"
         state: present
         disable_gpg_check: true
 
-    - name: Create /etc/modprobe.d/lnet.conf file
-      ansible.builtin.copy:
-        content: ""
-        dest: /etc/modprobe.d/lnet.conf
-        force: false
-        mode: 0755
+    - name: Ensure no extra ip rules are added by Lustre
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/lnet.conf
+        line: "options ksocklnd skip_mr_route_setup=1"
+        create: true
+        state: present
+        mode: '0644'
+
+    - name: Ensure the correct lnet options line is present in /etc/modprobe.d/lnet.conf
+      ansible.builtin.lineinfile:
+        path: /etc/modprobe.d/lnet.conf
+        line: 'options lnet lnet_peer_discovery_disabled=1'
+        state: present
+        create: true
 
     - name: Cleanup any existing mounts (if any)
       ansible.posix.mount: 

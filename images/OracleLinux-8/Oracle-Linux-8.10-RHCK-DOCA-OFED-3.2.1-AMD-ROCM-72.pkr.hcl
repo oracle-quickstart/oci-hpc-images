@@ -14,7 +14,7 @@ packer {
 }
 variable "base_image_name" {
   type    = string
-  default = "Oracle-Linux-8.10-2026.01.29-0"
+  default = "Oracle-Linux-8.10-2026.02.28-0"
 } 
 
 variable "operating_system" {
@@ -48,7 +48,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_321", "hpcx_2251", "openmpi_508", "amd_rocm_72", "ol8_rhck", "oca_157_beta_OL", "lustre_client_215"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_321", "hpcx_2251", "openmpi_508", "amd_rocm_72", "ol8_rhck", "oca_155_OL", "lustre_client_215"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

@@ -27,38 +27,84 @@
         autoremove: true
         lock_timeout: 300
 
-    - name: Install linux-image and headers (specific version)
-      ansible.builtin.apt:
-        name:
-          - "linux-image-{{ ubuntu_22_kernel_version }}"
-          - "linux-headers-{{ ubuntu_22_kernel_version }}"
-          - "linux-tools-{{ ubuntu_22_kernel_version }}"
-        state: present
-        install_recommends: true
-        lock_timeout: 300
-      when: ansible_distribution_major_version == '22'
+    - name: set kernel version
+      ansible.builtin.set_fact:
+        kernel_version: "{{ ubuntu_22_kernel_version if ansible_distribution_major_version == '22' else ubuntu_24_kernel_version }}"
 
-    - name: Install linux-image and headers (specific version)
+    - name: set kernel version
+      ansible.builtin.set_fact:
+        extra_modules_kernel_version: "{{ kernel_version }}"
+      when: extra_modules_check is not defined or not extra_modules_check | bool
+
+    - name: Get candidate version for linux-image-{{ kernel_version }}
+      ansible.builtin.command: apt-cache policy linux-image-{{ kernel_version }}
+      register: nvidia_meta_policy
+      changed_when: false
+      when: extra_modules_check is defined and extra_modules_check | bool
+
+    - name: Extract candidate version string
+      ansible.builtin.set_fact:
+        nvidia_meta_candidate: "{{ (nvidia_meta_policy.stdout | regex_findall('Candidate:\\s*(\\S+)') + ['']) | first }}"
+      when: extra_modules_check is defined and extra_modules_check | bool
+
+    - name: Fail if candidate version is missing
+      ansible.builtin.fail:
+        msg: |
+          Could not determine Candidate version for linux-image-{{ kernel_version }}.
+          Output was:
+          {{ nvidia_meta_policy.stdout }}
+      when:
+        - extra_modules_check is defined and extra_modules_check | bool
+        - nvidia_meta_candidate == '' or nvidia_meta_candidate == '(none)'
+
+    - name: Extract kernel ABI (e.g., 6.8.0-1047) from candidate
+      ansible.builtin.set_fact:
+        nvidia_kernel_abi: "{{ (nvidia_meta_candidate | regex_findall('^([0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+)') + ['']) | first }}"
+      when: extra_modules_check is defined and extra_modules_check | bool
+
+    - name: Fail if ABI could not be parsed
+      ansible.builtin.fail:
+        msg: "Could not parse kernel ABI from candidate '{{ nvidia_meta_candidate }}'"
+      when:
+        - extra_modules_check is defined and extra_modules_check | bool
+        - nvidia_kernel_abi == ''
+
+    - name: Set linux-modules-extra flavor for NVIDIA kernels
+      ansible.builtin.set_fact:
+        extra_modules_kernel_version: "{{ nvidia_kernel_abi }}-{{ 'nvidia-64k' if '64k' in kernel_version else 'nvidia' }}"
+      when: extra_modules_check is defined and extra_modules_check | bool
+
+    - name: Check candidate version for linux-modules-extra-{{ extra_modules_kernel_version }}
+      ansible.builtin.command: apt-cache policy linux-modules-extra-{{ extra_modules_kernel_version }}
+      register: modules_extra_policy
+      changed_when: false
+
+    - name: Determine if linux-modules-extra package exists
+      ansible.builtin.set_fact:
+        modules_extra_candidate: "{{ (modules_extra_policy.stdout | regex_findall('Candidate:\\s*(\\S+)') + ['']) | first }}"
+
+    - name: Determine if linux-modules-extra package exists
+      ansible.builtin.set_fact:
+        install_extra_modules: "{{ modules_extra_candidate not in ['', '(none)'] }}"
+
+    - name: Install linux-image, headers and tools (specific version)
       ansible.builtin.apt:
         name:
-          - "linux-image-{{ ubuntu_24_kernel_version }}"
-          - "linux-headers-{{ ubuntu_24_kernel_version }}"
-          - "linux-tools-{{ ubuntu_24_kernel_version }}"
+          - "linux-image-{{ kernel_version }}"
+          - "linux-headers-{{ kernel_version }}"
+          - "linux-tools-{{ kernel_version }}"
         state: present
         install_recommends: true
         lock_timeout: 300
-      when: ansible_distribution_major_version == '24'
-    # - name: Install linux-image and headers
-    #   ansible.builtin.apt:
-    #     name:
-    #       - "linux-image-{{ kernel_flavor_ubuntu }}"
-    #       - "linux-headers-{{ kernel_flavor_ubuntu }}"
-    #       - "linux-tools-{{ kernel_flavor_ubuntu }}"
-    #     state: present
-    #     install_recommends: true
-    #     lock_timeout: 300
-    #   when: ubuntu_kernel_version is not defined
-    #   register: kernel_packages
+
+    - name: Install linux-modules-extra when available
+      ansible.builtin.apt:
+        name:
+          - "linux-modules-extra-{{ extra_modules_kernel_version }}"
+        state: present
+        install_recommends: true
+        lock_timeout: 300
+      when: install_extra_modules | bool
 
     - name: Pin the kernel packages
       ansible.builtin.copy:
