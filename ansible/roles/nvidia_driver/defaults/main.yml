@@ -5,12 +5,12 @@ nvidia_driver_skip_reboot: true
 nvidia_driver_module_file: /etc/modprobe.d/nvidia.conf
 nvidia_driver_module_params:  |
   options nvidia NVreg_RestrictProfilingToAdminUsers=0
-  options nvidia NVreg_EnableGpuFirmware
+  options nvidia NVreg_EnableGpuFirmware=0
 nvidia_driver_module_params_arm64:  |
   options nvidia NVreg_RestrictProfilingToAdminUsers=0
   options nvidia NVreg_CreateImexChannel0=1
   options nvidia NVreg_CoherentGPUMemoryMode=driver
-  options nvidia NVreg_EnableGpuFirmware
+  options nvidia NVreg_EnableGpuFirmware=0
 
 nvidia_driver_add_repos: true
 nvidia_driver_branch: "470"

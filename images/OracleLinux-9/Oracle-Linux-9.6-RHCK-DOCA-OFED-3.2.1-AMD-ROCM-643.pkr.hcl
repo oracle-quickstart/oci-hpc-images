@@ -48,7 +48,7 @@ variable "build_options" {
 }
 
 variable "build_groups" {
-  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_321", "hpcx_2251", "openmpi_508", "amd_rocm_643", "ol9_rhck", "oca_157_beta_OL", "lustre_client_215"]
+  default = [ "kernel_parameters", "oci_hpc_packages", "mofed_doca_321", "hpcx_2251", "openmpi_508", "amd_rocm_643", "ol9_rhck", "oca_155_OL", "lustre_client_215"]
 }
 
 /* authentication variables, edit and use defaults.pkr.hcl instead */ 

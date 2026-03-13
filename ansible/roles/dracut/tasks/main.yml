@@ -11,6 +11,7 @@
       become: true
       ansible.builtin.reboot:
         reboot_timeout: 900
+        post_reboot_delay: 30
 
     - name: Run dracut -f # noqa no-changed-when
       ansible.builtin.command: "sudo dracut -f"
@@ -20,3 +21,4 @@
       become: true
       ansible.builtin.reboot:
         reboot_timeout: 900
+        post_reboot_delay: 30
