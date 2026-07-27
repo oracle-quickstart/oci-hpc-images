@@ -1,4 +1,4 @@
-hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/E0th3c7g499s5q2NuJDAaeK19H3OlcWeAjnXjJgCAr602ZCUuKbcWTUBv42g5j8K/n/hpc/b/source/o/" # noqa yaml[line-length]
+hpc_artifacts_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/X-M7SnsuoH5UDJwmaKSLaFScOool2YnRc_YlyaorMrM4Ou4LQ1BpLIngYLy6wkKA/n/hpc/b/source/o/" # noqa yaml[line-length]
 hpc_beta_download:  "https://hpc.objectstorage.eu-frankfurt-1.oci.customer-oci.com/p/HLqeFPXgKK7K8jKO4oTfCzuqz6lq21YU1T9rJR00-eo9BLCoGr8LbfV0NRyJocXI/n/hpc/b/hpc-beta/o/"
 
 mlx_ofed_download_link: "https://content.mellanox.com/ofed/"
@@ -26,6 +26,9 @@ gpu_sysctl:
   - { name: net.ipv4.neigh.default.gc_thresh1, value: 32768 }
   - { name: net.ipv4.neigh.default.gc_thresh2, value: 65535 }
   - { name: net.ipv4.neigh.default.gc_thresh3, value: 131072 }
+  - { name: net.ipv6.neigh.default.gc_thresh1, value: 32768 }
+  - { name: net.ipv6.neigh.default.gc_thresh2, value: 65535 }
+  - { name: net.ipv6.neigh.default.gc_thresh3, value: 131072 }
   - { name: kernel.perf_event_paranoid, value: 2 }
 
 oca_update: true

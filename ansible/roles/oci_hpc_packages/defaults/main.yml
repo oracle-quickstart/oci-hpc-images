@@ -1,0 +1,4 @@
+---
+# Network-device-name artifacts are published separately from the legacy HPC
+# package bundle. Keep the release endpoint here for simple PAR updates.
+oci_hpc_network_device_names_download: "https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/v7gxZXKpPoTf9nBpnC6uJmjdDwzrNcBCgO__4NcXr5HiT4onzBG0KzVsVUGFRg14/n/hpc/b/oci-hpc-network-device-names/o/release/" # noqa yaml[line-length]

@@ -1,4 +1,8 @@
-ubuntu_22_kernel_version: nvidia-64k-6.8
-ubuntu_24_kernel_version: nvidia-64k-6.8
-extra_modules_check: True 
-
+ubuntu_kernel:
+  by_ubuntu_release:
+    "22":
+      series: "6.8"
+      flavor: nvidia-64k
+    "24":
+      series: "6.8"
+      flavor: nvidia-64k

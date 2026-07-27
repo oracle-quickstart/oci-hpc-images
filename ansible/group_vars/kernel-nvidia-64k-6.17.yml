@@ -1,0 +1,5 @@
+ubuntu_kernel:
+  by_ubuntu_release:
+    "24":
+      series: "6.17"
+      flavor: nvidia-64k

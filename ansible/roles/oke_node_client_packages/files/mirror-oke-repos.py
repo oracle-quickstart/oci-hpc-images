@@ -42,7 +42,10 @@ _DEFAULT_PAR_BASE = (
 PAR_BASE = os.environ.get("OKE_PAR_BASE", _DEFAULT_PAR_BASE)
 
 # Kubernetes versions to mirror
-K8S_VERSIONS = ["1.31", "1.32", "1.33", "1.34"]
+K8S_VERSIONS = ["1.33", "1.34", "1.35", "1.36"]
+
+# Architectures to mirror
+ARCHITECTURES = ["amd64", "arm64"]
 
 # Ubuntu version mappings
 UBUNTU_VERSIONS = {
@@ -76,7 +79,7 @@ def download_file(url: str, dest: Path, retries: int = 3) -> DownloadResult:
             return DownloadResult(url, str(dest), True)
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                return DownloadResult(url, str(dest), False, f"404 Not Found")
+                return DownloadResult(url, str(dest), False, "404 Not Found")
             if attempt == retries - 1:
                 return DownloadResult(url, str(dest), False, str(e))
         except Exception as e:
@@ -120,12 +123,12 @@ def parse_packages_file(packages_path: Path) -> list[str]:
     return deb_files
 
 
-def decompress_packages(local_dir: Path) -> Optional[Path]:
-    """Decompress Packages.gz or Packages.bz2 if present."""
-    packages_dir = local_dir / "dists/stable/main/binary-amd64"
+def decompress_packages(local_dir: Path, arch: str) -> Optional[Path]:
+    """Decompress Packages.gz or Packages.bz2 if present for the given architecture."""
+    packages_dir = local_dir / "dists/stable/main" / f"binary-{arch}"
     packages_plain = packages_dir / "Packages"
     packages_gz = packages_dir / "Packages.gz"
-    
+
     if packages_gz.exists():
         try:
             with gzip.open(packages_gz, "rb") as f:
@@ -133,10 +136,10 @@ def decompress_packages(local_dir: Path) -> Optional[Path]:
             return packages_plain
         except Exception:
             pass
-    
+
     if packages_plain.exists():
         return packages_plain
-    
+
     return None
 
 
@@ -200,43 +203,48 @@ def mirror_repository(
     meta_success = sum(1 for r in meta_downloads if r.success)
     print(f"  Downloaded {meta_success}/{len(metadata_files)} metadata files")
     
-    # Step 3: Decompress and parse Packages file
-    print("\n[3/4] Parsing package list...")
-    packages_path = decompress_packages(local_dir)
-    
-    if not packages_path:
-        print("  ✗ No Packages file found")
-        return repo_key, "INCOMPLETE", 0, meta_success, meta_success
-    
-    deb_files = parse_packages_file(packages_path)
-    print(f"  Found {len(deb_files)} packages to download")
-    
+    # Step 3: Decompress and parse Packages files for each architecture
+    print("\n[3/4] Parsing package lists...")
+    deb_files: list[str] = []
+    seen: set[str] = set()
+    for arch in ARCHITECTURES:
+        packages_path = decompress_packages(local_dir, arch)
+        if not packages_path:
+            print(f"  ✗ No Packages file found for {arch}")
+            continue
+        arch_debs = parse_packages_file(packages_path)
+        print(f"  Found {len(arch_debs)} packages for {arch}")
+        for deb in arch_debs:
+            if deb not in seen:
+                seen.add(deb)
+                deb_files.append(deb)
+
     if not deb_files:
-        print("  ✗ No packages found in Packages file")
+        print("  ✗ No packages found in any Packages file")
         return repo_key, "INCOMPLETE", 0, meta_success, meta_success
-    
+
     # Step 4: Download .deb packages in parallel
-    print("\n[4/4] Downloading packages...")
+    print(f"\n[4/4] Downloading {len(deb_files)} unique packages...")
     pkg_downloads = []
-    
+
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {}
         for deb_path in deb_files:
             url = f"{repo_url}/{deb_path}"
             dest = local_dir / deb_path
             futures[executor.submit(download_file, url, dest)] = deb_path
-        
+
         completed = 0
         for future in as_completed(futures):
             result = future.result()
             pkg_downloads.append(result)
             completed += 1
-            
+
             # Progress indicator
             filename = Path(futures[future]).name
             status = "✓" if result.success else "✗"
             print(f"  [{completed}/{len(deb_files)}] {status} {filename}")
-    
+
     pkg_success = sum(1 for r in pkg_downloads if r.success)
     print(f"\n  Downloaded {pkg_success}/{len(deb_files)} packages")
     
@@ -312,4 +320,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

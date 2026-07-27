@@ -1,0 +1,8 @@
+packages_extra:
+  ubuntu2204:
+    - name: kmod
+      version: 29-1ubuntu1.1
+  ubuntu2404:
+    - name: kmod
+      version: 31+20240202-2ubuntu7.2
+packages_extra_reboot: true

@@ -11,3 +11,38 @@
   ansible.builtin.include_tasks: ubuntu.yml
   when:
     - ansible_distribution == 'Ubuntu'
+
+- name: Setup Lustre LDLM tuning
+  block:
+  - name: Install Lustre LDLM tuning script
+    ansible.builtin.copy:
+      src: apply_lustre_ldlm_tuning
+      dest: /usr/local/sbin/apply-lustre-ldlm-tuning
+      owner: root
+      group: root
+      mode: '0755'
+
+  - name: Install Lustre LDLM tuning service
+    ansible.builtin.copy:
+      src: lustre-ldlm-tuning.service
+      dest: /etc/systemd/system/lustre-ldlm-tuning.service
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Install Lustre LDLM tuning path unit
+    ansible.builtin.copy:
+      src: lustre-ldlm-tuning.path
+      dest: /etc/systemd/system/lustre-ldlm-tuning.path
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Enable Lustre LDLM tuning units
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      enabled: true
+      daemon_reload: true
+    loop:
+      - lustre-ldlm-tuning.service
+      - lustre-ldlm-tuning.path

@@ -8,6 +8,7 @@
     #   benchmarks - Install benchmarks
     #   intel-oneapi - Install Intel OneAPI MPI/MKL
     #   openmpi - Install OpenMPI against system gcc
+    #   occl_net_ib - Install the versioned OCCL Net IB shared library
     #   use_plugins - Do not install OCI HPC packages that are replaced by OCA HPC Plugins
     #   oke - Mirror OKE node client packages for offline installation
 
@@ -97,6 +98,9 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: nvidia_nccl
       when: "'nvidia' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: occl_net_ib
+      when: "'occl_net_ib' in options"
   #    - ansible.builtin.import_role:
   #        name: nvidia-fabricmanager
   #      when: "'nvidia' in options"
@@ -141,6 +145,15 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: hpc_benchmarks
       when: "'benchmarks' in options"
+
+- name: Image manifest
+  hosts: all
+  any_errors_fatal: true
+  become: true
+
+  tasks:
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: image_manifest
 
 - name: Reboot and cleanup
   hosts: all

@@ -1,4 +1,41 @@
 ---
+- name: Validate packages_extra shape
+  ansible.builtin.assert:
+    that:
+      - packages_extra is mapping and (packages_extra.keys() | difference(['ubuntu2204', 'ubuntu2404', 'ol8', 'ol9']) | length == 0)
+    fail_msg: >-
+      packages_extra must be a mapping keyed by ubuntu2204, ubuntu2404, ol8, and ol9.
+
+- name: Select packages_extra entries for current OS
+  ansible.builtin.set_fact:
+    packages_extra_selected: >-
+      {{
+        (
+          packages_extra.get(packages_extra_os_key, [])
+        ) | default([], true)
+      }}
+  vars:
+    packages_extra_os_key: >-
+      {{
+        'ubuntu2204' if ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
+        else 'ubuntu2404' if ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '24'
+        else 'ol8' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8'
+        else 'ol9' if ansible_os_family == 'RedHat' and ansible_distribution_major_version == '9'
+        else ''
+      }}
+
+- name: Validate selected packages_extra entries
+  ansible.builtin.assert:
+    that:
+      - item is string or item is mapping
+      - item is string or item.name is defined
+      - item is string or item.version is not defined or item.version is string
+    fail_msg: >-
+      packages_extra entries must be a package name string or a mapping with
+      name and optional string version keys.
+  loop: "{{ packages_extra_selected }}"
+  when: packages_extra_selected | length > 0
+
 - name: Packages for RHEL based systems
   when:
     - ansible_os_family == 'RedHat'
@@ -67,13 +104,23 @@
         - "options is defined"
         - "'upgrade' in options"
 
+    - name: Install extra packages
+      ansible.builtin.yum:
+        name: >-
+          {{
+            item if item is string
+            else item.name ~ ((item.version is defined) | ternary('-' ~ item.version, ''))
+          }}
+        state: present
+      loop: "{{ packages_extra_selected }}"
+      when: packages_extra_selected | length > 0
+
     - name: Reboot to install kernel updates
       ansible.builtin.reboot:
         reboot_timeout: 900
         post_reboot_delay: 30
       when:
-        - "options is defined"
-        - "'upgrade' in options or 'rhck' in options"
+        - (options is defined and ('upgrade' in options or 'rhck' in options)) or packages_extra_reboot | bool
 
 - name: Packages for Ubuntu
   when:
@@ -83,6 +130,14 @@
     - name: Wait for automatic system updates to complete
       ansible.builtin.shell: while pgrep apt; do sleep 10; done;
       changed_when: false
+
+    - name: Configure APT defaults
+      ansible.builtin.copy:
+        src: 99oci-hpc-apt
+        dest: /etc/apt/apt.conf.d/99oci-hpc-apt
+        owner: root
+        group: root
+        mode: '0644'
 
     - name: Disable unattended-upgrades
       ansible.builtin.systemd:
@@ -133,3 +188,22 @@
         name: python3-distro
         state: present
         lock_timeout: 300
+
+    - name: Install extra packages
+      ansible.builtin.apt:
+        name: >-
+          {{
+            item if item is string
+            else item.name ~ ((item.version is defined) | ternary('=' ~ item.version, ''))
+          }}
+        state: present
+        lock_timeout: 300
+      loop: "{{ packages_extra_selected }}"
+      when: packages_extra_selected | length > 0
+
+    - name: Reboot to install kernel updates
+      ansible.builtin.reboot:
+        reboot_timeout: 900
+        post_reboot_delay: 30
+      when:
+        - (options is defined and 'upgrade' in options) or packages_extra_reboot | bool

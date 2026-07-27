@@ -1,20 +1,78 @@
-- name: Kernel set version for Ubuntu 22 or ansible_distribution_major_version == '24'
+---
+- name: Configure the requested Ubuntu kernel series
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version == '22' or ansible_distribution_major_version == '24'
+    - ansible_distribution_major_version in ['22', '24']
   block:
+    - name: Select Ubuntu kernel series for this release
+      ansible.builtin.set_fact:
+        ubuntu_kernel_policy: >-
+          {{ ubuntu_kernel.by_ubuntu_release[ansible_distribution_major_version] | default({}) }}
 
-    # Prefer the generic kernel flavor over oracle *before* we install the
-    # generic kernel flavor so update-grub pick it during installation.
-    # - name: Prefer the generic kernel flavor over oracle
-    #   ansible.builtin.lineinfile:
-    #     path: /etc/default/grub.d/10_linux_flavour.cfg
-    #     create: true
-    #     regexp: '^GRUB_FLAVOUR_ORDER='
-    #     line: 'GRUB_FLAVOUR_ORDER="generic"'
-    #     mode: "0644"
+    - name: Validate Ubuntu kernel policy for this release
+      ansible.builtin.assert:
+        that:
+          - ubuntu_kernel_policy is mapping
+          - ubuntu_kernel_policy.series is defined
+          - ubuntu_kernel_policy.flavor is defined
+        fail_msg: >-
+          ubuntu_kernel.by_ubuntu_release must define a policy for Ubuntu
+          {{ ansible_distribution_major_version }}.
 
-    - name: Remove all kernel packages
+    - name: Set Ubuntu kernel policy facts
+      ansible.builtin.set_fact:
+        ubuntu_kernel_series: "{{ ubuntu_kernel_policy.series }}"
+        ubuntu_kernel_flavor: "{{ ubuntu_kernel_policy.flavor }}"
+
+    - name: Validate Ubuntu kernel policy
+      ansible.builtin.assert:
+        that:
+          - ubuntu_kernel_series is match('^[0-9]+\\.[0-9]+$')
+          - ubuntu_kernel_flavor in ['generic', 'oracle', 'nvidia', 'nvidia-64k']
+        fail_msg: >-
+          ubuntu_kernel must define a major.minor series and one of generic,
+          oracle, nvidia, or nvidia-64k as its flavor.
+
+    - name: Resolve the latest ABI in the requested kernel series
+      ansible.builtin.shell: |
+        set -o pipefail
+        apt-cache pkgnames "linux-image-{{ ubuntu_kernel_series }}." |
+          grep -E '^linux-image-{{ ubuntu_kernel_series | regex_escape }}\.[0-9]+-[0-9]+-{{ ubuntu_kernel_flavor | regex_escape }}$' |
+          sort -V |
+          tail -n 1
+      args:
+        executable: /bin/bash
+      register: ubuntu_kernel_image_package
+      changed_when: false
+
+    - name: Fail when the requested Ubuntu kernel series is unavailable
+      ansible.builtin.assert:
+        that:
+          - ubuntu_kernel_image_package.stdout != ''
+        fail_msg: >-
+          No {{ ubuntu_kernel_flavor }} kernel package is available for Ubuntu
+          kernel series {{ ubuntu_kernel_series }}.
+
+    - name: Derive the selected Ubuntu kernel ABI
+      ansible.builtin.set_fact:
+        ubuntu_kernel_abi: >-
+          {{
+            ubuntu_kernel_image_package.stdout
+            | regex_replace('^linux-image-(.*)-' ~ ubuntu_kernel_flavor ~ '$', '\1')
+          }}
+
+    - name: Check whether matching extra modules are installable
+      ansible.builtin.command:
+        argv:
+          - apt-get
+          - --simulate
+          - install
+          - "linux-modules-extra-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
+      register: ubuntu_kernel_extra_modules
+      changed_when: false
+      failed_when: false
+
+    - name: Remove existing kernel packages
       ansible.builtin.apt:
         name:
           - linux-headers*
@@ -27,86 +85,26 @@
         autoremove: true
         lock_timeout: 300
 
-    - name: set kernel version
-      ansible.builtin.set_fact:
-        kernel_version: "{{ ubuntu_22_kernel_version if ansible_distribution_major_version == '22' else ubuntu_24_kernel_version }}"
-
-    - name: set kernel version
-      ansible.builtin.set_fact:
-        extra_modules_kernel_version: "{{ kernel_version }}"
-      when: extra_modules_check is not defined or not extra_modules_check | bool
-
-    - name: Get candidate version for linux-image-{{ kernel_version }}
-      ansible.builtin.command: apt-cache policy linux-image-{{ kernel_version }}
-      register: nvidia_meta_policy
-      changed_when: false
-      when: extra_modules_check is defined and extra_modules_check | bool
-
-    - name: Extract candidate version string
-      ansible.builtin.set_fact:
-        nvidia_meta_candidate: "{{ (nvidia_meta_policy.stdout | regex_findall('Candidate:\\s*(\\S+)') + ['']) | first }}"
-      when: extra_modules_check is defined and extra_modules_check | bool
-
-    - name: Fail if candidate version is missing
-      ansible.builtin.fail:
-        msg: |
-          Could not determine Candidate version for linux-image-{{ kernel_version }}.
-          Output was:
-          {{ nvidia_meta_policy.stdout }}
-      when:
-        - extra_modules_check is defined and extra_modules_check | bool
-        - nvidia_meta_candidate == '' or nvidia_meta_candidate == '(none)'
-
-    - name: Extract kernel ABI (e.g., 6.8.0-1047) from candidate
-      ansible.builtin.set_fact:
-        nvidia_kernel_abi: "{{ (nvidia_meta_candidate | regex_findall('^([0-9]+\\.[0-9]+\\.[0-9]+-[0-9]+)') + ['']) | first }}"
-      when: extra_modules_check is defined and extra_modules_check | bool
-
-    - name: Fail if ABI could not be parsed
-      ansible.builtin.fail:
-        msg: "Could not parse kernel ABI from candidate '{{ nvidia_meta_candidate }}'"
-      when:
-        - extra_modules_check is defined and extra_modules_check | bool
-        - nvidia_kernel_abi == ''
-
-    - name: Set linux-modules-extra flavor for NVIDIA kernels
-      ansible.builtin.set_fact:
-        extra_modules_kernel_version: "{{ nvidia_kernel_abi }}-{{ 'nvidia-64k' if '64k' in kernel_version else 'nvidia' }}"
-      when: extra_modules_check is defined and extra_modules_check | bool
-
-    - name: Check candidate version for linux-modules-extra-{{ extra_modules_kernel_version }}
-      ansible.builtin.command: apt-cache policy linux-modules-extra-{{ extra_modules_kernel_version }}
-      register: modules_extra_policy
-      changed_when: false
-
-    - name: Determine if linux-modules-extra package exists
-      ansible.builtin.set_fact:
-        modules_extra_candidate: "{{ (modules_extra_policy.stdout | regex_findall('Candidate:\\s*(\\S+)') + ['']) | first }}"
-
-    - name: Determine if linux-modules-extra package exists
-      ansible.builtin.set_fact:
-        install_extra_modules: "{{ modules_extra_candidate not in ['', '(none)'] }}"
-
-    - name: Install linux-image, headers and tools (specific version)
+    - name: Install the latest ABI in the requested kernel series
       ansible.builtin.apt:
         name:
-          - "linux-image-{{ kernel_version }}"
-          - "linux-headers-{{ kernel_version }}"
-          - "linux-tools-{{ kernel_version }}"
+          - "linux-image-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
+          - "linux-headers-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
+          - "linux-tools-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
+          - "linux-modules-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
         state: present
         install_recommends: true
         lock_timeout: 300
 
-    - name: Install linux-modules-extra when available
+    - name: Install matching extra modules when available
       ansible.builtin.apt:
-        name:
-          - "linux-modules-extra-{{ extra_modules_kernel_version }}"
+        name: "linux-modules-extra-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"
         state: present
         install_recommends: true
         lock_timeout: 300
-      when: install_extra_modules | bool
+      when: ubuntu_kernel_extra_modules.rc == 0
 
-    - name: Pin the kernel packages
+    - name: Pin kernel packages after selecting the ABI
       ansible.builtin.copy:
         content: |
           Package: linux-*
@@ -117,5 +115,40 @@
       notify:
         - Reboot
 
-    - name: Flush handlers
+    - name: Reboot into the selected Ubuntu kernel
       meta: flush_handlers
+
+    - name: Refresh kernel facts after reboot
+      ansible.builtin.setup:
+        filter: ansible_kernel
+
+    - name: Collect bootable Ubuntu kernel releases
+      ansible.builtin.find:
+        paths: /boot
+        patterns: 'vmlinuz-*'
+        file_type: file
+        recurse: false
+      register: ubuntu_kernel_bootable_releases
+
+    - name: Check Ubuntu kernel package pin
+      ansible.builtin.stat:
+        path: /etc/apt/preferences.d/00_pin_kernel
+      register: ubuntu_kernel_pin
+
+    - name: Validate the selected Ubuntu kernel policy
+      ansible.builtin.assert:
+        that:
+          - ansible_kernel is match('^' ~ (ubuntu_kernel_series | regex_escape) ~ '\\.')
+          - ansible_kernel is match('^' ~ (ubuntu_kernel_abi | regex_escape) ~ '-')
+          - >-
+            ubuntu_kernel_bootable_releases.files
+            | map(attribute='path')
+            | map('basename')
+            | reject('match', '^vmlinuz-' ~ (ubuntu_kernel_series | regex_escape) ~ '\\.')
+            | list
+            | length == 0
+          - ubuntu_kernel_pin.stat.exists
+        fail_msg: >-
+          Expected Ubuntu kernel {{ ubuntu_kernel_abi }} from series
+          {{ ubuntu_kernel_series }}, with no other bootable kernel series and
+          /etc/apt/preferences.d/00_pin_kernel present; booted {{ ansible_kernel }}.

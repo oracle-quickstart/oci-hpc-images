@@ -131,3 +131,10 @@
   when: install_driver_rhel7.changed or install_driver_rhel8.changed
   register: install_driver
   changed_when: install_driver_rhel7.changed or install_driver_rhel8.changed
+
+  # add peermem to modprobe.d
+- name: Add peermem to modprobe.d
+  ansible.builtin.lineinfile:
+    path: /etc/modules-load.d/modules.conf
+    line: "nvidia_peermem"
+    create: true
