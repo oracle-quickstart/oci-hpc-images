@@ -1,3 +1,0 @@
-ubuntu_22_kernel_version: nvidia-hwe-22.04-edge
-ubuntu_24_kernel_version: nvidia-hwe-24.04-edge
-extra_modules_check: True 

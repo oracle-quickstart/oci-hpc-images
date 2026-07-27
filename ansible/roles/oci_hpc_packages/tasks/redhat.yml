@@ -65,13 +65,6 @@
         disable_gpg_check: true
       when: "'use_plugins' not in options"
 
-    - name: Install oci-hpc-network-device-names (HPC)
-      ansible.builtin.yum:
-        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}-compute.{{ oci_hpc_package_os }}.noarch.rpm"
-        state: present
-        disable_gpg_check: true
-      when: (oci_hpc_network_device_names_version | split('.') | first | int) == 1
-
     - name: Set RPM architecture mapping
       ansible.builtin.set_fact:
         rpm_architecture: >-
@@ -81,10 +74,9 @@
 
     - name: Install oci-hpc-network-device-names (HPC)
       ansible.builtin.yum:
-        name: "{{ hpc_artifacts_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{rpm_architecture}}.rpm"
+        name: "{{ oci_hpc_network_device_names_download }}oci-hpc-network-device-names-{{ oci_hpc_network_device_names_version }}.{{ rpm_architecture }}.rpm"
         state: present
         disable_gpg_check: true
-      when: (oci_hpc_network_device_names_version | split('.') | first | int) > 1
 
     - name: Install oci-hpc-dapl-configure (HPC)
       ansible.builtin.yum:

@@ -12,6 +12,10 @@
         # If the main mirror is slow, you can try another mirror from this list: https://launchpad.net/ubuntu/+archivemirrors. For arm64, you need to use a ports mirror.
         lustre_primary_ubuntu_mirror: "{{ 'http://mirrors.kernel.org/ubuntu/' if ansible_architecture == 'x86_64' else 'http://mirror.fmt-2.serverforge.org/ubuntu-ports/' }}"
 
+    - name: Set lustre-client patch facts
+      ansible.builtin.set_fact:
+        lustre_client_patch_files: "{{ lustre_client_patches_by_version[lustre_client_version] | default(lustre_client_patches | default([])) }}"
+
     - name: Ensure lustre-client prerequisites are installed on the host
       ansible.builtin.apt:
         state: present
@@ -139,6 +143,64 @@
         dest: "{{ lustre_chroot_path }}/lustre-client"
         version: "{{ lustre_client_version }}"
 
+    - name: Copy lustre-client patches into the chroot environment
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ lustre_chroot_path }}/{{ item }}"
+        mode: '0644'
+      loop: "{{ lustre_client_patch_files }}"
+
+    - name: Apply lustre-client patches
+      ansible.builtin.command:
+        cmd: "git apply {{ lustre_chroot_path }}/{{ item }}"
+        chdir: "{{ lustre_chroot_path }}/lustre-client"
+      loop: "{{ lustre_client_patch_files }}"
+
+    - name: Use Debian alternatives command in Lustre DKMS post-build hook
+      ansible.builtin.replace:
+        path: "{{ lustre_chroot_path }}/lustre-client/lustre-dkms_post-build.sh"
+        regexp: '^alternatives --install '
+        replace: 'update-alternatives --install '
+
+    - name: Apply Ubuntu kernel 6.14 fixes for Lustre 2.17
+      ansible.builtin.include_tasks: ubuntu_lustre_217_kernel_614_fixes.yml
+      when:
+        - ansible_kernel is regex('^6\\.14\\.')
+        - lustre_client_version is regex('^2\\.17\\.')
+
+    - name: Disable o2ib in Lustre DKMS config
+      ansible.builtin.replace:
+        path: "{{ lustre_chroot_path }}/lustre-client/debian/dkms.conf.in"
+        regexp: >-
+          --with-o2ib=[^\s'"]+
+        replace: '--with-o2ib=no'
+      register: lustre_client_ubuntu_dkms_o2ib_disable
+      when:
+        - lustre_client_version is version('2.17.0', '>=')
+
+    - name: Ensure o2ib was disabled in Lustre DKMS config
+      ansible.builtin.assert:
+        that:
+          - lustre_client_ubuntu_dkms_o2ib_disable is changed
+        fail_msg: >-
+          Expected to disable o2ib in
+          {{ lustre_chroot_path }}/lustre-client/debian/dkms.conf.in,
+          but no matching DKMS option was replaced.
+      when:
+        - lustre_client_version is version('2.17.0', '>=')
+
+    - name: Remove o2ib module from Lustre DKMS module list
+      ansible.builtin.replace:
+        path: "{{ lustre_chroot_path }}/lustre-client/debian/dkms.conf.in"
+        regexp: |-
+          if \[ "x\$\{ext_mofed\}" = "xyes" \] ; then
+              module ko2iblnd lnet/klnds/o2iblnd net/lustre
+          elif \[ "x\$\{int_mofed\}" = "xyes" \] ; then
+              module ko2iblnd lnet/klnds/in-kernel-o2iblnd net/lustre
+          fi
+        replace: |-
+          : # o2ib disabled for this image build
+
     - name: Build the lustre-client dkms-debs in the chroot environment
       ansible.builtin.shell: |
         chroot "{{ lustre_chroot_path }}" bash <<'EOF'
@@ -146,7 +208,7 @@
 
         cd lustre-client/
         sh autogen.sh
-        ./configure --enable-client --disable-server
+        ./configure --enable-client --disable-server --with-o2ib=no
 
         # Use sed to remove the reference to the kernel packages
         find debian -type f -name 'control*' -exec sed -Ei '
@@ -192,6 +254,24 @@
         dest: "{{ lustre_temporary_directory }}"
         remote_src: true
 
+    - name: Configure Lustre 2.15 DKMS to disable o2ib
+      block:
+        - name: Ensure Lustre DKMS configuration directory exists
+          ansible.builtin.file:
+            path: /etc/sysconfig
+            state: directory
+            mode: '0755'
+
+        - name: Set Lustre 2.15 DKMS build parameters
+          ansible.builtin.lineinfile:
+            path: /etc/sysconfig/lustre
+            line: 'LUSTRE_DKMS_CONFIGURE_EXTRA="--with-o2ib=no"'
+            create: true
+            state: present
+            mode: '0644'
+      when:
+        - lustre_client_version is version('2.16.0', '<')
+
     - name: Install lustre-client on the host
       ansible.builtin.shell: |
         deb_files=()
@@ -204,7 +284,7 @@
 
         for pkg in "${deb_files[@]}";
         do
-            if ! (apt-get update --yes && dpkg --ignore-depends=linux-image-oracle,linux-headers-oracle,linux-headers-amd64,inux-image-oracle-amd64,linux-image-oracle-arm64,linux-headers-oracle,linux-headers-amd64 -i "${pkg}" && rm -f "${pkg}") then
+            if ! (apt-get update --yes && dpkg --ignore-depends=linux-image-oracle,linux-headers-oracle,linux-headers-amd64,linux-image-oracle-amd64,linux-image-oracle-arm64,linux-headers-oracle,linux-headers-amd64 -i "${pkg}" && rm -f "${pkg}"); then
                 apt --fix-broken install -y
             fi
         done
@@ -215,7 +295,6 @@
             sleep 1
         done
 
-        command -v lnetctl >/dev/null 2>&1 && exit 0 || exit 1
       args:
         executable: /bin/bash
 
@@ -233,6 +312,15 @@
         line: 'options lnet lnet_peer_discovery_disabled=1'
         state: present
         create: true
+
+    - name: Validate Lustre client kernel module can be loaded
+      ansible.builtin.shell: |
+        set -euo pipefail
+
+        modprobe lnet || modprobe lustre
+      args:
+        executable: /bin/bash
+      changed_when: false
 
     - name: Cleanup any existing mounts (if any)
       ansible.posix.mount: 

@@ -1,0 +1,8 @@
+---
+occl_net_ib_version: "1.0.0"
+occl_net_ib_shared_library_filename: liboccl-net-ib.so
+occl_net_ib_artifact_base_urls:
+  x86_64: >-
+    https://objectstorage.us-phoenix-1.oraclecloud.com/p/XFq0wpWqZ5s_ufNRyveci8BIp2BOM3ygmCbyS7TnNVHACnH1g0Fe4rl1Bdu6X-jJ/n/ax8lpwectatc/b/occl/o/net-plugin/amd64/
+  aarch64: >-
+    https://objectstorage.us-phoenix-1.oraclecloud.com/p/xv55uUP1v0fSMMQnVIV22u8LmWnfsAAxjZHDuzH1oyiM22CGLCv6K_w2TMQmxadn/n/ax8lpwectatc/b/occl/o/net-plugin/aarch64/

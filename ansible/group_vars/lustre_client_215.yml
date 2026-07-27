@@ -1,11 +1,17 @@
-lustre_client_default_repo: "https://github.com/robo-cap/lustre-release"
+lustre_client_default_repo: "https://github.com/lustre/lustre-release"
 lustre_client_default_tag:
   "RedHat":
-    "kernel_4": "2.15.8-oci"
-    "kernel_5": "2.15.8-oci"
+    "kernel_4": "2.15.8"
+    "kernel_5": "2.15.8"
   "Debian":
-    "kernel_5": "2.15.8-oci"
-    "kernel_6": "2.15.90-oci"
+    "kernel_5": "2.15.8"
+    "kernel_6": "2.15.91"
+
+lustre_client_patches_by_version:
+  "2.15.8":
+    - lustre-2.15.8-netns-dkms-o2ib.patch
+  "2.15.91":
+    - lustre-2.15.91-netns.patch
 
 # lustre_client_repo: "https://github.com/lustre/lustre-release" # override default lustre client repo
 # lustre_client_tag: "2.15.91" # override default lustre client tag

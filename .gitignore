@@ -5,3 +5,5 @@ ansible/debug.yml
 *.manifest.json
 .DS_Store
 .ansible/*
+__pycache__/
+*.pyc

@@ -70,12 +70,37 @@ If your build node is Ubuntu 24.04 or later. Make sure to add set the line as
 OpenSSH9 = true
 ```
 
+Images built by this repository include `/etc/manifest.yml`. The manifest records the requested
+build options and groups, image/base image metadata, source provenance, and verified component
+versions collected from the target image near the end of the Ansible run. Version checks are
+best-effort: if an expected component check fails, Ansible prints a warning and omits that
+component from `verified_components` instead of writing a broken record.
+
+Manual builds default source provenance fields to `N/A`. To make a manual build traceable, add
+these optional variables to `defaults.pkr.hcl`:
+
+```hcl
+manifest_source_repo = "https://example.com/oci-hpc-images.git"
+manifest_source_revision = "abcdef1234567890"
+manifest_source_dirty = false
+manifest_manual = true
+manifest_image_hcl_path = "images/Ubuntu-24/example.pkr.hcl"
+manifest_image_hcl_sha256 = "sha256-of-the-image-template"
+```
+
 Give the target instance at least 16 ocpus and 64GB of memory since several packages will be
 compiled there and will require ample HW resources. In the case of AMD GPU compatible images, you
 may want to take a significatnly arger VM (64 ocpus, 256GB memory).
 
 In the image directory, choose the OS folder you would like to build for and edit the file with the image name 
 and the specific modules to install. 
+
+To include the OCCL Net IB plugin, add `occl_net_ib` to the template's
+`build_options`. The version in
+`ansible/roles/occl_net_ib/defaults/main.yml` selects the architecture-specific
+Object Storage artifact. The role installs it to
+`/opt/occl-net/lib/liboccl-net-ib.so` and validates runtime dependencies with
+`ldd` during the build.
 
 The base image can be derived from the image file version, but only for the most recent versions of
 the base image. For any other version you will need to edit the image OCID for your region. OCIDs can
@@ -128,6 +153,9 @@ This can be useful for troubleshooting and playbook development.
     
     [lustre_client_217]
     10.10.10.10
+
+    [packages_kmod_upgrade]
+    10.10.10.10
     ```
 
 ### 3.  Run the ansible playbook
@@ -136,6 +164,21 @@ This can be useful for troubleshooting and playbook development.
     
     ```
     ansible-playbook -i inventory hpc.yml
+    ```
+
+    To install additional vendor-repository packages through the `packages` role, add a matching
+    group var file such as:
+
+    ```yaml
+    # ansible/group_vars/packages_kmod_upgrade.yml
+    packages_extra:
+      ubuntu2204:
+        - name: kmod
+          version: 29-1ubuntu1.1
+      ubuntu2404:
+        - name: kmod
+          version: 31+20240202-2ubuntu7.2
+    packages_extra_reboot: true
     ```
 
 ### Updating component versions
@@ -161,29 +204,6 @@ in the working directory to log in:
 ```sh
 ssh -i oci_oracle.pem ubuntu@[IP Address]
 ```
-## Utilities
-
-### Listing available image configurations
-
-`utils/list_images.py` is a small helper utility that will list all images defined in a given
-directory along with their build options and build groups.
-
-You can run this utility with uv like this (from the repository's base dir):
-
-
-```sh
-uv run utils/list_images.py
-```
-
-### Creating patches on build-hosts
-
-`utils/diff_to_zip.sh` can be helpful during image testing to summarize changes. It will compare an
-exported git archive (e.g. produced via `git archive --format=zip --output=../oci-hpc-images.zip HEAD`) with the unpacked "dirty" working directory of that zip file and show all the changes as a diff. This can be useful to bring changes that were found to be necessary back from the testing environment to the git repo.
-
-```sh
-utils/diff_to_zip.sh ../oci-hpc-images.zip 
-```
-
 ## Contributing
 
 This project welcomes contributions from the community. Before submitting a pull request, please [review our contribution guide](./CONTRIBUTING.md)

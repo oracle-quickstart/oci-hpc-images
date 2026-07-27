@@ -67,10 +67,15 @@
         dest: /tmp/
         remote_src: true
 
-    - name: Check if hcoll is installed
-      ansible.builtin.shell: dpkg -l hcoll
+    - name: Check if hcoll Debian package is actually installed
+      ansible.builtin.command: dpkg-query -W -f='${db:Status-Abbrev}' hcoll
       register: hcoll_pkg_result
-      ignore_errors: true
+      failed_when: false
+      changed_when: false
+
+    - name: Set hcoll package installed fact
+      ansible.builtin.set_fact:
+        hcoll_pkg_installed: "{{ hcoll_pkg_result.stdout is match('^ii') }}"
 
     - name: Check if hcoll.pc exists at custom path
       ansible.builtin.set_fact:
@@ -89,15 +94,21 @@
         path: "{{ hcoll_pc_path }}"
         regexp: '^hpcx_home=.*$'
         replace: "hpcx_home={{ hcoll_hpcx_base }}"
-      when: mellanox_hpcx_package is defined and hcoll_pkg_result != 0
+      when:
+        - mellanox_hpcx_package is defined
+        - not hcoll_pkg_installed
+        - hcoll_pc_file is defined
+        - hcoll_pc_file.stat.exists
 
     - name: Set with_hcoll_flag
       set_fact:
         with_hcoll_flag: >-
-          {%- if hcoll_pkg_result.rc == 0 -%}--with-hcoll
-          {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}--with-hcoll={{ hcoll_hpcx_base }}/hcoll
+          {%- if hcoll_pkg_installed -%}
+          --with-hcoll
+          {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}
+          --with-hcoll={{ hcoll_hpcx_base }}/hcoll
           {%- endif -%}
-          
+
     - name: Configure and build OpenMPI
       ansible.builtin.shell: >
         ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \

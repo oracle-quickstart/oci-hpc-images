@@ -1,0 +1,285 @@
+---
+- name: Collect kernel release
+  ansible.builtin.command: uname -r
+  register: image_manifest_uname
+  changed_when: false
+  failed_when: false
+
+- name: Initialize image manifest component facts
+  ansible.builtin.set_fact:
+    image_manifest_verified_components: {}
+    image_manifest_build_options: >-
+      {{ image_manifest_build_options | default(options | default([]), true) }}
+    image_manifest_build_groups: >-
+      {{ image_manifest_build_groups | default(group_names | difference(['all', 'ungrouped']) | sort, true) }}
+
+- name: Collect bootable Ubuntu kernel releases
+  ansible.builtin.find:
+    paths: /boot
+    patterns: 'vmlinuz-*'
+    file_type: file
+    recurse: false
+  register: image_manifest_bootable_kernels
+  when: ubuntu_kernel_abi is defined
+
+- name: Check Ubuntu kernel package pin
+  ansible.builtin.stat:
+    path: /etc/apt/preferences.d/00_pin_kernel
+  register: image_manifest_kernel_pin
+  when: ubuntu_kernel_abi is defined
+
+- name: Final Ubuntu kernel policy validation
+  ansible.builtin.assert:
+    that:
+      - image_manifest_uname.stdout is match('^' ~ (ubuntu_kernel_series | regex_escape) ~ '\\.')
+      - image_manifest_uname.stdout is match('^' ~ (ubuntu_kernel_abi | regex_escape) ~ '-')
+      - >-
+        image_manifest_bootable_kernels.files
+        | map(attribute='path')
+        | map('basename')
+        | reject('match', '^vmlinuz-' ~ (ubuntu_kernel_series | regex_escape) ~ '\\.')
+        | list
+        | length == 0
+      - image_manifest_kernel_pin.stat.exists
+    fail_msg: >-
+      Final Ubuntu kernel validation failed: expected ABI {{ ubuntu_kernel_abi }}
+      from series {{ ubuntu_kernel_series }}, with no other bootable kernel
+      series and /etc/apt/preferences.d/00_pin_kernel present.
+  when: ubuntu_kernel_abi is defined
+
+- name: Check installed HPC components
+  ansible.builtin.shell: "set -o pipefail; {{ item.command }}"
+  args:
+    executable: /bin/bash
+  register: image_manifest_component_checks
+  changed_when: false
+  failed_when: false
+  when: item.expected | bool
+  loop:
+    - name: oracle_cloud_agent
+      command: >-
+        if command -v rpm >/dev/null 2>&1; then
+          rpm -q oracle-cloud-agent;
+        elif command -v snap >/dev/null 2>&1; then
+          snap list oracle-cloud-agent | awk 'NR == 2 { print $2 }';
+        else
+          exit 1;
+        fi
+      expected: true
+    - name: mellanox_ofed
+      command: ofed_info -s | sed 's/:$//'
+      expected: "{{ vars.get('doca_ofed_version') is not none or vars.get('mellanox_ofed_version') is not none }}"
+    - name: nvidia_kernel_module
+      command: modinfo -F version nvidia
+      expected: "{{ 'nvidia' in image_manifest_build_options }}"
+    - name: cuda_toolkit
+      command: >-
+        if [ -r /usr/local/cuda/version.json ]; then
+          python3 -c 'import json, sys; data = json.load(open("/usr/local/cuda/version.json")); version = data.get("cuda", {}).get("version") or data.get("version") or ""; print(version); sys.exit(0 if version else 1)';
+        else
+          exit 1;
+        fi
+      expected: "{{ 'nvidia' in image_manifest_build_options }}"
+    - name: nvidia_dcgm
+      command: dcgmi --version | awk '/version/ { print $NF; exit }'
+      expected: "{{ 'nvidia' in image_manifest_build_options and 'monitoring' in image_manifest_build_options }}"
+    - name: nvidia_nccl
+      command: >-
+        if command -v rpm >/dev/null 2>&1; then
+          rpm -qa 'libnccl*' 'nccl*' | sort;
+        elif command -v dpkg-query >/dev/null 2>&1; then
+          dpkg-query -W -f='${Package} ${Version}\n' 'libnccl*' 'nccl*';
+        else
+          exit 1;
+        fi
+      expected: "{{ 'nvidia' in image_manifest_build_options }}"
+    - name: amd_rocm
+      command: >-
+        if [ -r /opt/rocm/.info/version ]; then
+          cat /opt/rocm/.info/version;
+        elif command -v hipcc >/dev/null 2>&1; then
+          hipcc --version;
+        else
+          exit 1;
+        fi
+      expected: "{{ 'amd' in image_manifest_build_options }}"
+    - name: amd_driver
+      command: >-
+        if command -v rpm >/dev/null 2>&1; then
+          rpm -qa 'amdgpu*' 'rocm*' | sort | head -50;
+        elif command -v dpkg-query >/dev/null 2>&1; then
+          dpkg-query -W -f='${Package} ${Version}\n' 'amdgpu*' 'rocm*';
+        else
+          exit 1;
+        fi
+      expected: "{{ 'amd' in image_manifest_build_options }}"
+    - name: openmpi
+      command: >-
+        shopt -s nullglob;
+        for mpivars in /opt/openmpi-*/bin/mpivars.sh /usr/mpi/gcc/openmpi-*/bin/mpivars.sh; do
+          source "$mpivars";
+          if ompi_info --version |
+            awk '/Open MPI/ { print $NF; found=1; exit } END { exit(found ? 0 : 1) }'; then
+            exit 0;
+          fi;
+        done;
+        for ompi in /opt/openmpi-*/bin/ompi_info /usr/mpi/gcc/openmpi-*/bin/ompi_info /usr/bin/ompi_info; do
+          if "$ompi" --version |
+            awk '/Open MPI/ { print $NF; found=1; exit } END { exit(found ? 0 : 1) }'; then
+            exit 0;
+          fi;
+        done;
+        exit 1
+      expected: "{{ 'openmpi' in image_manifest_build_options }}"
+    - name: ucx
+      command: >-
+        shopt -s nullglob;
+        for mpivars in /opt/openmpi-*/bin/mpivars.sh /usr/mpi/gcc/openmpi-*/bin/mpivars.sh; do
+          source "$mpivars";
+          if command -v ucx_info >/dev/null 2>&1 &&
+            ucx_info -v |
+              awk -F: '/Library version/ { gsub(/^[ \t]+/, "", $2); print $2; found=1; exit } END { exit(found ? 0 : 1) }'; then
+            exit 0;
+          fi;
+        done;
+        if command -v ucx_info >/dev/null 2>&1; then
+          ucx_info -v |
+            awk -F: '/Library version/ { gsub(/^[ \t]+/, "", $2); print $2; found=1; exit } END { exit(found ? 0 : 1) }';
+        else
+          exit 1;
+        fi
+      expected: "{{ 'openmpi' in image_manifest_build_options }}"
+    - name: ucc
+      command: >-
+        shopt -s nullglob;
+        for mpivars in /opt/openmpi-*/bin/mpivars.sh /usr/mpi/gcc/openmpi-*/bin/mpivars.sh; do
+          source "$mpivars";
+          if command -v ucc_info >/dev/null 2>&1 &&
+            ucc_info -v |
+              awk -F'[= ]+' '/UCC version/ { print $4; found=1; exit } END { exit(found ? 0 : 1) }'; then
+            exit 0;
+          fi;
+        done;
+        if command -v ucc_info >/dev/null 2>&1; then
+          ucc_info -v |
+            awk -F'[= ]+' '/UCC version/ { print $4; found=1; exit } END { exit(found ? 0 : 1) }';
+        else
+          exit 1;
+        fi
+      expected: "{{ 'openmpi' in image_manifest_build_options and vars.get('ucc_version') is not none }}"
+    - name: mellanox_hpcx
+      command: >-
+        shopt -s nullglob;
+        for hpcx in /opt/hpcx* /opt/mellanox/hpcx*; do
+          echo "$hpcx";
+          exit 0;
+        done;
+        exit 1
+      version: "{{ vars.get('mellanox_hpcx_version') | default('') }}"
+      expected: "{{ vars.get('mellanox_hpcx_version') is not none }}"
+    - name: lustre
+      command: lctl --version
+      expected: "{{ 'lustre_client' in image_manifest_build_options }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Warn about expected manifest component checks that failed
+  ansible.builtin.debug:
+    msg: >-
+      WARNING: image manifest omitted {{ item.item.name }} because the version
+      check failed or returned no version with rc={{ item.rc }}:
+      {{ item.stderr | default(item.stdout) | trim }}
+  when:
+    - not item.skipped | default(false)
+    - item.rc != 0 or item.stdout | default('') | trim | length == 0
+    - item.item.expected | bool
+  loop: "{{ image_manifest_component_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Add successful component checks to image manifest
+  ansible.builtin.set_fact:
+    image_manifest_verified_components: >-
+      {{
+        image_manifest_verified_components | combine({
+          item.item.name: (
+            (item.item.name == 'mellanox_hpcx')
+            | ternary({
+              'version': item.item.version,
+              'path': item.stdout | trim
+            }, {
+              'version': item.stdout | trim
+            })
+          )
+        })
+      }}
+  when:
+    - not item.skipped | default(false)
+    - item.rc == 0
+    - item.stdout | default('') | trim | length > 0
+    - item.item.expected | bool
+  loop: "{{ image_manifest_component_checks.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Build expected version facts for image manifest
+  ansible.builtin.set_fact:
+    image_manifest_expected_versions: >-
+      {{
+        {}
+        | combine((vars.get('oci_cloud_agent_version') is not none) | ternary({'oracle_cloud_agent': vars.get('oci_cloud_agent_version')}, {}))
+        | combine((vars.get('oci_cloud_agent_version_ubuntu') is not none) | ternary({'oracle_cloud_agent': vars.get('oci_cloud_agent_version_ubuntu')}, {}))
+        | combine((vars.get('doca_ofed_version') is not none) | ternary({'doca_ofed': vars.get('doca_ofed_version')}, {}))
+        | combine((vars.get('doca_subversion_ubuntu') is not none and ansible_os_family == 'Debian') | ternary({'doca_subversion': vars.get('doca_subversion_ubuntu')}, {}))
+        | combine((vars.get('doca_subversion_rhel') is not none and ansible_os_family == 'RedHat') | ternary({'doca_subversion': vars.get('doca_subversion_rhel')}, {}))
+        | combine((vars.get('mellanox_ofed_version') is not none) | ternary({'mellanox_ofed': vars.get('mellanox_ofed_version')}, {}))
+        | combine((vars.get('mellanox_hpcx_version') is not none) | ternary({'hpcx': vars.get('mellanox_hpcx_version')}, {}))
+        | combine((vars.get('openmpi_version') is not none and 'openmpi' in image_manifest_build_options) | ternary({'openmpi': vars.get('openmpi_version')}, {}))
+        | combine((vars.get('ucx_version') is not none and 'openmpi' in image_manifest_build_options) | ternary({'ucx': vars.get('ucx_version')}, {}))
+        | combine((vars.get('ucc_version') is not none and 'openmpi' in image_manifest_build_options) | ternary({'ucc': vars.get('ucc_version')}, {}))
+        | combine((vars.get('lustre_client_version') is not none and 'lustre_client' in image_manifest_build_options) | ternary({'lustre_client': vars.get('lustre_client_version')}, {}))
+        | combine((vars.get('nvidia_driver_version') is not none and 'nvidia' in image_manifest_build_options) | ternary({'nvidia_driver': vars.get('nvidia_driver_version')}, {}))
+        | combine((vars.get('cuda_version') is not none and 'nvidia' in image_manifest_build_options) | ternary({'cuda': vars.get('cuda_version')}, {}))
+        | combine((vars.get('nccl_version') is not none and 'nvidia' in image_manifest_build_options) | ternary({'nccl': vars.get('nccl_version')}, {}))
+        | combine((vars.get('amd_rocm_version') is not none and 'amd' in image_manifest_build_options) | ternary({'rocm': vars.get('amd_rocm_version')}, {}))
+        | combine((vars.get('amd_dkms_version') is not none and 'amd' in image_manifest_build_options) | ternary({'amdgpu': vars.get('amd_dkms_version')}, {}))
+      }}
+
+- name: Build image manifest data
+  ansible.builtin.set_fact:
+    image_manifest:
+      schema_version: 2
+      generated_at: "{{ ansible_date_time.iso8601 }}"
+      source:
+        repo: "{{ image_manifest_source_repo | default('N/A', true) }}"
+        revision: "{{ image_manifest_source_revision | default('N/A', true) }}"
+        dirty: "{{ image_manifest_source_dirty | default('N/A') }}"
+        manual: "{{ image_manifest_manual | default('N/A') }}"
+        image_hcl_path: "{{ image_manifest_hcl_path | default('N/A', true) }}"
+        image_hcl_sha256: "{{ image_manifest_hcl_sha256 | default('N/A', true) }}"
+      image:
+        name: "{{ image_manifest_image_name | default('N/A', true) }}"
+        base_image_name: "{{ image_manifest_base_image_name | default('N/A', true) }}"
+        operating_system: "{{ ansible_distribution }}"
+        operating_system_version: "{{ ansible_distribution_version }}"
+        architecture: "{{ ansible_architecture }}"
+        kernel: "{{ image_manifest_uname.stdout | default(ansible_kernel, true) }}"
+        kernel_policy:
+          requested_series: "{{ ubuntu_kernel_series | default('N/A', true) }}"
+          flavor: "{{ ubuntu_kernel_flavor | default('N/A', true) }}"
+          resolved_abi: "{{ ubuntu_kernel_abi | default('N/A', true) }}"
+        features: "{{ image_manifest_features | default('N/A', true) }}"
+        release: "{{ image_manifest_release | default('N/A') }}"
+      configuration:
+        build_options: "{{ image_manifest_build_options }}"
+        build_groups: "{{ image_manifest_build_groups }}"
+        expected_versions: "{{ image_manifest_expected_versions }}"
+      verified_components: "{{ image_manifest_verified_components }}"
+
+- name: Write image manifest
+  ansible.builtin.copy:
+    dest: /etc/manifest.yaml
+    owner: root
+    group: root
+    mode: "0644"
+    content: "{{ image_manifest | to_nice_yaml(indent=2, sort_keys=false) }}"

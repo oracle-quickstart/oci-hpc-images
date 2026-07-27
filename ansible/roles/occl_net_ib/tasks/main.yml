@@ -1,0 +1,114 @@
+---
+- name: Evaluate OCCL Net IB plugin prerequisites
+  ansible.builtin.set_fact:
+    occl_net_ib_installable: >-
+      {{ ansible_architecture in ['x86_64', 'aarch64'] }}
+
+- name: Skip OCCL Net IB plugin when target architecture is unsupported
+  ansible.builtin.debug:
+    msg: >-
+      Skipping occl_net_ib because it is only supported on x86_64 and aarch64
+      images.
+  when: ansible_architecture not in ["x86_64", "aarch64"]
+
+- name: Install OCCL Net IB plugin
+  when: occl_net_ib_installable | bool
+  block:
+    - name: Verify OCCL Net IB plugin version is configured
+      ansible.builtin.assert:
+        that:
+          - (occl_net_ib_version | default('') | string | trim | length) > 0
+        fail_msg: >-
+          Set occl_net_ib_version in the role defaults before enabling the
+          occl_net_ib build option.
+
+    - name: Configure OCCL Net IB plugin artifact
+      ansible.builtin.set_fact:
+        occl_net_ib_shared_library_url: >-
+          {{
+            occl_net_ib_artifact_base_urls[ansible_architecture]
+            ~ (occl_net_ib_version | string | urlencode)
+            ~ '/'
+            ~ (occl_net_ib_shared_library_filename | urlencode)
+          }}
+        occl_net_ib_plugin_aliases:
+          - libnccl-net-occl-ib.so
+          - librccl-net-occl-ib.so
+        occl_net_ib_stale_plugin_aliases:
+          - libnccl-net-ib.so
+          - librccl-net-ib.so
+
+    - name: Ensure OCCL Net plugin directory exists
+      ansible.builtin.file:
+        path: /opt/occl-net/lib
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Download OCCL Net IB shared library
+      ansible.builtin.get_url:
+        url: "{{ occl_net_ib_shared_library_url }}"
+        dest: "/opt/occl-net/lib/{{ occl_net_ib_shared_library_filename }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Remove legacy incorrect OCCL Net plugin alias
+      ansible.builtin.file:
+        path: "/opt/occl-net/lib/{{ occl_net_ib_shared_library_filename }}.so"
+        state: absent
+
+    - name: Remove stale OCCL Net plugin artifact names
+      ansible.builtin.file:
+        path: "/opt/occl-net/lib/{{ item }}"
+        state: absent
+      loop: "{{ occl_net_ib_stale_plugin_aliases }}"
+
+    - name: Create runtime-compatible OCCL Net plugin name aliases
+      ansible.builtin.file:
+        src: "/opt/occl-net/lib/{{ occl_net_ib_shared_library_filename }}"
+        dest: "/opt/occl-net/lib/{{ item }}"
+        state: link
+        force: true
+      loop: "{{ occl_net_ib_plugin_aliases }}"
+
+    - name: Register OCCL Net plugin library path
+      ansible.builtin.copy:
+        dest: /etc/ld.so.conf.d/occl-net.conf
+        content: "/opt/occl-net/lib\n"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Refresh linker cache
+      ansible.builtin.command: ldconfig
+
+    - name: Inspect OCCL Net IB shared library dependencies
+      ansible.builtin.command: "ldd /opt/occl-net/lib/{{ occl_net_ib_shared_library_filename }}"
+      register: occl_net_ib_ldd
+      changed_when: false
+      failed_when: occl_net_ib_ldd.rc != 0
+
+    - name: Inspect runtime-compatible OCCL Net plugin aliases
+      ansible.builtin.command:
+        argv:
+          - ldd
+          - "/opt/occl-net/lib/{{ item }}"
+      register: occl_net_ib_alias_ldd
+      changed_when: false
+      failed_when: occl_net_ib_alias_ldd.rc != 0
+      loop: "{{ occl_net_ib_plugin_aliases }}"
+
+    - name: Install OCCL Net plugin helper environment file
+      ansible.builtin.copy:
+        dest: /etc/profile.d/occl-net-ib.sh
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          # OCCL Net IB plugin helper variables.
+          export OCCL_NET_IB_PLUGIN=/opt/occl-net/lib/{{ occl_net_ib_shared_library_filename }}
+          export OCCL_NET_IB_PLUGIN_NAME=occl-ib
+          # To opt in at runtime:
+          #   export NCCL_NET_PLUGIN="$OCCL_NET_IB_PLUGIN_NAME"

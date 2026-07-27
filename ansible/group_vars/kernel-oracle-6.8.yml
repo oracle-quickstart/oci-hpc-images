@@ -1,0 +1,8 @@
+ubuntu_kernel:
+  by_ubuntu_release:
+    "22":
+      series: "6.8"
+      flavor: oracle
+    "24":
+      series: "6.8"
+      flavor: oracle

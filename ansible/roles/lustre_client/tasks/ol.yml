@@ -20,6 +20,10 @@
         lustre_client_version: "{{ lustre_client_tag if lustre_client_tag is defined else lustre_client_default_tag[ansible_os_family]['kernel_' ~ ansible_kernel.split('.')[0]] }}"
         lustre_temporary_directory: "/tmp/lustre-client"
 
+    - name: Set lustre-client patch facts
+      ansible.builtin.set_fact:
+        lustre_client_patch_files: "{{ lustre_client_patches_by_version[lustre_client_version] | default(lustre_client_patches | default([])) }}"
+
     - name: Ensure lustre-client prerequisites are installed on the host
       ansible.builtin.yum:
         name:
@@ -106,6 +110,19 @@
         repo: "{{ lustre_client_repository }}"
         dest: "{{ lustre_chroot_path }}/lustre-client"
         version: "{{ lustre_client_version }}"
+
+    - name: Copy lustre-client patches into the chroot environment
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: "{{ lustre_chroot_path }}/{{ item }}"
+        mode: '0644'
+      loop: "{{ lustre_client_patch_files }}"
+
+    - name: Apply lustre-client patches
+      ansible.builtin.command:
+        cmd: "git apply {{ lustre_chroot_path }}/{{ item }}"
+        chdir: "{{ lustre_chroot_path }}/lustre-client"
+      loop: "{{ lustre_client_patch_files }}"
 
     - name: Build the lustre-client rpms in the chroot environment
       ansible.builtin.shell: |
@@ -198,6 +215,16 @@
         line: 'options lnet lnet_peer_discovery_disabled=1'
         state: present
         create: true
+
+    - name: Validate Lustre client kernel module can be loaded
+      ansible.builtin.shell: |
+        set -euo pipefail
+
+        modprobe lnet
+        modprobe lustre
+      args:
+        executable: /bin/bash
+      changed_when: false
 
     - name: Cleanup any existing mounts (if any)
       ansible.posix.mount: 

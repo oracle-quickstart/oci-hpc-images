@@ -1,114 +1,153 @@
 ---
 - name: Install rccl tests
   block:
-    - name: Clone rccl github repository
-      ansible.builtin.git:
-        repo: https://github.com/ROCm/rccl.git
-        dest: /opt/rccl
-        clone: true
-        update: true
-        version: "{{amd_rccl_commit}}"
+    - name: Select the RCCL installation used by tests
+      ansible.builtin.set_fact:
+        amd_rccl_home: >-
+          {{ '/opt/rccl' if amd_rocm_version is version('7.2.4', '<') else '/opt/rocm' }}
+        amd_rccl_tests_source_dir: /opt/rccl-tests
 
-    - name: Creates /opt/rccl/build directory
-      ansible.builtin.file:
-        path: /opt/rccl/build
-        state: directory
-        mode: "0755"
+    - name: Build RCCL from source for ROCm versions earlier than 7.2.4
+      block:
+        - name: Clone rccl github repository
+          ansible.builtin.git:
+            repo: https://github.com/ROCm/rccl.git
+            dest: /opt/rccl
+            clone: true
+            update: true
+            version: "{{amd_rccl_commit}}"
 
-    - name: Install AMD RCCL dependencies
-      ansible.builtin.apt:
-        name:
-          - libstdc++-12-dev
-          - wget
-          - gnupg
-          - libdrm-dev
-        lock_timeout: 300
-      when: ansible_distribution == 'Ubuntu'
+        - name: Creates /opt/rccl/build directory
+          ansible.builtin.file:
+            path: /opt/rccl/build
+            state: directory
+            mode: "0755"
 
-    - name: Download and store Kitware APT repository key
-      ansible.builtin.get_url:
-        url: https://apt.kitware.com/keys/kitware-archive-latest.asc
-        dest: /etc/apt/trusted.gpg.d/kitware.asc
-        mode: '0644'
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
+        - name: Install AMD RCCL dependencies
+          ansible.builtin.apt:
+            name:
+              - libstdc++-12-dev
+              - wget
+              - gnupg
+              - libdrm-dev
+            lock_timeout: 300
+          when: ansible_distribution == 'Ubuntu'
 
-    - name: Add Kitware APT repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://apt.kitware.com/ubuntu/ {{ ansible_distribution_release }} main"
-        state: present
-        filename: kitware
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
+        - name: Download and store Kitware APT repository key
+          ansible.builtin.get_url:
+            url: https://apt.kitware.com/keys/kitware-archive-latest.asc
+            dest: /etc/apt/trusted.gpg.d/kitware.asc
+            mode: '0644'
+          when:
+            - ansible_distribution == 'Ubuntu'
+            - ansible_distribution_major_version == '22'
 
-    - name: Install cmake
-      ansible.builtin.apt:
-        name:
-          - cmake=3.31.8-0kitware1ubuntu22.04.1
-          - cmake-data=3.31.8-0kitware1ubuntu22.04.1
-        state: latest
-        lock_timeout: 300
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
+        - name: Add Kitware APT repository
+          ansible.builtin.apt_repository:
+            repo: "deb https://apt.kitware.com/ubuntu/ {{ ansible_distribution_release }} main"
+            state: present
+            filename: kitware
+          when:
+            - ansible_distribution == 'Ubuntu'
+            - ansible_distribution_major_version == '22'
 
-    - name: Remove Kitware APT repository
-      ansible.builtin.apt_repository:
-        repo: "deb https://apt.kitware.com/ubuntu/ {{ ansible_distribution_release }} main"
-        state: absent
-        filename: kitware
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version == '22'
-      
-    - name: Install cmake
-      ansible.builtin.apt:
-        name:
-          - cmake
-          - cmake-data
-        state: latest
-        lock_timeout: 300
-      when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version != '22'
+        - name: Install Kitware CMake
+          ansible.builtin.apt:
+            name:
+              - cmake=3.31.8-0kitware1ubuntu22.04.1
+              - cmake-data=3.31.8-0kitware1ubuntu22.04.1
+            state: latest
+            lock_timeout: 300
+          when:
+            - ansible_distribution == 'Ubuntu'
+            - ansible_distribution_major_version == '22'
 
-    - name: Install AMD RCLL dependencies
-      ansible.builtin.yum:
-        name:
-          - cmake
-          - libstdc++-devel
-          - libdrm-devel
-      become: true
-      when: ansible_os_family == 'RedHat'
+        - name: Remove Kitware APT repository
+          ansible.builtin.apt_repository:
+            repo: "deb https://apt.kitware.com/ubuntu/ {{ ansible_distribution_release }} main"
+            state: absent
+            filename: kitware
+          when:
+            - ansible_distribution == 'Ubuntu'
+            - ansible_distribution_major_version == '22'
 
-    - name: Run RCCL CMake # noqa no-changed-when
-      ansible.builtin.shell: |
-        CXX=/opt/rocm/bin/hipcc cmake -DCMAKE_PREFIX_PATH=/opt/rocm/ ..
-      args:
-        chdir: "/opt/rccl/build"
+        - name: Install CMake
+          ansible.builtin.apt:
+            name:
+              - cmake
+              - cmake-data
+            state: latest
+            lock_timeout: 300
+          when:
+            - ansible_distribution == 'Ubuntu'
+            - ansible_distribution_major_version != '22'
 
-    - name: Build RCCL
-      community.general.make:
-        chdir: "/opt/rccl/build"
-        jobs: "{{ ansible_processor_vcpus }}"
+        - name: Install AMD RCCL dependencies
+          ansible.builtin.yum:
+            name:
+              - cmake
+              - libstdc++-devel
+              - libdrm-devel
+          when: ansible_os_family == 'RedHat'
 
-    - name: Find matching directories
-      ansible.builtin.find:
-        paths: /usr/mpi/gcc/
-        patterns: "openmpi*"
-        file_type: directory
-      register: openmpi_dirs
+        - name: Run RCCL CMake # noqa no-changed-when
+          ansible.builtin.shell: |
+            CXX=/opt/rocm/bin/hipcc cmake -DCMAKE_PREFIX_PATH=/opt/rocm/ ..
+          args:
+            chdir: "/opt/rccl/build"
 
-    - name: Clone rccl tests
-      ansible.builtin.git:
-        repo: https://github.com/ROCm/rccl-tests.git
-        dest: /opt/rccl-tests
-        clone: true
-        update: true
-        version: 6405c76e6826663bbb67bd40aeee8c70aa5d3094
+        - name: Build RCCL
+          community.general.make:
+            chdir: "/opt/rccl/build"
+            jobs: "{{ ansible_processor_vcpus }}"
+      when: amd_rocm_version is version('7.2.4', '<')
 
-    - name: Create symlink from openmpi /lib64 to /lib as rccl test build expects /lib
-      command: ln -s {{openmpi_dirs.files[0].path}}/lib64 {{openmpi_dirs.files[0].path}}/lib
-      when: ansible_os_family == 'RedHat'
+    - name: Verify packaged RCCL for ROCm 7.2.4 and newer
+      block:
+        - name: Check packaged RCCL library
+          ansible.builtin.stat:
+            path: /opt/rocm/lib/librccl.so
+          register: amd_packaged_rccl_library
 
-    - name: Make RCCL test
-      community.general.make:
-        chdir: "/opt/rccl-tests"
-        params:
-          MPI=1
-          MPI_HOME={{openmpi_dirs.files[0].path}}
-          NCCL_HOME=/opt/rccl
-          HIP_HOME=/opt/rocm
-        jobs: "{{ ansible_processor_vcpus }}"
+        - name: Ensure packaged RCCL library is available
+          ansible.builtin.assert:
+            that: amd_packaged_rccl_library.stat.exists
+            fail_msg: >-
+              ROCm {{ amd_rocm_version }} must provide /opt/rocm/lib/librccl.so
+              before rccl-tests is built against the packaged RCCL installation.
+      when: amd_rocm_version is version('7.2.4', '>=')
+
+    - name: Build RCCL tests
+      block:
+        - name: Find matching directories
+          ansible.builtin.find:
+            paths: /usr/mpi/gcc/
+            patterns: "openmpi*"
+            file_type: directory
+          register: openmpi_dirs
+
+        - name: Clone RCCL tests
+          ansible.builtin.git:
+            repo: https://github.com/ROCm/rccl-tests.git
+            dest: /opt/rccl-tests
+            clone: true
+            update: true
+            version: 6405c76e6826663bbb67bd40aeee8c70aa5d3094
+
+        - name: Create symlink from openmpi /lib64 to /lib as rccl test build expects /lib
+          ansible.builtin.command:
+            cmd: >-
+              ln -s {{ openmpi_dirs.files[0].path }}/lib64
+              {{ openmpi_dirs.files[0].path }}/lib
+            creates: "{{ openmpi_dirs.files[0].path }}/lib"
+          when: ansible_os_family == 'RedHat'
+
+        - name: Make RCCL test
+          community.general.make:
+            chdir: "{{ amd_rccl_tests_source_dir }}"
+            params:
+              MPI=1
+              MPI_HOME={{ openmpi_dirs.files[0].path }}
+              NCCL_HOME={{ amd_rccl_home }}
+              HIP_HOME=/opt/rocm
+            jobs: "{{ ansible_processor_vcpus }}"

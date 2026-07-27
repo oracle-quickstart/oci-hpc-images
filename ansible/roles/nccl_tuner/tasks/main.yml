@@ -16,7 +16,7 @@
     - name: Copy libnccl-ocituner for OL
       become: true
       ansible.builtin.get_url:
-        url: https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/m1Gdcbiguqst6n_aVwRZIFpRZxUG-wGMvqWS5QJeJbIvNZnqTTA3N1_DDRuYpvJx/n/hpc/b/source/o/tuner/libnccl-ocituner.so.{{ item }}_OL # noqa yaml[line-length]
+        url: "{{ hpc_artifacts_download }}tuner/libnccl-ocituner.so.{{ item }}_OL"
         dest: "{{ benchmark_base_path }}/oci-tuner/libnccl-ocituner-A100.so.{{ item }}"
         owner: "{{ user }}"
         group: "{{ user }}"
@@ -29,7 +29,7 @@
     - name: Copy libnccl-ocituner for Ubuntu # noqa yaml[line-length]
       become: true
       ansible.builtin.get_url:
-        url: https://objectstorage.eu-frankfurt-1.oraclecloud.com/p/m1Gdcbiguqst6n_aVwRZIFpRZxUG-wGMvqWS5QJeJbIvNZnqTTA3N1_DDRuYpvJx/n/hpc/b/source/o/tuner/libnccl-ocituner.so.{{ item }}_ubuntu_22.04 # noqa yaml[line-length]
+        url: "{{ hpc_artifacts_download }}tuner/libnccl-ocituner.so.{{ item }}_ubuntu_22.04"
         dest: "{{ benchmark_base_path }}/oci-tuner/libnccl-ocituner-A100.so.{{ item }}"
         owner: "{{ user }}"
         group: "{{ user }}"

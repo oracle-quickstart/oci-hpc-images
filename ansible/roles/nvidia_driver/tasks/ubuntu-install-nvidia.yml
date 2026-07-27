@@ -57,3 +57,4 @@
   ansible.builtin.lineinfile:
     path: /etc/modules-load.d/modules.conf
     line: "nvidia_peermem"
+    create: true
