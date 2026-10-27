@@ -248,13 +248,19 @@
   block:
 
 
+    - name: Set DOCA host RPM OS version
+      ansible.builtin.set_fact:
+        doca_host_os_version: "rhel{{ ansible_distribution_major_version }}"
+      when: doca_ofed_version is version('3.3.0', '>=')
+
     - name: debug
       debug: 
         var: ansible_architecture
 
     - name: Get package name
       ansible.builtin.set_fact:
-        doca_package_name: doca-host-{{ doca_ofed_version }}-{{ doca_subversion_rhel }}_{{ mellanox_os_version }}.{{ ansible_architecture }}.rpm
+        doca_package_name: >-
+          doca-host-{{ doca_ofed_version }}-{{ doca_subversion_rhel }}_{{ doca_host_os_version | default(mellanox_os_version) }}.{{ ansible_architecture }}.rpm
 
     - name: debug
       debug: 
@@ -282,3 +288,9 @@
         name: doca-all
         state: present
         update_cache: true
+
+    - name: Ensure Meson is installed for DOCA workloads
+      ansible.builtin.dnf:
+        enablerepo: "ol{{ ansible_facts['distribution_major_version'] }}_developer_EPEL,ol{{ ansible_facts['distribution_major_version'] }}_codeready_builder"
+        name: meson
+        state: present

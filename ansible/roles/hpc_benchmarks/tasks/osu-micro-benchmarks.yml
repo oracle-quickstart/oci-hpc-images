@@ -1,0 +1,53 @@
+---
+- name: Install OSU micro-benchmarks
+  block:
+    - name: Create OSU build directory
+      ansible.builtin.file:
+        path: /tmp/osu-micro-benchmarks
+        state: directory
+        mode: "0755"
+
+    - name: Extract OSU micro-benchmarks
+      ansible.builtin.unarchive:
+        src: "{{ osu_download_url }}"
+        dest: /tmp/osu-micro-benchmarks
+        remote_src: true
+        extra_opts:
+          - --strip-components=1
+
+    - name: Configure OSU micro-benchmarks # noqa no-changed-when
+      ansible.builtin.command:
+        cmd: >-
+          ./configure --prefix={{ benchmark_base_path }}/osu-micro-benchmarks
+          CC=/opt/openmpi-{{ openmpi_version }}/bin/mpicc
+          CXX=/opt/openmpi-{{ openmpi_version }}/bin/mpicxx
+          LDFLAGS=-Wl,--enable-new-dtags,-rpath,/opt/openmpi-{{ openmpi_version }}/lib{{ (':' ~ cuda_home ~ '/lib64') if 'nvidia' in options else '' }}
+          {{ '--with-cuda=' ~ cuda_home if 'nvidia' in options else '--disable-cuda' }}
+        chdir: /tmp/osu-micro-benchmarks
+
+    - name: Build OSU micro-benchmarks
+      community.general.make:
+        chdir: /tmp/osu-micro-benchmarks
+        jobs: "{{ ansible_processor_vcpus }}"
+
+    - name: Install OSU micro-benchmarks
+      community.general.make:
+        chdir: /tmp/osu-micro-benchmarks
+        target: install
+
+    - name: Install OSU documentation and license
+      ansible.builtin.copy:
+        src: "/tmp/osu-micro-benchmarks/{{ item }}"
+        dest: "{{ benchmark_base_path }}/osu-micro-benchmarks/{{ item }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - README
+        - COPYRIGHT
+
+    - name: Remove OSU build directory
+      ansible.builtin.file:
+        path: /tmp/osu-micro-benchmarks
+        state: absent

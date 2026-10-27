@@ -19,7 +19,20 @@
     priority: "50"
     baseurl: "{{ amd_rocm_repo_baseurl }}/el{{ ansible_facts['distribution_major_version'] }}/{{ amd_rocm_version }}/main"
     gpgcheck: true
-    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
+    gpgkey: "{{ amd_rocm_repo_gpgkey_url }}"
+  when: amd_rocm_version is version('10.0', '<')
+
+- name: Add AMD ROCm 10 stable repository
+  ansible.builtin.yum_repository:
+    name: amdrocm-stable
+    description: ROCm {{ amd_rocm_version }} stable repository
+    file: amdrocm-stable
+    enabled: true
+    priority: "50"
+    baseurl: "{{ amd_rocm_el_stable_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ amd_rocm_el_stable_repo_gpgkey_url }}"
+  when: amd_rocm_version is version('10.0', '>=')
 
 - name: Add AMD Graphics {{ amd_rocm_version }} repository
   ansible.builtin.yum_repository:
@@ -28,22 +41,12 @@
     file: amd_rocm
     enabled: true
     priority: "50"
-    baseurl: "{{ amd_dkms_repo_baseurl }}/{{ amd_rocm_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
+    baseurl: >-
+      {{ (amd_dkms_repo_baseurl if amd_rocm_version is version('7.0', '<')
+          else amd_graphics_repo_baseurl) }}/{{ amd_rocm_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/
     gpgcheck: true
-    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
-  when: amd_rocm_version is version('7.0', '<')
-
-- name: Add AMD Graphics {{ amd_rocm_version }} repository
-  ansible.builtin.yum_repository:
-    name: amdgraphics
-    description: AMD Graphics {{ amd_rocm_version }} repository
-    file: amd_rocm
-    enabled: true
-    priority: "50"
-    baseurl: "{{ amd_graphics_repo_baseurl }}/{{ amd_rocm_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
-    gpgcheck: true
-    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
-  when: amd_rocm_version is version('7.0', '>=')
+    gpgkey: "{{ amd_rocm_repo_gpgkey_url }}"
+  when: amd_rocm_version is version('10.0', '<')
 
 - name: Add AMD DKMS repository
   ansible.builtin.yum_repository:
@@ -52,9 +55,12 @@
     file: amd_rocm
     enabled: true
     priority: "50"
-    baseurl: "{{ amd_dkms_repo_baseurl }}/{{ amd_dkms_version }}/el/{{ ansible_facts['distribution_version'] }}/main/x86_64/"
+    baseurl: >-
+      {{ amd_dkms_repo_baseurl ~ '/' ~ amd_dkms_version ~ '/el/' ~
+         (amd_dkms_el_repo_release | default(ansible_facts['distribution_version'])) ~
+         '/main/x86_64/' }}
     gpgcheck: true
-    gpgkey: "{{ amd_rocm_el_repo_gpgkey_url }}"
+    gpgkey: "{{ amd_rocm_repo_gpgkey_url }}"
 
 - name: Install AMD driver package
   ansible.builtin.dnf:
@@ -79,6 +85,33 @@
   retries: 5
   delay: 30
   until: rocm_dnf is succeeded
+  when: amd_rocm_version is version('10.0', '<')
+
+- name: Install AMD ROCm 10 packages
+  ansible.builtin.dnf:
+    name: "{{ amd_rocm_el_packages }}"
+    state: present
+    lock_timeout: 600
+  register: rocm_dnf
+  retries: 5
+  delay: 30
+  until: rocm_dnf is succeeded
+  when: amd_rocm_version is version('10.0', '>=')
+
+- name: Register AMD ROCm 10 compatibility libraries with the dynamic linker
+  when: amd_rocm_version is version('10.0', '>=')
+  block:
+    - name: Configure AMD ROCm compatibility library search path
+      ansible.builtin.copy:
+        dest: /etc/ld.so.conf.d/amd_rocm.conf
+        content: "/opt/rocm/lib\n"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Refresh dynamic linker cache for AMD ROCm 10
+      ansible.builtin.command: ldconfig
+      changed_when: false
 
 - name: Add opc to render and video groups
   ansible.builtin.user:

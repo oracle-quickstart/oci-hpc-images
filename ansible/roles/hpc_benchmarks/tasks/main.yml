@@ -1,14 +1,10 @@
 ---
-- name: Install dependencies
-  ansible.builtin.include_tasks: redhat.yml
-  when: ansible_os_family == 'RedHat'
+- name: Install OSU micro-benchmarks
+  ansible.builtin.include_tasks: osu-micro-benchmarks.yml
+  when: (options is defined) and ('openmpi' in options)
 
-- name: Install dependencies
-  ansible.builtin.include_tasks: ubuntu.yml
-  when: ansible_distribution == 'Ubuntu'
-
-- name: Install NCCL test
-  ansible.builtin.include_tasks: nccl-test.yml
+- name: Install NCCL tests
+  ansible.builtin.include_tasks: nccl-tests.yml
   when: (options is defined) and ('nvidia' in options)
 
 - name: Install GPUDirect-aware perftest

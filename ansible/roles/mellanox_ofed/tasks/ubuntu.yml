@@ -191,7 +191,7 @@
     - name: Install Mellanox OFED
       ansible.builtin.shell: >
         {{ mlnx_extract_dir.path }}/MLNX_OFED_LINUX-{{ mellanox_ofed_version }}-{{ mellanox_os_version }}-{{ ansible_architecture }}/mlnxofedinstall
-        --force --all --without-fw-update
+        --force --all --without-fw-update {{ '--without-ucx' if 'amd' in options else '' }}
       args:
         chdir: "{{ mlnx_extract_dir.path }}"
         creates: "/usr/bin/ofed_info"
@@ -227,4 +227,9 @@
     - name: Install DOCA dependencies
       ansible.builtin.apt:
         name: "doca-all"
+        state: present
+
+    - name: Ensure Meson is installed for DOCA workloads
+      ansible.builtin.apt:
+        name: meson
         state: present

@@ -1,0 +1,6 @@
+ubuntu_kernel:
+  by_ubuntu_release:
+    "22":
+      series: "5.15"
+      flavor: oracle
+      abi: "5.15.0-1113"  # Required for Pollara firmware version up to 1.117.1-a-77

@@ -1,0 +1,12 @@
+# AMD Instinct MI300X (gfx942) and MI355X (gfx950), ROCm 10.0 package-manager installation.
+# ROCm packages and the AMDGPU DKMS driver use distinct AMD repositories.
+amd_dkms_version: "31.50"
+amd_rocm_version: "10.0.0"
+amd_rocm_stable_repo_url: "https://stable.repo.amd.com/rocm/core/packages/ubuntu{{ ansible_facts['distribution_version'] | replace('.', '') }}/"
+amd_rocm_stable_repo_gpgkey_url: "https://stable.repo.amd.com/rocm/gpg/packages.gpg"
+amd_rocm_packages:
+  - "amdrocm-core-sdk10.0-gfx942"
+  - "amdrocm-core-sdk10.0-gfx950"
+amd_rvs_repo_url: "https://stable.repo.amd.com/rocm/extras/rvs/packages/ubuntu{{ ansible_facts['distribution_version'] | replace('.', '') }}/"
+amd_rvs_package: "amdrocm10-rvs"
+amd_perftest_commit: 720b61082454e189b1f21835ec175536a944afc3 # 2026-04-17

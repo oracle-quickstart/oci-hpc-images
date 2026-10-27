@@ -7,4 +7,7 @@
 amd_dkms_version: "30.30.4"
 amd_rocm_version: "7.2.4"
 amd_rocm_repo: "https://repo.radeon.com/amdgpu-install/"
+amd_rccl_commit: 96a25b5fd6f73fba58c7d83eb57cf19a50230aa4 # rocm-7.2.4
+amd_anp_commit: bd9eef7855a25cb18da86a865f9d01099beb67a7 # v1.3.0
+amd_custom_rccl_anp_url: ""
 amd_perftest_commit: 720b61082454e189b1f21835ec175536a944afc3 #26.04.17

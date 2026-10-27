@@ -20,12 +20,26 @@
         dest: /tmp/mirror-oke-repos.py
         mode: "0755"
 
+    - name: Verify supported OKE package architecture
+      ansible.builtin.assert:
+        that:
+          - ansible_architecture in ['x86_64', 'aarch64']
+        fail_msg: >-
+          Unsupported OKE package architecture: {{ ansible_architecture }}
+
+    - name: Set OKE Debian architecture
+      ansible.builtin.set_fact:
+        oke_deb_architecture: >-
+          {{ 'amd64' if ansible_architecture == 'x86_64' else 'arm64' }}
+
     - name: Mirror OKE packages for each Kubernetes version
       ansible.builtin.command:
         cmd: >-
           python3 /tmp/mirror-oke-repos.py
           {{ oke_packages_path }}
           {{ oke_ubuntu_codename }}
+          {{ item }}
+          {{ oke_deb_architecture }}
         creates: "{{ oke_packages_path }}/ubuntu-{{ oke_ubuntu_codename }}/kubernetes-{{ item }}/dists/stable/Release"
       environment:
         OKE_PAR_BASE: "{{ oke_par_base }}"
@@ -45,4 +59,3 @@
         owner: root
         group: root
         recurse: true
-

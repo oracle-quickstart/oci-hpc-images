@@ -1,17 +1,25 @@
-lustre_client_default_repo: "https://github.com/lustre/lustre-release"
+lustre_client_default_repo: "https://github.com/oracle-samples/oci-lustre-client"
 lustre_client_default_tag:
   "RedHat":
-    "kernel_4": "2.15.8"
-    "kernel_5": "2.15.8"
+    "kernel_4": "2.15.8_oci_v1"
+    "kernel_5": "2.15.8_oci_v1"
   "Debian":
-    "kernel_5": "2.15.8"
-    "kernel_6": "2.15.91"
+    "kernel_5": "2.15.8_oci_v1"
+    "kernel_6": "2.15.8_oci_v1"
 
+# Keep 2.15.8_oci_v1 for its stated kernel 6.17 support. Once an OCI 2.15.90
+# release supports 6.17 and is validated here, retire these 2.15.8 patches:
+# Network namespace (our link-state-only backport; upstream also fixes address events):
+# https://github.com/oracle-samples/oci-lustre-client/commit/c88116309c34572a61a84929ff62ee8e31f71d1b
+# DKMS --with-o2ib=no handling for RPM and Debian packaging:
+# https://github.com/oracle-samples/oci-lustre-client/commit/bdf2744ad5d05b9b54eadc02ba279c929b373836
+# Keep the Ansible /etc/sysconfig/lustre setting: newer DKMS reads the flag there.
 lustre_client_patches_by_version:
-  "2.15.8":
-    - lustre-2.15.8-netns-dkms-o2ib.patch
-  "2.15.91":
-    - lustre-2.15.91-netns.patch
+  "2.15.8_oci_v1":
+    - lustre-2.15.8-netns-dkms-o2ib-dpatch.patch
+    - lustre-2.15.8-debian-dkms-disable-o2ib.patch
+#  "2.15.91":
+#    - lustre-2.15.91-netns.patch
 
 # lustre_client_repo: "https://github.com/lustre/lustre-release" # override default lustre client repo
 # lustre_client_tag: "2.15.91" # override default lustre client tag

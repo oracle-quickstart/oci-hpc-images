@@ -1,0 +1,30 @@
+# Pollara host software and expected firmware bundle release.
+amd_ainic_bundle_version: "1.117.5-a-77"
+# Expected card firmware release; image builds do not flash the NIC.
+amd_firmware_bundle_version: "1.117.5-a-77"
+amd_ainic_repo_version: "1.117.5-a-77"
+amd_ainic_repo_url: "https://repo.radeon.com/amdainic/pensando/ubuntu/{{ amd_ainic_repo_version }}"
+amd_ainic_pkg_versions:
+  ionic-common: "26.03.3.001"
+  ionic-dkms: "26.03.3.001"
+  pds-dkms: "1.117.5.a.77"
+  tawk-ipc-dkms: "1.117.5.a.77"
+  libionic1: "54.0-187-1"
+  libionic-dev: "54.0-187-1"
+  nicctl: "1.117.5.a.77-1"
+  ainic-monitor: "1.117.5.a.77-1"
+amd_ainic_dbg_tools_version: "1.117.5.a.77-1"
+amd_ainic_hold_packages: true
+
+amd_argus_version: "1.117.5-a-66"
+amd_argus_file_path: "{{ hpc_beta_download }}"
+amd_argus_file_name: "argus_{{ amd_argus_version }}"
+amd_argus_file: "{{ amd_argus_file_name }}.tar.gz"
+amd_argus_file_url: "{{ amd_argus_file_path }}{{ amd_argus_file }}"
+
+amd_anp_repo: "https://github.com/ROCm/amd-anp.git"
+
+amd_custom_rccl_anp_file_path: "{{ hpc_beta_download }}"
+amd_custom_rccl_anp_file_name: "oci_rccl_anp_for_rocm7.0.2"
+amd_custom_rccl_anp_file: "{{ amd_custom_rccl_anp_file_name }}.tar.gz"
+amd_custom_rccl_anp_url: "{{ amd_custom_rccl_anp_file_path }}{{ amd_custom_rccl_anp_file }}"

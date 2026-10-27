@@ -135,3 +135,134 @@
             state: latest
             disable_gpg_check: true
           when: ansible_os_family == "RedHat"
+
+        - name: Remove NCCL source build artifacts without inspector
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "/tmp/nccl-{{ nccl_version }}"
+            - "/tmp/v{{ nccl_version }}.tar.gz"
+          when: "'monitoring' not in options"
+
+- name: Install NCCL inspector plugin
+  when: "'monitoring' in options"
+  vars:
+    nccl_inspector_base_version: "{{ nccl_version.split('-')[0] }}"
+    nccl_inspector_ref: "v{{ nccl_inspector_base_version if nccl_inspector_base_version is version('2.31.2', '>=') else '2.31.2' }}-1"
+    nccl_inspector_archive: "/tmp/{{ nccl_inspector_ref }}.tar.gz"
+  block:
+    - name: Check for NCCL source archive
+      ansible.builtin.stat:
+        path: "{{ nccl_inspector_archive }}"
+      register: nccl_inspector_archive_stat
+
+    - name: Download NCCL inspector source if NCCL used packages
+      ansible.builtin.get_url:
+        url: "https://github.com/NVIDIA/nccl/archive/refs/tags/{{ nccl_inspector_ref }}.tar.gz"
+        dest: "{{ nccl_inspector_archive }}"
+        mode: '0644'
+      register: nccl_inspector_download
+      until: nccl_inspector_download is success
+      retries: 5
+      delay: 10
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when: not nccl_inspector_archive_stat.stat.exists
+
+    - name: Remove stale NCCL inspector source directory
+      ansible.builtin.file:
+        path: /tmp/nccl-inspector-src
+        state: absent
+
+    - name: Create NCCL inspector source directory
+      ansible.builtin.file:
+        path: /tmp/nccl-inspector-src
+        state: directory
+        mode: '0755'
+
+    - name: Extract NCCL inspector source
+      ansible.builtin.unarchive:
+        src: "{{ nccl_inspector_archive }}"
+        dest: "/tmp/nccl-inspector-src"
+        remote_src: yes
+        extra_opts: [--strip-components=1]
+
+    - name: Check NCCL inspector plugin source exists
+      ansible.builtin.stat:
+        path: /tmp/nccl-inspector-src/plugins/profiler/inspector
+      register: nccl_inspector_dir
+
+    - name: Fail if NCCL inspector plugin source not found
+      ansible.builtin.fail:
+        msg: "NCCL inspector directory not found in {{ nccl_inspector_ref }} - failing image build"
+      when: not nccl_inspector_dir.stat.exists
+
+    - name: Install NCCL inspector build dependencies on Ubuntu
+      ansible.builtin.apt:
+        name:
+          - build-essential
+        state: present
+        lock_timeout: 300
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install NCCL inspector build dependencies on RHEL
+      ansible.builtin.yum:
+        name:
+          - make
+          - gcc-c++
+        state: present
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      when: ansible_os_family == 'RedHat'
+
+    - name: Build NCCL inspector plugin
+      ansible.builtin.command: make
+      args:
+        chdir: /tmp/nccl-inspector-src/plugins/profiler/inspector
+      changed_when: true
+
+    - name: Find NCCL inspector library
+      ansible.builtin.find:
+        paths: /tmp/nccl-inspector-src/plugins/profiler/inspector
+        patterns: "libnccl-profiler-inspector.so"
+        file_type: file
+      register: nccl_inspector_so
+
+    - name: Fail if NCCL inspector build produced no library
+      ansible.builtin.fail:
+        msg: "NCCL inspector build produced no .so library - failing image build"
+      when: nccl_inspector_so.files | length == 0
+
+    - name: Install NCCL inspector library for Ubuntu
+      ansible.builtin.copy:
+        src: "{{ nccl_inspector_so.files[0].path }}"
+        dest: "/usr/lib/{{ ansible_architecture }}-linux-gnu/libnccl-profiler-inspector.so"
+        mode: '0644'
+        remote_src: true
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install NCCL inspector library for RHEL
+      ansible.builtin.copy:
+        src: "{{ nccl_inspector_so.files[0].path }}"
+        dest: "/usr/lib64/libnccl-profiler-inspector.so"
+        mode: '0644'
+        remote_src: true
+      when: ansible_os_family == 'RedHat'
+
+    - name: Refresh linker cache
+      ansible.builtin.command: ldconfig
+      changed_when: true
+
+    - name: Record NCCL inspector version for image manifest
+      ansible.builtin.set_fact:
+        nccl_inspector_version: "{{ nccl_inspector_ref }}"
+
+    - name: Remove NCCL inspector build artifacts
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/nccl-inspector-src
+        - "/tmp/nccl-{{ nccl_version }}"
+        - "/tmp/v{{ nccl_version }}.tar.gz"
+        - "{{ nccl_inspector_archive }}"

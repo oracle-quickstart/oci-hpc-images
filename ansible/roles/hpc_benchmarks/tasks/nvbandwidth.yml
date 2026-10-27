@@ -64,7 +64,7 @@
 
     - name: Generate nvbandwidth Makefile from CMake # noqa command-instead-of-shell no-changed-when
       ansible.builtin.command:
-        cmd: "{{ benchmark_base_path }}/nvbandwidth/cmake/bin/cmake . -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=80;90"
+        cmd: "{{ benchmark_base_path }}/nvbandwidth/cmake/bin/cmake . -DCMAKE_CUDA_COMPILER={{ cuda_home }}/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=80;90"
       args:
         chdir: "{{ benchmark_base_path }}/nvbandwidth"
       become_user: "{{ user }}"

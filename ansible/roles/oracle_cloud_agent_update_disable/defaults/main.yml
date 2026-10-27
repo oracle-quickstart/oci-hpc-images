@@ -1,0 +1,8 @@
+---
+# Use default (or leave empty) to keep the DrHPCv2 package and binary path provided by OCA.
+oci_dr_hpc_v2_version: default
+oci_dr_hpc_v2_package_url: >-
+  https://objectstorage.us-phoenix-1.oraclecloud.com/p/EC98VxSG5eaI1lfsE56kJPEywr7IXZ0uNl2h_5oLXVO3gnw5UhEdkBzbR70czaLN/n/hpc/b/drhpcv2/o/oci-dr-hpc-v2_{{ oci_dr_hpc_v2_version }}-1ubuntu_{{ oci_dr_hpc_v2_deb_arch }}.deb
+oci_dr_hpc_v2_rpm_package_url: >-
+  https://objectstorage.us-phoenix-1.oraclecloud.com/p/EC98VxSG5eaI1lfsE56kJPEywr7IXZ0uNl2h_5oLXVO3gnw5UhEdkBzbR70czaLN/n/hpc/b/drhpcv2/o/oci-dr-hpc-v2_{{ oci_dr_hpc_v2_version }}-1_amd64.rpm
+oci_dr_hpc_v2_config_path: /etc/oracle-cloud-agent/plugins/oci-hpc/oci-hpc-monitoring/oci-dr-hpc-v2.yml

@@ -1,0 +1,11 @@
+# Freeze the Oracle 6.8 ABI for Pollara driver compatibility.
+ubuntu_kernel:
+  by_ubuntu_release:
+    "22":
+      series: "6.8"
+      flavor: oracle
+      abi: "6.8.0-1062"  # Required for Pollara firmware version up to 1.117.1-a-77
+    "24":
+      series: "6.8"
+      flavor: oracle
+      abi: "6.8.0-1062"  # Required for Pollara firmware version up to 1.117.1-a-77

@@ -1,5 +1,6 @@
 ---
 - name: Install rvs
+  when: amd_rocm_version is version('10.0', '<')
   block:
     - name: Enable ol8_developer_EPEL repository
       command: yum-config-manager --enable ol8_developer_EPEL
@@ -13,3 +14,35 @@
       ansible.builtin.yum:
         name: rocm-validation-suite
         lock_timeout: 300
+
+- name: Install ROCm 10 RVS
+  when: amd_rocm_version is version('10.0', '>=')
+  block:
+    - name: Add AMD ROCm extras RVS repository
+      ansible.builtin.yum_repository:
+        name: amd-rvs
+        description: ROCm Validation Suite
+        file: amd-rvs
+        enabled: true
+        priority: "50"
+        baseurl: "{{ amd_rvs_el_repo_url }}"
+        gpgcheck: true
+        gpgkey: "{{ amd_rvs_el_repo_gpgkey_url }}"
+
+    - name: Install the ROCm 10 RVS package
+      ansible.builtin.dnf:
+        name: "{{ amd_rvs_package }}"
+        state: present
+        lock_timeout: 300
+
+    - name: Configure the ROCm 10 RVS environment
+      ansible.builtin.copy:
+        dest: /etc/profile.d/amd_rvs.sh
+        content: |
+          export EXTRAS_PATH=/opt/rocm/extras-{{ amd_rocm_version.split('.')[0] }}
+          export ROCM_PATH=/opt/rocm/core-{{ amd_rocm_version | regex_replace('^([0-9]+\\.[0-9]+)\\..*$', '\\1') }}
+          export PATH=$EXTRAS_PATH/bin:$ROCM_PATH/bin:$PATH
+          export LD_LIBRARY_PATH=$EXTRAS_PATH/lib:$ROCM_PATH/lib:$ROCM_PATH/lib/llvm/lib:$LD_LIBRARY_PATH
+        owner: root
+        group: root
+        mode: '0644'

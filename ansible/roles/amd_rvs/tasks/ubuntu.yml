@@ -1,7 +1,48 @@
 ---
 - name: Install rvs
+  when: amd_rocm_version is version('10.0', '<')
   block:
     - name: Install the rocm-validation-suite package
       ansible.builtin.apt:
         name: rocm-validation-suite
         lock_timeout: 300
+
+- name: Install ROCm 10 RVS
+  when: amd_rocm_version is version('10.0', '>=')
+  block:
+    - name: Download AMD ROCm extras repository GPG key
+      ansible.builtin.get_url:
+        url: "{{ amd_rocm_stable_repo_gpgkey_url }}"
+        dest: /tmp/amd_rvs.asc.gpg
+        mode: '0644'
+        force: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+    - name: Convert AMD ROCm extras repository key to binary keyring
+      ansible.builtin.command:
+        cmd: >-
+          gpg --dearmor --yes -o /etc/apt/keyrings/amd_rvs.gpg
+          /tmp/amd_rvs.asc.gpg
+      changed_when: true
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+    - name: Add AMD ROCm extras RVS repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/amd_rvs.sources
+        content: |
+          Types: deb
+          URIs: {{ amd_rvs_repo_url }}
+          Suites: stable
+          Components: main
+          Architectures: amd64
+          Signed-By: /etc/apt/keyrings/amd_rvs.gpg
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install the ROCm 10 RVS package
+      ansible.builtin.apt:
+        name: "{{ amd_rvs_package }}"
+        update_cache: true
+        lock_timeout: 300
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"

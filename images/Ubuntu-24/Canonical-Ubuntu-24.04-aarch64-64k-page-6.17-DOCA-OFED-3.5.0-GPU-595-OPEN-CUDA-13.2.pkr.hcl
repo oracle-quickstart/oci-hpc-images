@@ -1,0 +1,114 @@
+packer {
+  required_plugins {
+    oracle = { source = "github.com/hashicorp/oracle", version = ">= 1.0.3" }
+    ansible = { source = "github.com/hashicorp/ansible", version = "~> 1" }
+  }
+}
+
+variable "base_image_name" { default = "Canonical-Ubuntu-24.04-aarch64-2026.09.18-0" }
+variable "operating_system" { default = "Ubuntu" }
+variable "operating_system_version" { default = "24" }
+variable "ssh_username" { default = "ubuntu" }
+variable "features" { default = "KERNEL-NVIDIA-64K-6.17-DOCA-OFED-3.5.0-GPU-595-OPEN-CUDA-13.2" }
+variable "release" { default = 0 }
+variable "build_options" {
+  type    = string
+  default = "noselinux,nomitigations,openmpi,benchmarks,nvidia,enroot,monitoring,networkdevicenames,use_plugins,cx8,oke,lustre_client,occl_net_ib"
+}
+variable "build_groups" {
+  default = [
+    "hpcx_2251",
+    "kernel-nvidia-64k-6.17",
+    "kernel_parameters",
+    "lustre_client_215",
+    "mofed_doca_350",
+    "nvidia_cuda_13_2",
+    "nvidia_open_595",
+    "oca_164",
+    "oci_hpc_packages",
+    "openmpi_510",
+    "packages_kmod_upgrade",
+  ]
+}
+
+variable "region" { type = string }
+variable "ad" { type = string }
+variable "compartment_ocid" { type = string }
+variable "shape" { type = string }
+variable "subnet_ocid" { type = string }
+variable "use_instance_principals" { type = bool }
+variable "access_cfg_file_account" { default = "DEFAULT" }
+variable "access_cfg_file" { default = "~/.oci/config" }
+variable "OpenSSH9" { default = false }
+variable "shape_config" {
+  type = object({ ocpus = number, memory_in_gbs = number })
+  default = { ocpus = 8, memory_in_gbs = 64 }
+}
+variable "skip_create_image" { default = false }
+variable "manifest_source_repo" { default = "N/A" }
+variable "manifest_source_revision" { default = "N/A" }
+variable "manifest_source_dirty" { default = false }
+variable "manifest_manual" { default = true }
+variable "manifest_image_hcl_path" { default = "N/A" }
+variable "manifest_image_hcl_sha256" { default = "N/A" }
+
+source "oracle-oci" "oracle" {
+  availability_domain       = var.ad
+  compartment_ocid          = var.compartment_ocid
+  image_name                = local.image_base_name
+  shape                     = var.shape
+  ssh_username              = var.ssh_username
+  subnet_ocid               = var.subnet_ocid
+  access_cfg_file           = var.use_instance_principals ? null : var.access_cfg_file
+  access_cfg_file_account   = var.use_instance_principals ? null : var.access_cfg_file_account
+  region                    = var.use_instance_principals ? null : var.region
+  user_data_file            = "${path.root}/../files/user_data.txt"
+  disk_size                 = 100
+  use_instance_principals   = var.use_instance_principals
+  ssh_timeout               = "90m"
+  instance_name             = "HPC-ImageBuilder-${local.image_base_name}"
+  skip_create_image         = var.skip_create_image
+  base_image_filter { display_name = var.base_image_name }
+  shape_config {
+    ocpus         = var.shape_config.ocpus
+    memory_in_gbs = var.shape_config.memory_in_gbs
+  }
+}
+
+locals {
+  ansible_args   = "options=[${var.build_options}]"
+  ansible_groups = "${var.build_groups}"
+  timestamp       = "${formatdate("YYYY.MM.DD", timestamp())}"
+  image_base_name = "${var.base_image_name}-${var.features}-${local.timestamp}-${var.release}"
+  ansible_manifest_args = jsonencode({
+    image_manifest_source_repo = var.manifest_source_repo
+    image_manifest_source_revision = var.manifest_source_revision
+    image_manifest_source_dirty = var.manifest_source_dirty
+    image_manifest_manual = var.manifest_manual
+    image_manifest_hcl_path = var.manifest_image_hcl_path
+    image_manifest_hcl_sha256 = var.manifest_image_hcl_sha256
+    image_manifest_image_name = local.image_base_name
+    image_manifest_base_image_name = var.base_image_name
+    image_manifest_features = var.features
+    image_manifest_release = var.release
+    image_manifest_build_options = split(",", var.build_options)
+    image_manifest_build_groups = var.build_groups
+  })
+}
+
+build {
+  name    = "buildname"
+  sources = ["source.oracle-oci.oracle"]
+  provisioner "ansible" {
+    playbook_file = "${path.root}/../../ansible/hpc.yml"
+    extra_arguments = var.OpenSSH9 ? ["-e", local.ansible_args, "-e", local.ansible_manifest_args, "--scp-extra-args", "'-O'"] : ["-e", local.ansible_args, "-e", local.ansible_manifest_args]
+    groups = local.ansible_groups
+    user   = var.ssh_username
+    use_proxy = false
+  }
+  provisioner "shell" { inline = ["rm -rf $HOME/~*", "sudo /usr/libexec/oci-image-cleanup --force"] }
+  post-processor "manifest" {
+    output = "${local.image_base_name}.manifest.json"
+    custom_data = { image_name = local.image_base_name, ssh_username = var.ssh_username, display_name = var.base_image_name, operating_system = var.operating_system, operating_system_version = var.operating_system_version }
+  }
+}

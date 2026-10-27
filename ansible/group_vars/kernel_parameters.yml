@@ -15,7 +15,7 @@ grub_cmdline_kernel6:
   - processor.max_cstate=1
   - mce=ignore_ce
   - skew_tick=1
-  - iommu=off
+  - "iommu={{ 'pt' if 'pollara' in (options | default([])) else 'off' }}"
   - numa_balancing=disable
 grub_cmdline_ubuntu_cx8:
   - processor.max_cstate=1

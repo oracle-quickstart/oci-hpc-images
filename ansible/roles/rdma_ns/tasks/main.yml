@@ -1,8 +1,8 @@
 ---
-- name: Change RDMA namespace to exclusive
+- name: Change RDMA namespace to shared
   ansible.builtin.lineinfile:
     path: /etc/modprobe.d/ib_core.conf
-    line: 'options ib_core netns_mode=0'
+    line: 'options ib_core netns_mode=1'
     create: true
     owner: root
     group: root

@@ -2,7 +2,7 @@
 - name: Download AMD ROCm Repository GPG key
   become: true
   ansible.builtin.get_url:
-    url: "{{ amd_rocm_ubuntu_repo_gpgkey_url }}"
+    url: "{{ amd_rocm_repo_gpgkey_url }}"
     dest: /tmp/amd_rocm.asc.gpg
     mode: '0644'
     force: true
@@ -10,8 +10,7 @@
 - name: Convert key to binary keyring
   become: true
   ansible.builtin.command:
-    cmd: "gpg --dearmor -o /etc/apt/keyrings/amd_rocm.gpg /tmp/amd_rocm.asc.gpg"
-    creates: /etc/apt/keyrings/amd_rocm.gpg
+    cmd: "gpg --batch --yes --dearmor -o /etc/apt/keyrings/amd_rocm.gpg /tmp/amd_rocm.asc.gpg"
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
 - name: Add AMD drivers repository
@@ -23,16 +22,52 @@
 - name: Add AMD ROCm repository
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.1.1 noble main
-    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_rocm_repo_baseurl }}/apt//{{ amd_rocm_version }} {{ ansible_facts['distribution_release'] }} main"
+    repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_rocm_repo_baseurl }}/apt/{{ amd_rocm_version }} {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: amd_rocm_version is version('10.0', '<')
+
+- name: Download AMD ROCm 10 stable repository GPG key
+  ansible.builtin.get_url:
+    url: "{{ amd_rocm_stable_repo_gpgkey_url }}"
+    dest: /tmp/amd_rocm_stable.asc.gpg
+    mode: '0644'
+    force: true
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: amd_rocm_version is version('10.0', '>=')
+
+- name: Convert AMD ROCm 10 stable repository key to binary keyring
+  ansible.builtin.command:
+    cmd: >-
+      gpg --dearmor --yes -o /etc/apt/keyrings/amd_rocm_stable.gpg
+      /tmp/amd_rocm_stable.asc.gpg
+  changed_when: true
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: amd_rocm_version is version('10.0', '>=')
+
+- name: Add AMD ROCm 10 stable repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/amd_rocm_stable.sources
+    content: |
+      Types: deb
+      URIs: {{ amd_rocm_stable_repo_url }}
+      Suites: stable
+      Components: main
+      Architectures: amd64
+      Signed-By: /etc/apt/keyrings/amd_rocm_stable.gpg
+    owner: root
+    group: root
+    mode: '0644'
+  when: amd_rocm_version is version('10.0', '>=')
 - name: Add AMD graphics repository
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/graphics/7.1.1/ubuntu noble main
     repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_graphics_repo_baseurl }}/{{ amd_rocm_version }}/ubuntu {{ ansible_facts['distribution_release'] }} main"
     update_cache: true
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when: amd_rocm_version is version('7.0', '>=')
+  when:
+    - amd_rocm_version is version('7.0', '>=')
+    - amd_rocm_version is version('10.0', '<')
 - name: Add AMD repository for amdgpu-lib
   ansible.builtin.apt_repository:
     #e.g. deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.4.3/ubuntu noble main
@@ -71,10 +106,13 @@
   when: pinned_kernel.stat.exists
 
 - name: Install AMD driver package
+  become: true
   ansible.builtin.apt:
     name:
       - "amdgpu-dkms"
-    state: "present"
+    state: latest
+    update_cache: true
+    lock_timeout: 300
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
 
 - name: Pin the kernel packages again
@@ -93,13 +131,41 @@
     post_reboot_delay: 30
 
 - name: Install AMD ROCm packages
+  become: true
   ansible.builtin.apt:
     name:
       - "rocm"
       - "amdgpu-lib"
-    state: "present"
+    state: latest
+    update_cache: true
     lock_timeout: 300
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: amd_rocm_version is version('10.0', '<')
+
+- name: Install AMD ROCm 10 packages
+  ansible.builtin.apt:
+    name: "{{ amd_rocm_packages }}"
+    state: "present"
+    update_cache: true
+    cache_valid_time: 0
+    lock_timeout: 300
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when: amd_rocm_version is version('10.0', '>=')
+
+- name: Register AMD ROCm 10 compatibility libraries with the dynamic linker
+  when: amd_rocm_version is version('10.0', '>=')
+  block:
+    - name: Configure AMD ROCm compatibility library search path
+      ansible.builtin.copy:
+        dest: /etc/ld.so.conf.d/amd_rocm.conf
+        content: "/opt/rocm/lib\n"
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Refresh dynamic linker cache for AMD ROCm 10
+      ansible.builtin.command: ldconfig
+      changed_when: false
 
 - name: Add default user to render and video groups
   block:

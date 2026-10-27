@@ -25,7 +25,7 @@
     state: "present"
     lock_timeout: 300
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
-  when: nvidia_driver_ubuntu_branch | int > 575
+  when: (nvidia_driver_ubuntu_branch | split('.') | first | int) > 575
 
 # - name: Get latest subversion of drivers
 #   shell: "apt-cache madison nvidia-modprobe | grep {{ nvidia_driver_ubuntu_branch }} | head -n1 | awk '{print $3}'"
@@ -51,6 +51,18 @@
   with_items: "{{nvidia_driver_ubuntu_cuda_packages}}"
   register: install_driver
   environment: "{{ proxy_env if proxy_env is defined else {} }}"
+
+- name: Install Fabric Manager for open NVIDIA drivers on x86_64
+  ansible.builtin.apt:
+    name: "nvidia-fabricmanager"
+    state: "{{ nvidia_driver_package_state }}"
+    autoremove: "{{ nvidia_driver_package_state == 'absent' }}"
+    purge: "{{ nvidia_driver_package_state == 'absent' }}"
+    lock_timeout: 300
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  when:
+    - nvidia_driver_open is defined and nvidia_driver_open
+    - ansible_architecture == 'x86_64'
 
 # add peermem to modprobe.d
 - name: Add peermem to modprobe.d

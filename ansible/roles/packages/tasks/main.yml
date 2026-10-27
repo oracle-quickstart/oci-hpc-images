@@ -87,6 +87,16 @@
         enablerepo: "*developer_EPEL*"
         name:
           - "@Development Tools"
+          - binutils
+          - htop
+          - jq
+          - git
+          - cmake
+          - autoconf
+          - automake
+          - libtool
+          - pciutils
+          - pciutils-devel
           - numactl
           - numactl-devel
           - libxml2
@@ -94,7 +104,24 @@
           - environment-modules
           - python3-psutil
           - python3-distro
+          - tmux
         state: present
+
+    - name: Install yq on Oracle Linux 9
+      ansible.builtin.yum:
+        enablerepo: "*developer_EPEL*"
+        name: yq
+        state: present
+      when: ansible_distribution_major_version == '9'
+
+    - name: Install GPU monitoring tool
+      ansible.builtin.yum:
+        enablerepo: "*developer_EPEL*"
+        name: nvtop
+        state: present
+      when:
+        - options is defined
+        - "'nvidia' in options or 'amd' in options"
 
     - name: Upgrade all packages # noqa package-latest
       ansible.builtin.yum:
@@ -173,9 +200,18 @@
       when:
         - options is defined and 'upgrade' in options
 
-    - name: Install CMake
+    - name: Install development tools
       ansible.builtin.apt:
-        name: cmake
+        name:
+          - build-essential
+          - git
+          - cmake
+          - autoconf
+          - automake
+          - libtool
+          - pciutils
+          - libpci-dev
+          - acl
         state: present
         lock_timeout: 300
     - name: Install python3-psutil
@@ -188,6 +224,44 @@
         name: python3-distro
         state: present
         lock_timeout: 300
+
+    - name: Install common tools
+      ansible.builtin.apt:
+        name:
+          - binutils
+          - htop
+          - jq
+          - tmux
+        state: present
+        lock_timeout: 300
+
+    # Jammy has no apt yq package; download the pinned upstream binary so both
+    # Ubuntu releases use the same Mike Farah yq v4 implementation as OL.
+    # Remove a distro package first to avoid coexisting yq implementations.
+    - name: Remove distribution-provided yq
+      ansible.builtin.apt:
+        name: yq
+        state: absent
+        lock_timeout: 300
+
+    - name: Install yq from the pinned upstream release
+      ansible.builtin.get_url:
+        url: "{{ yq_downloads[ansible_architecture].url }}"
+        dest: /usr/local/bin/yq
+        checksum: "{{ yq_downloads[ansible_architecture].checksum }}"
+        owner: root
+        group: root
+        mode: '0755'
+      when: ansible_architecture in yq_downloads
+
+    - name: Install GPU monitoring tool
+      ansible.builtin.apt:
+        name: nvtop
+        state: present
+        lock_timeout: 300
+      when:
+        - options is defined
+        - "'nvidia' in options or 'amd' in options"
 
     - name: Install extra packages
       ansible.builtin.apt:

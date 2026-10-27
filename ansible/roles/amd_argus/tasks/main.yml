@@ -1,0 +1,61 @@
+---
+- name: Install AMD Argus
+  block:
+    - name: Creates /opt/oci-hpc directory
+      ansible.builtin.file:
+        path: /opt/oci-hpc
+        state: directory
+        mode: "0755"
+
+    - name: Untar Argus package
+      ansible.builtin.unarchive:
+        src: "{{ amd_argus_file_url }}"
+        dest: "/opt/oci-hpc"
+        remote_src: true
+        creates: /opt/oci-hpc/argus
+
+    - name: Install AINIC debug tools for Argus
+      when: ansible_distribution == 'Ubuntu'
+      environment: "{{ proxy_env if proxy_env is defined else {} }}"
+      block:
+        - name: Add AMD AINIC repository for Argus
+          ansible.builtin.apt_repository:
+            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_ainic_repo_url }} {{ ansible_distribution_release }} main"
+            filename: amdainic-argus
+            state: present
+            update_cache: true
+          when: amd_ainic_bundle_file_url is defined
+
+        - name: Install AINIC debug tools
+          ansible.builtin.apt:
+            name: "ainic-dbg-tools={{ amd_ainic_dbg_tools_version }}"
+            state: present
+            lock_timeout: 300
+
+        - name: Hold AINIC debug tools
+          ansible.builtin.dpkg_selections:
+            name: ainic-dbg-tools
+            selection: hold
+          when: amd_ainic_hold_packages | bool
+
+    - name: Install venv and pip
+      ansible.builtin.apt:
+        name:
+          - python3-venv
+          - python3-pip
+          - sshpass  # required by Argus to gather data from nodes
+        lock_timeout: 300
+
+    - name: Create a Python virtual environment
+      ansible.builtin.shell: |
+        python3 -m venv argus_venv
+      args:
+        chdir: /opt/oci-hpc/argus
+        creates: /opt/oci-hpc/argus/argus_venv/bin/activate
+
+    - name: Install argus requirements (venv)
+      ansible.builtin.shell: |
+        ./argus_venv/bin/python -m pip install --upgrade pip
+        ./argus_venv/bin/python -m pip install --upgrade -r requirements.txt
+      args:
+        chdir: /opt/oci-hpc/argus

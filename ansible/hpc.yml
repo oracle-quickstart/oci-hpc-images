@@ -4,7 +4,8 @@
     #   nomitigations - Disable all security mitigations
     #   noselinux - Disable SELinux
     #   nvidia - Install NVIDIA GPU drivers and software
-    #   monitoring - Install NVIDIA DCGM
+    #   pollara - Install AINIC, Argus, and ANP
+    #   monitoring - Install NVIDIA DCGM and NCCL inspector plugin
     #   benchmarks - Install benchmarks
     #   intel-oneapi - Install Intel OneAPI MPI/MKL
     #   openmpi - Install OpenMPI against system gcc
@@ -47,8 +48,10 @@
         name: disable_selinux
     - ansible.builtin.import_role: # noqa name[missing]
         name: mellanox_ofed
+      when: "'pollara' not in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: mellanox_hpcx
+      when: "'pollara' not in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: oci_hpc_packages
     - ansible.builtin.import_role: # noqa name[missing]
@@ -68,6 +71,33 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: amd_rocm
       when: "'amd' in options"
+
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: openmpi_gcc
+      when: "'amd' in options and 'openmpi' in options"
+
+    # Preserve the legacy /usr/mpi/gcc OpenMPI path.
+    - name: Ensure /usr/mpi/gcc exists
+      ansible.builtin.file:
+        path: /usr/mpi/gcc
+        state: directory
+        mode: "0755"
+      when: "'amd' in options and 'openmpi' in options"
+
+    - name: Link OpenMPI into /usr/mpi/gcc for compatibility
+      ansible.builtin.file:
+        src: "/opt/openmpi-{{ openmpi_version }}"
+        dest: "/usr/mpi/gcc/openmpi-{{ openmpi_version }}"
+        state: link
+        force: true
+      when: "'amd' in options and 'openmpi' in options"
+
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_ainic_bundle
+      when: "'amd' in options and 'pollara' in options"
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_argus
+      when: "'amd' in options and 'pollara' in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: amd_perftest
       when: "'amd' in options"
@@ -80,6 +110,12 @@
     - ansible.builtin.import_role: # noqa name[missing]
         name: amd_rccl_tests
       when: "'amd' in options"
+
+    - ansible.builtin.import_role: # noqa name[missing]
+        name: amd_anp
+      when:
+        - "'amd' in options and 'pollara' in options"
+        - amd_rocm_version is version('7.2.4', '<')
 
 - name: NVIDIA configuration
   hosts: all
@@ -139,9 +175,7 @@
   tasks:
     - ansible.builtin.import_role: # noqa name[missing]
         name: openmpi_gcc
-      when: "'openmpi' in options"
-    - ansible.builtin.import_role: # noqa name[missing]
-        name: mpivars
+      when: "'amd' not in options and 'openmpi' in options"
     - ansible.builtin.import_role: # noqa name[missing]
         name: hpc_benchmarks
       when: "'benchmarks' in options"
@@ -160,6 +194,10 @@
   any_errors_fatal: true
   become: true
   tasks:
+    - ansible.builtin.import_role:
+        name: mofed_ib_cm_fix
+      when: mofed_ib_cm_dreq_patch | default(false) | bool
+
     - ansible.builtin.import_role: # noqa name[missing]
         name: dracut
     - ansible.builtin.import_role: # noqa name[missing]

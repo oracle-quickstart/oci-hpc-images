@@ -1,0 +1,40 @@
+# AINIC version/channel used for AMD APT repo path:
+#   https://repo.radeon.com/amdainic/pensando/ubuntu/<amd_ainic_repo_version>
+amd_ainic_repo_version: "1.117.5-a-56"
+amd_ainic_repo_url: "https://repo.radeon.com/amdainic/pensando/ubuntu/{{ amd_ainic_repo_version }}"
+amd_ainic_dbg_tools_version: "1.117.5.a.56"
+# Expected card firmware release; image builds do not flash the NIC.
+amd_firmware_bundle_version: "1.117.5-a-56"
+
+amd_ainic_hold_packages: false
+
+# --------------------------------------------------------------------
+# Bundle installer variables
+# --------------------------------------------------------------------
+amd_ainic_bundle_version: "1.117.5-a-56"
+amd_ainic_bundle_file_path: "{{ hpc_beta_download }}"
+amd_ainic_bundle_file_name: "ainic_bundle_{{ amd_ainic_bundle_version }}"
+amd_ainic_bundle_file: "{{ amd_ainic_bundle_file_name }}.tar.gz"
+amd_ainic_bundle_file_url: "{{ amd_ainic_bundle_file_path }}{{ amd_ainic_bundle_file }}"
+
+host_sw_pkg_file: "host_sw_pkg.tar.gz"
+host_sw_pkg_file_name: "host_sw_pkg"
+
+# --------------------------------------------------------------------
+# Argus (kept as-is)
+# --------------------------------------------------------------------
+amd_argus_version: "1.117.5-a-66"
+amd_argus_file_path: "{{ hpc_beta_download }}"
+amd_argus_file_name: "argus_{{ amd_argus_version }}"
+amd_argus_file: "{{ amd_argus_file_name }}.tar.gz"
+amd_argus_file_url: "{{ amd_argus_file_path }}{{ amd_argus_file }}"
+
+# --------------------------------------------------------------------
+# ANP / RCCL ANP (kept as-is)
+# --------------------------------------------------------------------
+amd_anp_repo: "https://github.com/ROCm/amd-anp.git"
+
+amd_custom_rccl_anp_file_path: "{{ hpc_beta_download }}"
+amd_custom_rccl_anp_file_name: "oci_rccl_anp_for_rocm7.0.2"
+amd_custom_rccl_anp_file: "{{ amd_custom_rccl_anp_file_name }}.tar.gz"
+amd_custom_rccl_anp_url: "{{ amd_custom_rccl_anp_file_path }}{{ amd_custom_rccl_anp_file }}"

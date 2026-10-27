@@ -1,0 +1,46 @@
+---
+- name: Install configured DrHPCv2 override on Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - oci_dr_hpc_v2_version | default('', true) | string | length > 0
+    - oci_dr_hpc_v2_version | default('default', true) | string | lower != 'default'
+  block:
+    - name: Get DrHPCv2 DEB architecture # noqa no-changed-when
+      ansible.builtin.command: dpkg --print-architecture
+      register: oci_dr_hpc_v2_deb_architecture
+      changed_when: false
+
+    - name: Set DrHPCv2 DEB architecture
+      ansible.builtin.set_fact:
+        oci_dr_hpc_v2_deb_arch: "{{ oci_dr_hpc_v2_deb_architecture.stdout }}"
+
+    - name: Download configured DrHPCv2 package
+      ansible.builtin.get_url:
+        url: "{{ oci_dr_hpc_v2_package_url }}"
+        dest: "/tmp/oci-dr-hpc-v2_{{ oci_dr_hpc_v2_version }}_{{ oci_dr_hpc_v2_deb_arch }}.deb"
+        mode: '0644'
+
+    - name: Install configured DrHPCv2 package
+      ansible.builtin.apt:
+        deb: "/tmp/oci-dr-hpc-v2_{{ oci_dr_hpc_v2_version }}_{{ oci_dr_hpc_v2_deb_arch }}.deb"
+        state: present
+
+    - name: Resolve configured DrHPCv2 binary path # noqa no-changed-when
+      ansible.builtin.command: readlink -f /usr/bin/oci-dr-hpc-v2
+      register: oci_dr_hpc_v2_binary_path
+      changed_when: false
+
+    - name: Configure OCA to use configured DrHPCv2 binary
+      ansible.builtin.lineinfile:
+        path: "{{ oci_dr_hpc_v2_config_path }}"
+        regexp: '^binary_path:'
+        line: "binary_path: {{ oci_dr_hpc_v2_binary_path.stdout }}"
+        insertafter: EOF
+
+    - name: Ensure OCA can access the DrHPCv2 installation directory
+      ansible.builtin.file:
+        path: /opt
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
