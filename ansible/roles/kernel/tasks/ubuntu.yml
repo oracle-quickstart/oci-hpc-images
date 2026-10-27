@@ -29,14 +29,23 @@
         that:
           - ubuntu_kernel_series is match('^[0-9]+\\.[0-9]+$')
           - ubuntu_kernel_flavor in ['generic', 'oracle', 'nvidia', 'nvidia-64k']
+          - >-
+            ubuntu_kernel_policy.abi is not defined or
+            ubuntu_kernel_policy.abi is match('^' ~ (ubuntu_kernel_series | regex_escape) ~ '\\.[0-9]+-[0-9]+$')
         fail_msg: >-
           ubuntu_kernel must define a major.minor series and one of generic,
-          oracle, nvidia, or nvidia-64k as its flavor.
+          oracle, nvidia, or nvidia-64k as its flavor. An optional ABI must
+          belong to the requested series, for example 6.8.0-1062.
 
-    - name: Resolve the latest ABI in the requested kernel series
+    - name: Remove the kernel pin before selecting and installing an ABI
+      ansible.builtin.file:
+        path: /etc/apt/preferences.d/00_pin_kernel
+        state: absent
+
+    - name: Resolve the requested ABI or the latest ABI in the kernel series
       ansible.builtin.shell: |
         set -o pipefail
-        apt-cache pkgnames "linux-image-{{ ubuntu_kernel_series }}." |
+        apt-cache pkgnames "linux-image-{{ (ubuntu_kernel_policy.abi ~ '-') if ubuntu_kernel_policy.abi is defined else (ubuntu_kernel_series ~ '.') }}" |
           grep -E '^linux-image-{{ ubuntu_kernel_series | regex_escape }}\.[0-9]+-[0-9]+-{{ ubuntu_kernel_flavor | regex_escape }}$' |
           sort -V |
           tail -n 1
@@ -44,14 +53,15 @@
         executable: /bin/bash
       register: ubuntu_kernel_image_package
       changed_when: false
+      failed_when: false
 
-    - name: Fail when the requested Ubuntu kernel series is unavailable
+    - name: Fail when the requested Ubuntu kernel is unavailable
       ansible.builtin.assert:
         that:
           - ubuntu_kernel_image_package.stdout != ''
         fail_msg: >-
           No {{ ubuntu_kernel_flavor }} kernel package is available for Ubuntu
-          kernel series {{ ubuntu_kernel_series }}.
+          kernel {{ ubuntu_kernel_policy.abi | default('series ' ~ ubuntu_kernel_series) }}.
 
     - name: Derive the selected Ubuntu kernel ABI
       ansible.builtin.set_fact:
@@ -85,7 +95,7 @@
         autoremove: true
         lock_timeout: 300
 
-    - name: Install the latest ABI in the requested kernel series
+    - name: Install the selected Ubuntu kernel ABI
       ansible.builtin.apt:
         name:
           - "linux-image-{{ ubuntu_kernel_abi }}-{{ ubuntu_kernel_flavor }}"

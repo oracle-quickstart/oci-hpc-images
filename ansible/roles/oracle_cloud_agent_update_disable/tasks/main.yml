@@ -13,6 +13,16 @@
     file: install_oracle_cloud_agent_ubuntu.yml
   when: ansible_distribution == 'Ubuntu'
 
+- name: Install configured DrHPCv2 override on Ubuntu
+  ansible.builtin.include_tasks:
+    file: install_oci_dr_hpc_v2_ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+- name: Install configured DrHPCv2 override on Oracle Linux
+  ansible.builtin.include_tasks:
+    file: install_oci_dr_hpc_v2_ol.yml
+  when: ansible_distribution == 'OracleLinux'
+
 - name: Disable OCA updates
   ansible.builtin.include_tasks:
     file: disable_oca_updates.yml

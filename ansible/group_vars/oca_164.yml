@@ -1,0 +1,10 @@
+oci_cloud_agent_version: 1.64.0-4987
+oci_cloud_agent_version_ubuntu: 1.64.0-4987
+oca_download_url: >-
+  https://idxzjcdglx2s.objectstorage.eu-frankfurt-1.oci.customer-oci.com/p/OQvygv5RFpv_doxuiOEq0TRV4WE-U_FrAmZU9FbKPuXjXF28G3zUxIfk0-9P0-Uy/n/idxzjcdglx2s/b/packages/o/oca/
+
+# DrHPCv2 package selector:
+# - default: keep the package and binary path provided by OCA (no override)
+# - latest: install the current DrHPCv2 package
+# - a specific version, for example 1.0.704: install that version
+oci_dr_hpc_v2_version: default

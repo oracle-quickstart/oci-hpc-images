@@ -1,0 +1,165 @@
+---
+- name: Ensure patch and DKMS tools are installed
+  ansible.builtin.apt:
+    name:
+      - patch
+      - dkms
+    state: present
+    update_cache: false
+
+- name: Locate installed MLNX OFED DKMS source
+  ansible.builtin.find:
+    paths: /usr/src
+    patterns: "mlnx-ofed-kernel-*"
+    file_type: directory
+    recurse: false
+  register: mofed_source_search
+
+- name: Require exactly one MLNX OFED source directory
+  ansible.builtin.assert:
+    that:
+      - mofed_source_search.matched == 1
+    fail_msg: >-
+      Expected exactly one /usr/src/mlnx-ofed-kernel-* directory,
+      but found {{ mofed_source_search.matched }}.
+
+- name: Set MLNX OFED source and DKMS version
+  ansible.builtin.set_fact:
+    mofed_source_dir: "{{ mofed_source_search.files[0].path }}"
+    mofed_dkms_version: >-
+      {{ mofed_source_search.files[0].path
+         | basename
+         | regex_replace('^mlnx-ofed-kernel-', '') }}
+
+- name: Show selected MLNX OFED source
+  ansible.builtin.debug:
+    msg:
+      - "Source: {{ mofed_source_dir }}"
+      - "DKMS version: {{ mofed_dkms_version }}"
+
+- name: Create temporary patch directory
+  ansible.builtin.file:
+    path: /tmp/mofed_ib_cm_patches
+    state: directory
+    mode: "0755"
+
+- name: Copy ib_cm patches
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/tmp/mofed_ib_cm_patches/{{ item }}"
+    mode: "0644"
+  loop:
+    - 0001-cm-mark-response-retransmission.patch
+    - 0002-cm-reference-only-when-needed.patch
+    - 0003-mofed-cm-rework-dreq-destroy.patch
+
+- name: Apply MOFED kernel backports before ib_cm fixes
+  ansible.builtin.shell: |
+    set -euo pipefail
+
+    ./ofed_scripts/ofed_patch.sh \
+      --kernel-version="{{ ansible_kernel }}"
+
+    touch backports_applied
+  args:
+    executable: /bin/bash
+    chdir: "{{ mofed_source_dir }}"
+    creates: "{{ mofed_source_dir }}/backports_applied"
+
+- name: Apply ib_cm patches in dependency order
+  ansible.builtin.shell: |
+    set -euo pipefail
+
+    patch --batch --forward -p1 \
+      < "/tmp/mofed_ib_cm_patches/{{ item }}"
+
+    touch ".oci-{{ item }}.applied"
+  args:
+    executable: /bin/bash
+    chdir: "{{ mofed_source_dir }}"
+    creates: "{{ mofed_source_dir }}/.oci-{{ item }}.applied"
+  loop:
+    - 0001-cm-mark-response-retransmission.patch
+    - 0002-cm-reference-only-when-needed.patch
+    - 0003-mofed-cm-rework-dreq-destroy.patch
+
+- name: Confirm the patched DREQ implementation exists
+  ansible.builtin.command:
+    argv:
+      - grep
+      - -q
+      - cm_issue_dreq
+      - "{{ mofed_source_dir }}/drivers/infiniband/core/cm.c"
+  changed_when: false
+
+- name: Confirm the old DREQ implementation is absent
+  ansible.builtin.command:
+    argv:
+      - grep
+      - -q
+      - cm_send_dreq_locked
+      - "{{ mofed_source_dir }}/drivers/infiniband/core/cm.c"
+  register: old_dreq_function
+  changed_when: false
+  failed_when: old_dreq_function.rc != 1
+
+- name: Rebuild patched MLNX OFED DKMS modules
+  ansible.builtin.shell: |
+    set -euo pipefail
+
+    built=0
+
+    for module_dir in /lib/modules/*; do
+      kernel="${module_dir##*/}"
+
+      if [[ ! -e "${module_dir}/build" ]]; then
+        echo "Skipping ${kernel}: kernel headers are unavailable"
+        continue
+      fi
+
+      echo "Building patched MLNX OFED for ${kernel}"
+
+      dkms build --force \
+        -m mlnx-ofed-kernel \
+        -v "{{ mofed_dkms_version }}" \
+        -k "${kernel}"
+
+      dkms install --force \
+        -m mlnx-ofed-kernel \
+        -v "{{ mofed_dkms_version }}" \
+        -k "${kernel}"
+
+      depmod -a "${kernel}"
+      built=$((built + 1))
+    done
+
+    if [[ "${built}" -eq 0 ]]; then
+      echo "No kernel with installed headers was found" >&2
+      exit 1
+    fi
+  args:
+    executable: /bin/bash
+  register: mofed_dkms_rebuild
+  changed_when: true
+
+- name: Display DKMS rebuild result
+  ansible.builtin.debug:
+    var: mofed_dkms_rebuild.stdout_lines
+
+- name: Update all image initramfs files
+  ansible.builtin.command:
+    argv:
+      - update-initramfs
+      - -u
+      - -k
+      - all
+  changed_when: true
+
+- name: Show final MLNX OFED DKMS status
+  ansible.builtin.command: dkms status
+  register: mofed_dkms_status
+  changed_when: false
+
+- name: Display final MLNX OFED DKMS status
+  ansible.builtin.debug:
+    var: mofed_dkms_status.stdout_lines

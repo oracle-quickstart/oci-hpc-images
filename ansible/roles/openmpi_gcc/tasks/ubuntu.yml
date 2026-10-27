@@ -3,7 +3,11 @@
   block:
     - name: Install OpenMPI prereqs
       ansible.builtin.apt:
-        name: libiberty-dev
+        name:
+          - librdmacm-dev
+          - libiberty-dev
+          - libibverbs-dev
+          - libtool
         state: present
         lock_timeout: 300
 
@@ -14,13 +18,12 @@
         clone: true
         update: true
         version: "{{ucx_version}}"
-      when: ucx_version is defined
 
     - name: Configure and build UCX
       ansible.builtin.shell: >
         ./autogen.sh && \
         ./configure \
-        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %} \
+        {% if 'nvidia' in options %}--with-cuda={{ cuda_home }}{% endif %} \
         {% if 'amd' in options %}--with-rocm=/opt/rocm{% endif %} \
         --disable-logging --disable-debug --disable-assertions \
         --disable-params-check --with-rdmacm --with-verbs --with-mlx5 --enable-cma \
@@ -31,6 +34,21 @@
       args:
         chdir: "/tmp/ucx-{{ ucx_version }}"
         executable: /bin/bash
+
+    - name: Check UCX IB transport module
+      ansible.builtin.stat:
+        path: "/opt/openmpi-{{ openmpi_version }}/lib/ucx/libuct_ib.so"
+        follow: true
+      register: ucx_ib_module
+      when: ucx_version is defined
+
+    - name: Require UCX IB transport module
+      ansible.builtin.assert:
+        that:
+          - ucx_ib_module.stat.isreg | default(false)
+        fail_msg: >-
+          UCX IB transport module is missing. Check RDMA development
+          dependencies and UCX configure output.
       when: ucx_version is defined
 
     - name: Clone UCC github repository
@@ -40,17 +58,27 @@
         clone: true
         update: true
         version: "{{ucc_version}}"
-      when: ucc_version is defined
       register: git_clone_result
       retries: 5          # number of retry attempts
       delay: 30           # wait time (seconds) between retries
       until: git_clone_result is succeeded
 
+    - name: Install GCC 12 C++ headers for ROCm 10 on Ubuntu 22
+      ansible.builtin.apt:
+        name: libstdc++-12-dev
+        state: present
+        lock_timeout: 300
+      when:
+        - "'amd' in options"
+        - ansible_distribution_major_version == '22'
+        - amd_rocm_version is defined
+        - amd_rocm_version is version('10.0', '>=')
+
     - name: Configure and build UCC
       ansible.builtin.shell: >
         ./autogen.sh && \
         ./configure \
-        {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda{% endif %} \
+        {% if 'nvidia' in options %}--with-cuda={{ cuda_home }}{% endif %} \
         {% if 'amd' in options %}--with-rocm=/opt/rocm --with-rocm-arch=all-arch-no-native{% endif %} \
         --with-ucx=/opt/openmpi-{{ openmpi_version }} \
         --prefix=/opt/openmpi-{{ openmpi_version }} \
@@ -59,7 +87,6 @@
       args:
         chdir: "/tmp/ucc-{{ ucc_version }}"
         executable: /bin/bash
-      when: ucc_version is defined
 
     - name: Download and unpack OpenMPI
       ansible.builtin.unarchive:
@@ -67,80 +94,25 @@
         dest: /tmp/
         remote_src: true
 
-    - name: Check if hcoll Debian package is actually installed
-      ansible.builtin.command: dpkg-query -W -f='${db:Status-Abbrev}' hcoll
-      register: hcoll_pkg_result
-      failed_when: false
-      changed_when: false
-
-    - name: Set hcoll package installed fact
-      ansible.builtin.set_fact:
-        hcoll_pkg_installed: "{{ hcoll_pkg_result.stdout is match('^ii') }}"
-
-    - name: Check if hcoll.pc exists at custom path
-      ansible.builtin.set_fact:
-        hcoll_pc_path: "{{ install_prefix }}/{{ mellanox_hpcx_package }}/hcoll/lib/pkgconfig/hcoll.pc"
-        hcoll_hpcx_base: "{{ install_prefix }}/{{ mellanox_hpcx_package }}"
-      when: mellanox_hpcx_package is defined
-
-    - name: Check if hcoll.pc exists at custom path
-      ansible.builtin.stat:
-        path: "{{ hcoll_pc_path }}"
-      register: hcoll_pc_file
-      when: mellanox_hpcx_package is defined
-
-    - name: Update hcoll.pc to reflect true HPC-X install location
-      ansible.builtin.replace:
-        path: "{{ hcoll_pc_path }}"
-        regexp: '^hpcx_home=.*$'
-        replace: "hpcx_home={{ hcoll_hpcx_base }}"
-      when:
-        - mellanox_hpcx_package is defined
-        - not hcoll_pkg_installed
-        - hcoll_pc_file is defined
-        - hcoll_pc_file.stat.exists
-
-    - name: Set with_hcoll_flag
-      set_fact:
-        with_hcoll_flag: >-
-          {%- if hcoll_pkg_installed -%}
-          --with-hcoll
-          {%- elif mellanox_hpcx_package is defined and hcoll_pc_file is defined and hcoll_pc_file.stat.exists -%}
-          --with-hcoll={{ hcoll_hpcx_base }}/hcoll
-          {%- endif -%}
-
     - name: Configure and build OpenMPI
       ansible.builtin.shell: >
         ./configure --prefix=/opt/openmpi-{{ openmpi_version }} \
                     --with-ucx=/opt/openmpi-{{ openmpi_version }} \
-                    {% if ucc_version is defined %}--with-ucc=/opt/openmpi-{{ openmpi_version }} {% endif %} \
-                    {{ with_hcoll_flag | default('') | replace('\n','') | trim}} \
-                    {% if 'nvidia' in options %}--with-cuda=/usr/local/cuda {% endif %} \
+                    --with-ucc=/opt/openmpi-{{ openmpi_version }} \
+                    --without-hcoll \
+                    --with-hwloc=internal \
+                    --with-libevent=internal \
+                    --with-pmix=internal \
+                    --with-prrte=internal \
+                    {% if 'nvidia' in options %}--with-cuda={{ cuda_home }} {% endif %} \
                     {% if 'amd' in options %}--with-rocm=/opt/rocm {% endif %} \
                     --enable-mpirun-prefix-by-default \
                     --with-platform=contrib/platform/mellanox/optimized \
-                    --with-pmix --enable-ipv6 && make -j$(nproc) \
+                    --enable-ipv6 && make -j$(nproc) \
         && make install
       args:
         chdir: "/tmp/openmpi-{{ openmpi_version }}"
         executable: /bin/bash
-
-    - name: Ensure directory exists
-      ansible.builtin.file:
-        path: /etc/environment-modules/modules/mpi/openmpi/
-        state: directory
-        mode: '0775'
-        owner: ubuntu
-        group: ubuntu
-        recurse: true
-        
-    - name: Install OpenMPI module file
-      ansible.builtin.template:
-        src: templates/module.j2
-        dest: "/etc/environment-modules/modules/mpi/openmpi/{{ openmpi_version }}-gcc"
-        owner: root
-        group: root
-        mode: '0644'
 
     - name: Install OpenMPI shell files
       ansible.builtin.template:

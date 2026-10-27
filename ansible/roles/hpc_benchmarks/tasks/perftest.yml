@@ -1,23 +1,6 @@
 ---
 - name: Install perftest
-  vars:
-    user: "{{ ansible_user }}"
   block:
-    - name: Install dependencies
-      ansible.builtin.apt:
-        name:
-          - libtool
-        lock_timeout: 300
-      when: ansible_distribution == 'Ubuntu'
-    - name: Create perftest directory
-      ansible.builtin.file:
-        path: "{{ benchmark_base_path }}/perftest"
-        state: directory
-        mode: "0755"
-        owner: "{{ user }}"
-        group: "{{ user }}"
-      become: true
-
     - name: Get the latest release tag from GitHub
       ansible.builtin.uri:
         url: "{{ perftest_repo | replace('.git', '') }}/releases/latest"
@@ -33,34 +16,54 @@
     - name: Clone IB perftest
       ansible.builtin.git:
         repo: "{{ perftest_repo }}"
-        dest: "{{ benchmark_base_path }}/perftest"
+        dest: /tmp/perftest
         force: true
         version: "{{ perftest_version }}"
-      become_user: "{{ user }}"
-      become: true
 
     - name: Autogen IB perftest # noqa no-changed-when
       ansible.builtin.command: ./autogen.sh
       args:
-        chdir: "{{ benchmark_base_path }}/perftest"
+        chdir: /tmp/perftest
 
     - name: Configure IB perftest for GPUDirect # noqa no-changed-when
-      ansible.builtin.command: ./configure CUDA_H_PATH=/usr/local/cuda/include/cuda.h
+      ansible.builtin.command:
+        cmd: >-
+          ./configure --prefix={{ benchmark_base_path }}/perftest
+          CUDA_H_PATH={{ cuda_home }}/include/cuda.h
+          LDFLAGS=-Wl,--enable-new-dtags,-rpath,{{ cuda_home }}/lib64
       args:
-        chdir: "{{ benchmark_base_path }}/perftest"
+        chdir: /tmp/perftest
 
     - name: make block
       block:
         - name: Build IB perftest
           community.general.make:
-            chdir: "{{ benchmark_base_path }}/perftest"  
+            chdir: /tmp/perftest
             jobs: "{{ ansible_processor_vcpus }}"
       rescue:
         - name: Build IB perftest (Needed on OL8)
           community.general.make:
-            chdir: "{{ benchmark_base_path }}/perftest"
+            chdir: /tmp/perftest
             params:
               LD: g++
-              LDFLAGS: "-L/usr/local/cuda/lib64 -lstdc++ -lcudart"
+              LDFLAGS: "-L{{ cuda_home }}/lib64 -lstdc++ -lcudart -Wl,--enable-new-dtags,-rpath,{{ cuda_home }}/lib64"
             jobs: "{{ ansible_processor_vcpus }}"
-            
+
+    - name: Install IB perftest
+      community.general.make:
+        chdir: /tmp/perftest
+        target: install
+
+    - name: Install perftest license
+      ansible.builtin.copy:
+        src: /tmp/perftest/COPYING
+        dest: "{{ benchmark_base_path }}/perftest/COPYING"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Remove perftest build directory
+      ansible.builtin.file:
+        path: /tmp/perftest
+        state: absent

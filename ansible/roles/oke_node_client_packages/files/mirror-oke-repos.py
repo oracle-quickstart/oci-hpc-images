@@ -3,24 +3,21 @@
 Mirror OKE APT repositories for offline/local use in custom images.
 
 Usage:
-    ./mirror-oke-repos.py [OUTPUT_DIR] [UBUNTU_VERSION]
+    ./mirror-oke-repos.py OUTPUT_DIR UBUNTU_VERSION KUBERNETES_VERSION ARCHITECTURE
 
 Arguments:
-    OUTPUT_DIR      - Where to save mirrored repos (default: /opt/oke-node-client-packages)
-    UBUNTU_VERSION  - Which Ubuntu to mirror: 22, 24, or all (default: all)
-                      22 = jammy (Ubuntu 22.04)
-                      24 = noble (Ubuntu 24.04)
-                      all = both versions
+    OUTPUT_DIR          - Where to save mirrored repositories
+    UBUNTU_VERSION      - Which Ubuntu to mirror: 22, 24, jammy, noble, or all
+    KUBERNETES_VERSION  - Kubernetes repository version, such as 1.36
+    ARCHITECTURE        - Debian architecture: amd64 or arm64
 
 Environment Variables:
     OKE_PAR_BASE    - Override the default PAR URL for the OKE packages repository
 
 Examples:
-    ./mirror-oke-repos.py                           # Mirror all to default location
-    ./mirror-oke-repos.py ./local-repos             # Mirror all to ./local-repos
-    ./mirror-oke-repos.py ./local-repos 22          # Mirror Ubuntu 22.04 only
-    ./mirror-oke-repos.py ./local-repos 24          # Mirror Ubuntu 24.04 only
-    OKE_PAR_BASE="https://..." ./mirror-oke-repos.py  # Use custom PAR URL
+    ./mirror-oke-repos.py ./local-repos jammy 1.36 amd64
+    ./mirror-oke-repos.py ./local-repos noble 1.36 arm64
+    OKE_PAR_BASE="https://..." ./mirror-oke-repos.py ./local-repos 24 1.36 amd64
 """
 
 import gzip
@@ -41,11 +38,7 @@ _DEFAULT_PAR_BASE = (
 )
 PAR_BASE = os.environ.get("OKE_PAR_BASE", _DEFAULT_PAR_BASE)
 
-# Kubernetes versions to mirror
-K8S_VERSIONS = ["1.33", "1.34", "1.35", "1.36"]
-
-# Architectures to mirror
-ARCHITECTURES = ["amd64", "arm64"]
+SUPPORTED_ARCHITECTURES = {"amd64", "arm64"}
 
 # Ubuntu version mappings
 UBUNTU_VERSIONS = {
@@ -144,7 +137,7 @@ def decompress_packages(local_dir: Path, arch: str) -> Optional[Path]:
 
 
 def mirror_repository(
-    ubuntu: str, k8s: str, output_dir: Path
+    ubuntu: str, k8s: str, architecture: str, output_dir: Path
 ) -> tuple[str, str, int, int, int]:
     """
     Mirror a single repository.
@@ -179,7 +172,12 @@ def mirror_repository(
     
     # Step 2: Parse Release and download metadata files
     print("\n[2/4] Downloading metadata files...")
-    metadata_files = parse_release_file(release_path)
+    metadata_files = [
+        file
+        for file in parse_release_file(release_path)
+        if architecture in file
+        or not any(arch in file for arch in SUPPORTED_ARCHITECTURES)
+    ]
     
     if not metadata_files:
         print("  ✗ No metadata files found in Release")
@@ -203,24 +201,18 @@ def mirror_repository(
     meta_success = sum(1 for r in meta_downloads if r.success)
     print(f"  Downloaded {meta_success}/{len(metadata_files)} metadata files")
     
-    # Step 3: Decompress and parse Packages files for each architecture
-    print("\n[3/4] Parsing package lists...")
-    deb_files: list[str] = []
-    seen: set[str] = set()
-    for arch in ARCHITECTURES:
-        packages_path = decompress_packages(local_dir, arch)
-        if not packages_path:
-            print(f"  ✗ No Packages file found for {arch}")
-            continue
-        arch_debs = parse_packages_file(packages_path)
-        print(f"  Found {len(arch_debs)} packages for {arch}")
-        for deb in arch_debs:
-            if deb not in seen:
-                seen.add(deb)
-                deb_files.append(deb)
+    # Step 3: Decompress and parse the Packages file
+    print("\n[3/4] Parsing package list...")
+    packages_path = decompress_packages(local_dir, architecture)
+    if not packages_path:
+        print(f"  ✗ No Packages file found for {architecture}")
+        return repo_key, "INCOMPLETE", 0, meta_success, meta_success
+
+    deb_files = parse_packages_file(packages_path)
+    print(f"  Found {len(deb_files)} packages for {architecture}")
 
     if not deb_files:
-        print("  ✗ No packages found in any Packages file")
+        print("  ✗ No packages found in Packages file")
         return repo_key, "INCOMPLETE", 0, meta_success, meta_success
 
     # Step 4: Download .deb packages in parallel
@@ -267,8 +259,17 @@ def get_total_size(path: Path) -> str:
 
 def main():
     # Parse arguments
-    output_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/opt/oke-node-client-packages")
-    ubuntu_arg = sys.argv[2] if len(sys.argv) > 2 else "all"
+    if len(sys.argv) != 5:
+        print(
+            "Usage: mirror-oke-repos.py OUTPUT_DIR UBUNTU_VERSION "
+            "KUBERNETES_VERSION ARCHITECTURE"
+        )
+        sys.exit(1)
+
+    output_dir = Path(sys.argv[1])
+    ubuntu_arg = sys.argv[2]
+    k8s_version = sys.argv[3]
+    architecture = sys.argv[4]
     
     # Determine Ubuntu versions to mirror
     if ubuntu_arg.lower() == "all":
@@ -279,13 +280,25 @@ def main():
         print(f"Error: Invalid Ubuntu version '{ubuntu_arg}'")
         print("Valid options: 22, 24, all (or jammy, noble)")
         sys.exit(1)
+
+    version_parts = k8s_version.split(".")
+    if len(version_parts) != 2 or not all(part.isdigit() for part in version_parts):
+        print(f"Error: Invalid Kubernetes version '{k8s_version}'")
+        print("Use the major.minor format, such as 1.36")
+        sys.exit(1)
+
+    if architecture not in SUPPORTED_ARCHITECTURES:
+        print(f"Error: Invalid architecture '{architecture}'")
+        print("Valid architectures: amd64, arm64")
+        sys.exit(1)
     
     print("=" * 60)
     print("OKE APT Repository Mirror (Python)")
     print("=" * 60)
     print(f"Output directory: {output_dir}")
     print(f"Ubuntu versions:  {', '.join(ubuntu_versions)}")
-    print(f"K8s versions:     {', '.join(K8S_VERSIONS)}")
+    print(f"K8s version:      {k8s_version}")
+    print(f"Architecture:     {architecture}")
     print(f"Parallel workers: {MAX_WORKERS}")
     print("=" * 60)
     
@@ -295,9 +308,8 @@ def main():
     # Mirror each repository
     results = []
     for ubuntu in ubuntu_versions:
-        for k8s in K8S_VERSIONS:
-            result = mirror_repository(ubuntu, k8s, output_dir)
-            results.append(result)
+        result = mirror_repository(ubuntu, k8s_version, architecture, output_dir)
+        results.append(result)
     
     # Print summary
     print("\n" + "=" * 60)

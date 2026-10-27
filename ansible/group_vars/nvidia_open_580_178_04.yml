@@ -1,0 +1,12 @@
+nvidia_driver_version: "580"
+nvidia_driver_branch: "580"
+nvidia_driver_ubuntu_branch: "580.178.04"
+nvidia_driver_open: true
+nvidia_driver_skip_reboot: true
+nvidia_driver_ubuntu_cuda_packages_open: >-
+  {{ ['nvidia-open=580.178.04-1ubuntu1',
+      'libnvidia-nscq=580.178.04-1ubuntu1',
+      'nvidia-fabricmanager=580.178.04-1ubuntu1',
+      'nvlsm=2025.10.14-1']
+     + (['nvlink5=580.178.04-1', 'nvidia-imex=580.178.04-1ubuntu1']
+        if ansible_architecture == 'aarch64' else []) }}

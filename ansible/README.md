@@ -27,11 +27,24 @@ ansible_hpc is a collection of ansible roles and playbook to build an HPC image.
 | nvidia-cuda          | Installs cuda                                                                                                                                |
 | nvidia-cudnn         | Installs cuda libraries for neural networks - https://developer.nvidia.com/cudnn****                                                         |
 | nvidia-fabricmanager | installs fabricmanager for nvidia                                                                                                            |
-| nvidia-nccl          | Installs NCCL libs                                                                                                                           |
+| nvidia-nccl          | Installs NCCL libs; builds and installs the NCCL inspector plugin when the monitoring option is set                                          |
 | occl-net-ib          | Downloads a versioned, architecture-specific `liboccl-net-ib.so` into `/opt/occl-net/lib` and registers it with the dynamic linker         |
 | nvidia-dcgm          | Installs dcgm                                                                                                                                |
 | hpc-benchmarks       | Installs benchmark utils - gpuburn,nccl-test,stream                                                                                          |
 | systemd              | Configures systemd                                                                                                                           |
+## Benchmark installation
+
+The `packages` role installs common build prerequisites before the component roles.
+The active `hpc_benchmarks` tasks build in `/tmp` and install under
+`benchmark_base_path` (normally `/opt/oci-hpc`):
+
+| Benchmark | Installed executables |
+|-----------|-----------------------|
+| NCCL tests | `/opt/oci-hpc/nccl-tests/bin/*_perf` |
+| perftest | `/opt/oci-hpc/perftest/bin/` |
+| STREAM | `/opt/oci-hpc/STREAM/bin/stream` |
+| OSU micro-benchmarks | `/opt/oci-hpc/osu-micro-benchmarks/libexec/osu-micro-benchmarks/mpi/` |
+
 # Group variables
 
 group_vars/ folder specified variables used by the build job 
@@ -41,11 +54,10 @@ group_vars/ folder specified variables used by the build job
 | benchmark_base_path                   | Base path for benchmark tools                                               |
 | cuda_toolkit_version                  | Version of the CUDA toolkit                                                 |
 | cuda_version                          | Version of CUDA                                                             |
-| gcc_version                           | Version of GCC                                                              |
 | gpuburn_repo                          | Repository for GPU burn tests                                               |
 | gpu_sysctl                            | Sysctl settings for GPU                                                     |
 | grub_cmdline_kernel5                  | GRUB command line settings                                                  |
-| grub_cmdline_kernel6                  | GRUB command line settings for Ubuntu 24.04 (IOMMU turned off)              |
+| grub_cmdline_kernel6                  | GRUB settings for kernel 6.8+ (POLLARA IOMMU=pt; otherwise off)              |
 | grub_cmdline_disable_mitigations      | GRUB command line settings to disable mitigations                           |
 | grub_cmdline_enroot                   | GRUB command line settings for Enroot                                       |
 | grub_cmdline_network_device_names     | GRUB command line settings for network device names                         |
@@ -74,6 +86,9 @@ group_vars/ folder specified variables used by the build job
 | oca_download_url                      | URL to download Oracle Cloud Agent                                          |
 | oci_cloud_agent_channel_ubuntu        | Channel for Oracle Cloud Agent on Ubuntu                                    |
 | oci_cloud_agent_version               | Version of Oracle Cloud Agent                                               |
+| oci_dr_hpc_v2_version                 | DrHPCv2 selector: `default` (no override), `latest`, or a specific version |
+| oci_dr_hpc_v2_package_url             | Optional Ubuntu DrHPCv2 package URL; defaults to the public versioned package URL |
+| oci_dr_hpc_v2_rpm_package_url         | Optional Oracle Linux DrHPCv2 RPM URL; defaults to the public versioned RPM URL |
 | oci_cn_auth_version                   | Version of OCI CN Auth                                                      |
 | oci_hpc_dapl_configure_version        | Version of OCI HPC DAPL configuration                                       |
 | oci_hpc_mlx_configure_version         | Version of OCI HPC Mellanox configuration                                   |
@@ -90,8 +105,6 @@ group_vars/ folder specified variables used by the build job
 | rhel7_mellanox_hpcx_package           | Mellanox HPC-X package for RHEL 7                                           |
 | rhel8_mellanox_hpcx_package           | Mellanox HPC-X package for RHEL 8                                           |
 | rhel9_mellanox_hpcx_package           | Mellanox HPC-X package for RHEL 9                                           |
-| spack_base_path                       | Base path for Spack                                                         |
-| spack_repo                            | Repository for Spack                                                        |
 | stable_nvidia_dcgm_version            | Stable version of NVIDIA DCGM                                               |
 | ubuntu20_mellanox_hpcx_package        | Mellanox HPC-X package for Ubuntu 20                                        |
 | ubuntu_kernel                         | Ubuntu kernel policy: major.minor series and flavor, resolved to latest ABI |

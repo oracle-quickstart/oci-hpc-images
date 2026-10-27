@@ -1,0 +1,101 @@
+---
+- name: Install NCCL tests
+  block:
+    - name: Require our OpenMPI build
+      ansible.builtin.assert:
+        that:
+          - "'openmpi' in options"
+        fail_msg: NCCL tests require the openmpi build option.
+
+    - name: Clone NCCL tests
+      ansible.builtin.git:
+        repo: "{{ nccltest_repo }}"
+        dest: /tmp/nccl-tests
+        force: true
+        version: "{{ nccltests_version }}"
+
+    - name: Build NCCL tests
+      community.general.make:
+        chdir: /tmp/nccl-tests
+        jobs: "{{ ansible_processor_vcpus }}"
+        params:
+          MPI: "1"
+          MPI_HOME: "/opt/openmpi-{{ openmpi_version }}"
+          CUDA_HOME: "{{ cuda_home }}"
+          # A command-line NVLDFLAGS overrides upstream flags, so include all link dependencies.
+          NVLDFLAGS: >-
+            -L{{ cuda_home }}/lib64 -lcudart -lrt
+            -L/opt/openmpi-{{ openmpi_version }}/lib -L/opt/openmpi-{{ openmpi_version }}/lib64 -lmpi -lnccl
+            -Xlinker --enable-new-dtags
+            -Xlinker -rpath,/opt/openmpi-{{ openmpi_version }}/lib:{{ cuda_home }}/lib64
+
+    - name: Create NCCL tests installation directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/nccl-tests/bin"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Find NCCL test executables
+      ansible.builtin.find:
+        paths: /tmp/nccl-tests/build
+        patterns: "*_perf"
+        file_type: file
+      register: hpc_benchmarks_nccl_bins
+
+    - name: Require built NCCL test executables
+      ansible.builtin.assert:
+        that:
+          - hpc_benchmarks_nccl_bins.matched > 0
+
+    - name: Install NCCL test executables
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "{{ benchmark_base_path }}/nccl-tests/bin/"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0755"
+      loop: "{{ hpc_benchmarks_nccl_bins.files }}"
+
+    - name: Install NCCL tests documentation and license
+      ansible.builtin.copy:
+        src: "/tmp/nccl-tests/{{ item }}"
+        dest: "{{ benchmark_base_path }}/nccl-tests/{{ item }}"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - README.md
+        - LICENSE.txt
+
+    - name: Create legacy NCCL test directory for the diagnostic tripwire
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/nccl-test/build"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install NCCL compatibility fixup script
+      ansible.builtin.copy:
+        src: nccl_compat_fix.py
+        dest: "{{ benchmark_base_path }}/nccl-tests/bin/nccl_compat_fix.py"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install diagnostic tripwire at the legacy NCCL test path
+      ansible.builtin.copy:
+        src: nccl_bvr_tripwire.sh
+        dest: "{{ benchmark_base_path }}/nccl-test/build/all_reduce_perf"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Remove NCCL tests build directory
+      ansible.builtin.file:
+        path: /tmp/nccl-tests
+        state: absent

@@ -1,29 +1,45 @@
 ---
-- name: Install perftest
-  vars:
-    user: "{{ ansible_user }}"
+- name: Install STREAM
   block:
-    - name: Create STREAM directory
-      ansible.builtin.file:
-        path: "{{ benchmark_base_path }}/stream"
-        state: directory
-        mode: "0755"
-        owner: "{{ user }}"
-        group: "{{ user }}"
-      become: true
-
     - name: Clone STREAM from repo
       ansible.builtin.git:
         repo: "{{ stream_repo }}"
-        dest: "{{ benchmark_base_path }}/stream"
+        dest: /tmp/STREAM
         force: true
         version: "{{ stream_version | default('master') }}"
-      become_user: "{{ user }}"
-      become: true
 
     - name: Build STREAM # noqa no-changed-when
       ansible.builtin.command:
-        cmd: "gcc {{ stream_cflags }} -o {{ benchmark_base_path }}/stream/stream {{ benchmark_base_path }}/stream/stream.c"
-        chdir: "{{ benchmark_base_path }}/stream"
-      become_user: "{{ user }}"
-      become: true
+        cmd: "gcc {{ stream_cflags }} -o stream stream.c"
+        chdir: /tmp/STREAM
+
+    - name: Create STREAM installation directory
+      ansible.builtin.file:
+        path: "{{ benchmark_base_path }}/STREAM/bin"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install STREAM executable
+      ansible.builtin.copy:
+        src: /tmp/STREAM/stream
+        dest: "{{ benchmark_base_path }}/STREAM/bin/stream"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install STREAM source and license notice
+      ansible.builtin.copy:
+        src: /tmp/STREAM/stream.c
+        dest: "{{ benchmark_base_path }}/STREAM/stream.c"
+        remote_src: true
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Remove STREAM build directory
+      ansible.builtin.file:
+        path: /tmp/STREAM
+        state: absent

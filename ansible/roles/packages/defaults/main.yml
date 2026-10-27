@@ -1,3 +1,14 @@
 ---
 packages_extra: {}
 packages_extra_reboot: false
+
+# Match the yq version provided by Oracle Linux EPEL and use the same
+# implementation on Ubuntu, where Jammy does not provide an apt yq package.
+yq_version: "4.53.3"
+yq_downloads:
+  x86_64:
+    url: "https://github.com/mikefarah/yq/releases/download/v{{ yq_version }}/yq_linux_amd64"
+    checksum: "sha256:fa52a4e758c63d38299163fbdd1edfb4c4963247918bf9c1c5d31d84789eded4"
+  aarch64:
+    url: "https://github.com/mikefarah/yq/releases/download/v{{ yq_version }}/yq_linux_arm64"
+    checksum: "sha256:578648e463a11c1b6db6010cbf41eafed6bee79466fcffa1bb446672cf7945ea"

@@ -81,17 +81,3 @@
         dest: "{{ modulefile_directory }}/hpcx/{{ mellanox_hpcx_version }}/{{ item.path | basename }}"
         state: link
       loop: "{{ hpcx_modules.files }}"
-
-    - name: Create MPI module directory
-      ansible.builtin.file:
-        path: "{{ modulefile_directory }}/mpi/openmpi"
-        state: directory
-        mode: "0755"
-
-    - name: Create HPCX module file
-      ansible.builtin.template:
-        dest: "{{ modulefile_directory }}/mpi/openmpi/hpcx-{{ mellanox_hpcx_version }}"
-        src: templates/module.j2
-        owner: root
-        group: root
-        mode: "0644"

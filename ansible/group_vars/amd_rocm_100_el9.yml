@@ -1,0 +1,15 @@
+# AMD Instinct MI300X (gfx942) and MI355X (gfx950).
+# Experimental on OL9 RHCK; AMD documents UEK for OL9.
+amd_dkms_version: "31.50"
+# AMDGPU 31.50 publishes a single EL9 repository, not per-minor EL9 paths.
+amd_dkms_el_repo_release: "9"
+amd_rocm_version: "10.0.0"
+amd_rocm_el_stable_repo_url: "https://stable.repo.amd.com/rocm/core/packages/rhel9/x86_64"
+amd_rocm_el_stable_repo_gpgkey_url: "https://stable.repo.amd.com/rocm/gpg/packages.gpg"
+amd_rocm_el_packages:
+  - "amdrocm-core-sdk10.0-gfx942"
+  - "amdrocm-core-sdk10.0-gfx950"
+amd_rvs_el_repo_url: "https://stable.repo.amd.com/rocm/extras/rvs/packages/rhel9/x86_64"
+amd_rvs_el_repo_gpgkey_url: "https://stable.repo.amd.com/rocm/gpg/packages.gpg"
+amd_rvs_package: "amdrocm10-rvs"
+amd_perftest_commit: 720b61082454e189b1f21835ec175536a944afc3 # 2026-04-17

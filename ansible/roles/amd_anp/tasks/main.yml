@@ -1,0 +1,70 @@
+---
+- name: Clone ANP github repository
+  ansible.builtin.git:
+    repo: "{{ amd_anp_repo }}"
+    dest: /opt/amd-anp
+    clone: true
+    update: true
+    version: "{{amd_anp_commit}}"
+  when:
+    - amd_custom_rccl_anp_url | default('') | length == 0
+
+- name: Copy ANP from download URL
+  block:
+    - name: Untar custom rccl anp package
+      ansible.builtin.unarchive:
+        src: "{{ amd_custom_rccl_anp_url }}"
+        dest: "/tmp"
+        remote_src: true
+        creates: /tmp/amd-anp
+
+    - name: Move custom anp package
+      ansible.builtin.copy:
+        src: "/tmp/amd-anp"
+        dest: "/opt"
+        remote_src: true
+  when:
+    - amd_custom_rccl_anp_url | default('') | length > 0
+
+- name: Install dependencies
+  ansible.builtin.apt:
+    name:
+      - libfmt-dev
+      - libboost-dev
+    lock_timeout: 300
+
+- name: Creates /opt/amd-anp/build directory
+  ansible.builtin.file:
+    path: /opt/amd-anp/build
+    state: directory
+    mode: "0755"
+
+- name: Build AMD ANP
+  community.general.make:
+    chdir: /opt/amd-anp
+    params:
+      RCCL_HOME: /opt/rccl
+    jobs: "{{ ansible_processor_vcpus }}"
+  environment:
+    RCCL_HOME: /opt/rccl
+    RCCL_BUILD: /opt/rccl/build
+    LD_LIBRARY_PATH: /usr/lib:{{ ansible_env.PATH }}
+    PATH: /usr/sbin:{{ ansible_env.PATH }}
+
+- name: Install AMD ANP
+  community.general.make:
+    chdir: /opt/amd-anp
+    params:
+      RCCL_HOME: /opt/rccl
+    target: install
+  environment:
+    RCCL_HOME: /opt/rccl
+    RCCL_BUILD: /opt/rccl/build
+    LD_LIBRARY_PATH: /usr/lib:{{ ansible_env.PATH }}
+    PATH: /usr/sbin:{{ ansible_env.PATH }}
+  become: true
+
+- name: Remove ANP source and build artifacts
+  ansible.builtin.file:
+    path: /opt/amd-anp
+    state: absent

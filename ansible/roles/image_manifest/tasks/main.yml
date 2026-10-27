@@ -66,6 +66,11 @@
           exit 1;
         fi
       expected: true
+    - name: oci_dr_hpc_v2
+      command: >-
+        oci-dr-hpc-v2 --version 2>/dev/null |
+        awk '/^oci-dr-hpc-v2 version / { print $3; exit }'
+      expected: "{{ ansible_os_family in ['Debian', 'RedHat'] }}"
     - name: mellanox_ofed
       command: ofed_info -s | sed 's/:$//'
       expected: "{{ vars.get('doca_ofed_version') is not none or vars.get('mellanox_ofed_version') is not none }}"
@@ -74,11 +79,10 @@
       expected: "{{ 'nvidia' in image_manifest_build_options }}"
     - name: cuda_toolkit
       command: >-
-        if [ -r /usr/local/cuda/version.json ]; then
-          python3 -c 'import json, sys; data = json.load(open("/usr/local/cuda/version.json")); version = data.get("cuda", {}).get("version") or data.get("version") or ""; print(version); sys.exit(0 if version else 1)';
-        else
-          exit 1;
-        fi
+        {% if 'nvidia' in image_manifest_build_options %}
+        jq -er 'first((.cuda.version, .version) | select(type == "string" and length > 0))'
+        {{ (cuda_home ~ '/version.json') | quote }}
+        {% endif %}
       expected: "{{ 'nvidia' in image_manifest_build_options }}"
     - name: nvidia_dcgm
       command: dcgmi --version | awk '/version/ { print $NF; exit }'
@@ -93,6 +97,15 @@
           exit 1;
         fi
       expected: "{{ 'nvidia' in image_manifest_build_options }}"
+    - name: nccl_inspector
+      command: >-
+        for path in /usr/lib64/libnccl-profiler-inspector.so
+        /usr/lib/{{ ansible_architecture }}-linux-gnu/libnccl-profiler-inspector.so; do
+        if [ -r "$path" ] && grep -aq NCCL_INSPECTOR_OTEL_EXPORT "$path"; then
+        echo "{{ nccl_inspector_version | default('unknown') }}"; exit 0; fi;
+        done;
+        exit 1
+      expected: "{{ 'nvidia' in image_manifest_build_options and 'monitoring' in image_manifest_build_options }}"
     - name: amd_rocm
       command: >-
         if [ -r /opt/rocm/.info/version ]; then
@@ -243,6 +256,8 @@
         | combine((vars.get('nccl_version') is not none and 'nvidia' in image_manifest_build_options) | ternary({'nccl': vars.get('nccl_version')}, {}))
         | combine((vars.get('amd_rocm_version') is not none and 'amd' in image_manifest_build_options) | ternary({'rocm': vars.get('amd_rocm_version')}, {}))
         | combine((vars.get('amd_dkms_version') is not none and 'amd' in image_manifest_build_options) | ternary({'amdgpu': vars.get('amd_dkms_version')}, {}))
+        | combine((vars.get('amd_ainic_bundle_version') is not none and 'pollara' in image_manifest_build_options) | ternary({'amd_ainic_host_software_bundle': vars.get('amd_ainic_bundle_version')}, {}))
+        | combine((vars.get('amd_firmware_bundle_version') is not none and 'pollara' in image_manifest_build_options) | ternary({'amd_firmware_bundle': vars.get('amd_firmware_bundle_version')}, {}))
       }}
 
 - name: Build image manifest data

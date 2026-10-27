@@ -1,0 +1,110 @@
+---
+- name: AINIC_BUNDLE for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - amd_ainic_bundle_file_url is defined
+  block:
+    - name: Untar AINIC_BUNDLE
+      ansible.builtin.unarchive:
+        src: "{{ amd_ainic_bundle_file_url }}"
+        dest: "/tmp"
+        remote_src: true
+        creates: /tmp/{{ amd_ainic_bundle_file_name }}
+  
+    - name: Untar host_sw_pkg
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ amd_ainic_bundle_file_name }}/{{ host_sw_pkg_file }}"
+        dest: "/tmp/{{ amd_ainic_bundle_file_name }}"
+        remote_src: yes
+
+    - name: Install dependencies
+      ansible.builtin.apt:
+        name:
+          - autoconf
+          - automake
+          - cmake
+          - cron
+          - device-tree-compiler 
+          - dkms
+          - dpkg-dev
+          - initramfs-tools
+          - jq
+          - libibverbs-dev 
+          - libnl-3-dev
+          - libnl-route-3-dev
+          - libpci-dev
+          - librdmacm-dev 
+          - libtool
+          - logrotate
+          - make 
+          - ninja-build
+          - perl
+          - pkg-config
+          - policycoreutils
+          - procps 
+          - python3
+          - tar
+          - util-linux
+          - xz-utils
+  
+    - name: Install bundle
+      ansible.builtin.shell: |
+        sudo AINIC_PERSONA=1 ./install.sh -y
+      args:
+        chdir: "/tmp/{{ amd_ainic_bundle_file_name }}/{{ host_sw_pkg_file_name}}"
+
+- name: Install AINIC from AMD repository for Ubuntu
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - amd_ainic_bundle_file_url is not defined
+  environment: "{{ proxy_env if proxy_env is defined else {} }}"
+  block:
+    - name: Create AINIC configuration directory
+      ansible.builtin.file:
+        path: /etc/amd/ainic
+        state: directory
+        mode: "0755"
+
+    - name: Select AINIC persona 1 before package installation
+      ansible.builtin.copy:
+        dest: /etc/amd/ainic/nicctl.conf
+        content: "AINIC_PERSONA=1\n"
+        mode: "0644"
+
+    - name: Add AMD AINIC repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/amd_rocm.gpg] {{ amd_ainic_repo_url }} {{ ansible_distribution_release }} main"
+        filename: amdainic
+        state: present
+        update_cache: true
+
+    - name: Install pinned AINIC host software packages
+      ansible.builtin.apt:
+        name:
+          - "ionic-common={{ amd_ainic_pkg_versions['ionic-common'] }}"
+          - "ionic-dkms={{ amd_ainic_pkg_versions['ionic-dkms'] }}"
+          - "pds-dkms={{ amd_ainic_pkg_versions['pds-dkms'] }}"
+          - "tawk-ipc-dkms={{ amd_ainic_pkg_versions['tawk-ipc-dkms'] }}"
+          - "libionic1={{ amd_ainic_pkg_versions['libionic1'] }}"
+          - "libionic-dev={{ amd_ainic_pkg_versions['libionic-dev'] }}"
+          - "nicctl={{ amd_ainic_pkg_versions['nicctl'] }}"
+          - "ainic-monitor={{ amd_ainic_pkg_versions['ainic-monitor'] }}"
+        state: present
+        lock_timeout: 300
+
+    - name: Link AINIC persona 1 configuration
+      ansible.builtin.file:
+        src: /etc/amd/ainic/ainic_default_cfg_persona_1.txt
+        dest: /etc/amd/ainic/ainic_default_cfg.txt
+        state: link
+        force: true
+
+    - name: Update initramfs for AINIC drivers
+      ansible.builtin.command: update-initramfs -u -k all
+
+    - name: Hold AINIC host software packages
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop: "{{ amd_ainic_pkg_versions.keys() | list }}"
+      when: amd_ainic_hold_packages | bool

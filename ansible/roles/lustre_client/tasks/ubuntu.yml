@@ -19,13 +19,13 @@
     - name: Ensure lustre-client prerequisites are installed on the host
       ansible.builtin.apt:
         state: present
-        name: 
+        name:
           - debootstrap
           - git
         lock_timeout: 300
 
     - name: Cleanup any existing mounts (if any)
-      ansible.posix.mount: 
+      ansible.posix.mount:
         path: "{{ item }}"
         state: "unmounted"
       loop:
@@ -80,9 +80,9 @@
         dest: "{{ lustre_chroot_path }}/etc/apt/sources.list.d/"
         remote_src: true
       ignore_errors: true
-      
+
     - name: Create mounts for chroot
-      ansible.posix.mount: 
+      ansible.posix.mount:
         path: "{{ item.path }}"
         src: "{{ item.src }}"
         boot: false
@@ -108,7 +108,7 @@
       ansible.builtin.shell: |
         chroot "{{ lustre_chroot_path }}" bash <<'EOF'
         set -euo pipefail
-        export DEBIAN_FRONTEND=noninteractive 
+        export DEBIAN_FRONTEND=noninteractive
         apt-get update || true
         apt-get install -y --install-recommends \
           linux-image-{{ ansible_kernel }} \
@@ -162,6 +162,13 @@
         regexp: '^alternatives --install '
         replace: 'update-alternatives --install '
 
+    - name: Remove obsolete dpatch build dependency on Ubuntu 24
+      ansible.builtin.replace:
+        path: "{{ lustre_chroot_path }}/lustre-client/debian/control"
+        regexp: '^(Build-Depends:.*), dpatch, '
+        replace: '\1, '
+      when: ansible_distribution_major_version == '24'
+
     - name: Apply Ubuntu kernel 6.14 fixes for Lustre 2.17
       ansible.builtin.include_tasks: ubuntu_lustre_217_kernel_614_fixes.yml
       when:
@@ -189,6 +196,9 @@
       when:
         - lustre_client_version is version('2.17.0', '>=')
 
+    # OCI 2.15.90's DKMS template omits ko2iblnd when /etc/sysconfig/lustre
+    # sets --with-o2ib=no. Revisit this source rewrite when moving 6.17 builds
+    # to that release; other Lustre versions may still need it.
     - name: Remove o2ib module from Lustre DKMS module list
       ansible.builtin.replace:
         path: "{{ lustre_chroot_path }}/lustre-client/debian/dkms.conf.in"
@@ -216,7 +226,7 @@
           s/((\s*linux-image-generic\s*(\([^)]+\))?\s*[|,])|(\s*linux-image\s*(\([^)]+\))?\s*[|,])|(\s*linux-image-amd64\s*(\([^)]+\))?\s*[|,]|)|(\s*linux-image-arm64\s*(\([^)]+\))?\s*[|,]|))//g;
           s/((\s*linux-headers-generic\s*(\([^)]+\))?\s*[|,]|)|(\s*linux-headers\s*(\([^)]+\))?\s*[|,]|)|(\s*linux-headers-amd64\s*(\([^)]+\))?\s*[|,]|)|(\s*linux-headers-arm64\s*(\([^)]+\))?\s*[|,]|))//g;
         }
-        ' {} + 
+        ' {} +
 
         make dkms-debs
         tar -czf lustre-client-dkms.tar.gz debs/lustre-client-utils_2.*.deb debs/lustre-client-modules-dkms_2.*.deb
@@ -262,6 +272,7 @@
             state: directory
             mode: '0755'
 
+        # Keep this for OCI 2.15.90: its DKMS template reads this flag.
         - name: Set Lustre 2.15 DKMS build parameters
           ansible.builtin.lineinfile:
             path: /etc/sysconfig/lustre
@@ -323,7 +334,7 @@
       changed_when: false
 
     - name: Cleanup any existing mounts (if any)
-      ansible.posix.mount: 
+      ansible.posix.mount:
         path: "{{ item }}"
         state: "unmounted"
       loop:
